@@ -1,0 +1,33 @@
+# Archivo de orquestación de Docker Compose para la infraestructura local.
+# Define los servicios necesarios para ejecutar la aplicación en un entorno de desarrollo.
+
+version: '3.8'
+
+services:
+  # Servicio de base de datos PostgreSQL
+  postgres:
+    # Utilizamos la imagen oficial de PostgreSQL versión 16
+    image: postgres:16
+    # Nombre del contenedor para facilitar su identificación y administración
+    container_name: inventory_postgres
+    # Configuración de variables de entorno para inicializar la base de datos
+    environment:
+      # Usuario administrador de la base de datos
+      POSTGRES_USER: inventory_user
+      # Contraseña del usuario administrador
+      POSTGRES_PASSWORD: inventory_password
+      # Nombre de la base de datos que se creará al iniciar el contenedor
+      POSTGRES_DB: inventory_db
+    # Mapeo de puertos: el puerto 5432 del host se redirige al puerto 5432 del contenedor
+    ports:
+      - "5432:5432"
+    # Configuración de volúmenes para persistir los datos de la base de datos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Reiniciar automáticamente el contenedor si falla
+    restart: unless-stopped
+
+# Declaración de volúmenes nombrados
+volumes:
+  # Volumen persistente para almacenar los datos de PostgreSQL y evitar pérdida al reiniciar
+  postgres_data:

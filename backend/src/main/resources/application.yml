@@ -1,0 +1,59 @@
+# ===================================================================
+# Configuración principal de Spring Boot
+# ===================================================================
+
+spring:
+  application:
+    name: inventory-system
+
+  # -----------------------------------------------------------------
+  # Configuración de la Base de Datos (Datasource)
+  # -----------------------------------------------------------------
+  datasource:
+    # URL de conexión a la base de datos PostgreSQL expuesta en Docker Compose.
+    # jdbc:postgresql://[host]:[puerto]/[base_de_datos]
+    url: jdbc:postgresql://localhost:5432/inventory_db
+    # Usuario administrador de la base de datos configurado en el entorno
+    username: inventory_user
+    # Contraseña del usuario
+    password: inventory_password
+    # Driver JDBC a utilizar
+    driver-class-name: org.postgresql.Driver
+
+  # -----------------------------------------------------------------
+  # Configuración de JPA / Hibernate
+  # -----------------------------------------------------------------
+  jpa:
+    # Propiedades específicas de Hibernate
+    hibernate:
+      # MUY IMPORTANTE: Se configura en 'validate' para asegurar que JPA/Hibernate
+      # no modifique el esquema de la base de datos de forma automática.
+      # La gestión exclusiva del DDL (Data Definition Language) será responsabilidad de Flyway.
+      ddl-auto: validate
+    # Mostrar las consultas SQL generadas en los logs (útil para desarrollo)
+    show-sql: true
+    properties:
+      hibernate:
+        # Formatear el SQL en los logs para que sea legible
+        format_sql: true
+        # Dialecto específico de PostgreSQL
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # -----------------------------------------------------------------
+  # Configuración de Flyway (Herramienta de Migración de Base de Datos)
+  # -----------------------------------------------------------------
+  flyway:
+    # Habilitar Flyway para que se ejecute automáticamente al arrancar la aplicación
+    enabled: true
+    # Por defecto, Flyway buscará los scripts en classpath:db/migration.
+    # Aquí lo explicitamos para mayor claridad.
+    locations: classpath:db/migration
+    # El baseline-on-migrate permite inicializar Flyway en bases de datos que ya tienen tablas.
+    baseline-on-migrate: true
+
+# ===================================================================
+# Configuración del Servidor Web (Tomcat embebido)
+# ===================================================================
+server:
+  # Puerto en el que la aplicación Spring Boot aceptará peticiones HTTP
+  port: 8080
