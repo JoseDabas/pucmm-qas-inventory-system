@@ -62,6 +62,9 @@ spring:
     locations: classpath:db/migration
     # El baseline-on-migrate permite inicializar Flyway en bases de datos que ya tienen tablas.
     baseline-on-migrate: true
+    # Forzamos la versión base a 0 para asegurar que la migración V1 siempre se ejecute
+    # incluso si Keycloak ya creó tablas en la misma base de datos.
+    baseline-version: 0
 
 # ===================================================================
 # Configuración del Servidor Web (Tomcat embebido)
@@ -69,3 +72,10 @@ spring:
 server:
   # Puerto en el que la aplicación Spring Boot aceptará peticiones HTTP
   port: 8080
+
+# ===================================================================
+# Configuración de Logs (Diagnóstico)
+# ===================================================================
+logging:
+  level:
+    org.springframework.security: DEBUG

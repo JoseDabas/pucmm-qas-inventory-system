@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.lang.NonNull;
+
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 /**
  * Configuración de Seguridad Centralizada (DevSecOps).
  * <p>
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     /**
@@ -53,6 +58,7 @@ public class SecurityConfig {
             // Configura las reglas de acceso. Por defecto, exigimos que CUALQUIER petición (anyRequest())
             // deba estar autenticada (authenticated()), implementando el principio de "Seguridad por defecto".
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
 
@@ -94,7 +100,7 @@ public class SecurityConfig {
     private static class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         @Override
-        public Collection<GrantedAuthority> convert(Jwt jwt) {
+        public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
             // Extrae la sección 'realm_access' del payload del token JWT
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
 
