@@ -10,7 +10,7 @@
       "description": "Cliente confidencial para la aplicación. 'standardFlowEnabled' permite el flujo de código de autorización (Authorization Code Flow) recomendado para aplicaciones web. 'directAccessGrantsEnabled' permite el Resource Owner Password Credentials Grant, útil para pruebas de API y automatizaciones.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "inventory-client-secret-12345",
+      "secret": "${KEYCLOAK_CLIENT_SECRET}",
       "redirectUris": [
         "*"
       ],
@@ -67,7 +67,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "admin123",
+          "value": "${KEYCLOAK_TEST_USER_PASSWORD}",
           "temporary": false
         }
       ],

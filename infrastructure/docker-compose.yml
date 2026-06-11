@@ -9,7 +9,7 @@ services:
     # Nombre del contenedor para facilitar su identificación y administración
     container_name: inventory_postgres
     # Configuración de variables de entorno para inicializar la base de datos
-    environment:
+    environment:  
       # Usuario administrador de la base de datos
       POSTGRES_USER: inventory_user
       # Contraseña del usuario administrador
@@ -48,6 +48,11 @@ services:
       KC_DB_USERNAME: inventory_user
       # Contraseña de la base de datos de PostgreSQL (debe coincidir con POSTGRES_PASSWORD del servicio postgres)
       KC_DB_PASSWORD: inventory_password
+      # Variables de entorno para configurar el cliente y usuario de prueba en Keycloak
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      # Contraseña del usuario de prueba en Keycloak (debe coincidir con el valor en realm-export.json)
+      KEYCLOAK_TEST_USER_PASSWORD: ${KEYCLOAK_TEST_USER_PASSWORD}
+
     # Mapeo de puertos: Redirigimos el puerto 9080 del host al 8080 del contenedor (puerto por defecto de Keycloak)
     # Se usa 9080 en el host para evitar conflictos con el puerto 8080 por defecto que suele utilizar Spring Boot
     ports:
