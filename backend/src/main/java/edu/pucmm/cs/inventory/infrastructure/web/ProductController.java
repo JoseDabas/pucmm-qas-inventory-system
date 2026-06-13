@@ -18,12 +18,14 @@ import org.springframework.lang.NonNull;
 import java.util.UUID;
 
 /**
- * Controlador REST (Capa de Infraestructura Web) para el mantenimiento de Productos.
+ * Controlador REST (Capa de Infraestructura Web) para el mantenimiento de
+ * Productos.
  * 
  * Expone los endpoints de la API hacia clientes externos (Frontend, Apps).
- * Se encarga del enrutamiento HTTP, validación estructural de entrada y 
+ * Se encarga del enrutamiento HTTP, validación estructural de entrada y
  * delegación de la lógica comercial al 'ProductService'.
- * Está asegurado vía @PreAuthorize para validar tokens JWT emitidos por Keycloak.
+ * Está asegurado vía @PreAuthorize para validar tokens JWT emitidos por
+ * Keycloak.
  */
 @RestController
 @RequestMapping("/api/v1/products")
@@ -42,12 +44,11 @@ public class ProductController {
      * Requiere el rol granular 'product:view' en el token de Keycloak.
      */
     @GetMapping
-    @PreAuthorize("hasRole('product:view')")
+    @PreAuthorize("hasAuthority('product:view')")
     @Operation(summary = "Consultar Catálogo", description = "Recupera una lista paginada de todos los productos registrados. Soporta filtros y ordenamiento mediante el objeto Pageable.")
     public ResponseEntity<Page<ProductResponseDTO>> getProducts(
-            @Parameter(description = "Inyección automática de Spring. Parámetros de URL soportados: ?page=0&size=10&sort=name,asc", hidden = true)
-            @NonNull Pageable pageable) {
-        
+            @Parameter(description = "Inyección automática de Spring. Parámetros de URL soportados: ?page=0&size=10&sort=name,asc", hidden = true) @NonNull Pageable pageable) {
+
         Page<ProductResponseDTO> products = productService.getProducts(pageable);
         return ResponseEntity.ok(products);
     }
@@ -58,11 +59,11 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @PostMapping
-    @PreAuthorize("hasRole('product:manage')")
+    @PreAuthorize("hasAuthority('product:manage')")
     @Operation(summary = "Crear un Nuevo Producto", description = "Registra un producto e inicializa su cantidad de stock generando una entrada automática en el historial (StockMovement).")
     public ResponseEntity<ProductResponseDTO> createProduct(
             @Valid @RequestBody ProductRequestDTO request) {
-        
+
         ProductResponseDTO response = productService.createProduct(request);
         // Devuelve código HTTP 201 Created indicando el éxito de la inserción
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -74,13 +75,12 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('product:manage')")
+    @PreAuthorize("hasAuthority('product:manage')")
     @Operation(summary = "Actualizar Información de Producto", description = "Reescribe los metadatos y configuración descriptiva de un producto pre-existente.")
     public ResponseEntity<ProductResponseDTO> updateProduct(
-            @Parameter(description = "Identificador único UUID del producto", required = true)
-            @PathVariable @NonNull UUID id,
+            @Parameter(description = "Identificador único UUID del producto", required = true) @PathVariable @NonNull UUID id,
             @Valid @RequestBody ProductRequestDTO request) {
-        
+
         ProductResponseDTO response = productService.updateProduct(id, request);
         return ResponseEntity.ok(response);
     }
@@ -91,12 +91,11 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('product:manage')")
+    @PreAuthorize("hasAuthority('product:manage')")
     @Operation(summary = "Eliminar Producto Definitivamente", description = "Borra físicamente (Hard Delete) el registro de un producto. Si cuenta con movimientos de stock, fallará por integridad referencial.")
     public ResponseEntity<Void> deleteProduct(
-            @Parameter(description = "Identificador único UUID del producto a destruir", required = true)
-            @PathVariable @NonNull UUID id) {
-        
+            @Parameter(description = "Identificador único UUID del producto a destruir", required = true) @PathVariable @NonNull UUID id) {
+
         productService.deleteProduct(id);
         // Devuelve HTTP 204 No Content confirmando la eliminación sin retornar cuerpo
         return ResponseEntity.noContent().build();
