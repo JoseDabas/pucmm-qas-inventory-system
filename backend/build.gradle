@@ -29,14 +29,16 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 	implementation 'org.hibernate.orm:hibernate-envers'
-	compileOnly 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok' // Lombok es una biblioteca que reduce el código boilerplate en Java, como getters, setters, constructores, etc.
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testCompileOnly 'org.projectlombok:lombok'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test' // Incluye dependencias para pruebas unitarias y de integración, como JUnit, Mockito, etc.
+	testCompileOnly 'org.projectlombok:lombok' 
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher' // Necesario para ejecutar pruebas con JUnit Platform
 	testAnnotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.springframework.security:spring-security-test' // Proporciona utilidades para probar la seguridad en aplicaciones Spring
+
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers' // Proporciona soporte para usar Testcontainers en pruebas de Spring Boot, facilitando la integración de contenedores Docker para pruebas de integración.
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'
 }
