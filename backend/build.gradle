@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id 'jacoco'
 	id 'org.springframework.boot' version '3.5.14'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -37,8 +38,33 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.security:spring-security-test' // Proporciona utilidades para probar la seguridad en aplicaciones Spring
 
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers' // Proporciona soporte para usar Testcontainers en pruebas de Spring Boot, facilitando la integración de contenedores Docker para pruebas de integración.
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		html.required = true
+		xml.required = true
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+				'**/dto/**',
+				'**/infrastructure/persistence/entity/**',
+				'**/config/**',
+				'**/InventorySystemApplication.class'
+			])
+		}))
+	}
+}
+
+tasks.named('test') {
+	finalizedBy jacocoTestReport
 }
