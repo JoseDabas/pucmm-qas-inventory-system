@@ -38,7 +38,7 @@ pipeline {
             steps {
                 echo 'Ejecutando pruebas de integracion con Testcontainers'
                 dir('backend') {
-                    sh './gradlew test --tests "*IntegrationTest"'
+                    sh 'TESTCONTAINERS_RYUK_DISABLED=true ./gradlew test --tests "*IntegrationTest"' // Deshabilita Ryuk para evitar problemas de permisos en entornos CI/CD
                 }
             }
         }
