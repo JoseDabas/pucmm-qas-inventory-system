@@ -8,8 +8,10 @@ services:
       - "50000:50000" # Puerto de agentes Jenkins
     volumes:
       - jenkins_home:/var/jenkins_home
-      # Monta el socket de Docker del host para que Jenkins pueda lanzar contenedores 
+      # Monta el socket de Docker del host para que Jenkins pueda lanzar contenedores
       - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Para que Jenkins pueda acceder a servicios en el host
     restart: unless-stopped
 
 volumes:
