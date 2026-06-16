@@ -137,6 +137,9 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw new IllegalArgumentException("Operación denegada. El producto especificado no existe.");
         }
+        // Eliminar primero los movimientos de stock para evitar violaciones de clave foránea
+        stockMovementRepository.deleteByProductId(id);
+        
         productRepository.deleteById(id);
     }
 
@@ -197,6 +200,7 @@ public class ProductService {
         dto.setDescription(entity.getDescription());
         dto.setCategory(entity.getCategory() != null ? entity.getCategory().getName() : null);
         dto.setPrice(entity.getPrice());
+        dto.setInitialQuantity(entity.getInitialQuantity());
         dto.setMinimumStock(entity.getMinimumStock());
         dto.setIsActive(entity.getIsActive());
         return dto;
