@@ -69,6 +69,7 @@ public class SecurityConfig {
                 // "Seguridad por defecto".
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Configuración del Servidor de Recursos OAuth2 (Resource Server)
