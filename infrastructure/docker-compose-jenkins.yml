@@ -1,0 +1,16 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: inventory_jenkins
+    user: root  # Para acceder al socket de Docker del host
+    ports:
+      - "8082:8080"   # UI de Jenkins 
+      - "50000:50000" # Puerto de agentes Jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Monta el socket de Docker del host para que Jenkins pueda lanzar contenedores 
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:

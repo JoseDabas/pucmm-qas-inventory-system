@@ -22,13 +22,23 @@ services:
     # Configuración de volúmenes para persistir los datos de la base de datos
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Script de init: crea la base keycloak_db. Solo corre si el volumen está vacío.
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
+
+    # Healthcheck: Keycloak espera a que esto pase antes de arrancar.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory_user -d inventory_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
     # Reiniciar automáticamente el contenedor si falla
     restart: unless-stopped
 
   # Servicio de Gestión de Identidad y Acceso (Keycloak)
   keycloak:
     # Utilizamos la imagen oficial de Keycloak proporcionada por RedHat (Quay)
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.0
     # Nombre del contenedor para facilitar su identificación y administración
     container_name: inventory_keycloak
     # Comando de inicio: 'start-dev' arranca Keycloak en modo desarrollo (ideal para local).
@@ -36,21 +46,16 @@ services:
     command: start-dev --import-realm
     # Variables de entorno requeridas para la configuración inicial y conexión a la base de datos
     environment:
-      # Usuario administrador maestro de Keycloak (Consola de administración principal)
-      KEYCLOAK_ADMIN: admin
-      # Contraseña del administrador maestro
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      # Indica el motor de base de datos a utilizar (PostgreSQL) para que Keycloak cree sus esquemas
+      # Admin bootstrap (Keycloak 26.x usa KC_BOOTSTRAP_ADMIN_*)
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Conexión a la base DEDICADA de Keycloak (no la de la app)
       KC_DB: postgres
-      # URL de conexión a la base de datos PostgreSQL utilizando el nombre del servicio Docker (postgres)
-      KC_DB_URL: jdbc:postgresql://postgres:5432/inventory_db
-      # Usuario de base de datos de PostgreSQL (debe coincidir con POSTGRES_USER del servicio postgres)
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
       KC_DB_USERNAME: inventory_user
-      # Contraseña de la base de datos de PostgreSQL (debe coincidir con POSTGRES_PASSWORD del servicio postgres)
       KC_DB_PASSWORD: inventory_password
-      # Variables de entorno para configurar el cliente y usuario de prueba en Keycloak
+      # Variables consumidas por realm-export.json vía sustitución ${...}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-      # Contraseña del usuario de prueba en Keycloak (debe coincidir con el valor en realm-export.json)
       KEYCLOAK_TEST_USER_PASSWORD: ${KEYCLOAK_TEST_USER_PASSWORD}
 
     # Mapeo de puertos: Redirigimos el puerto 9080 del host al 8080 del contenedor (puerto por defecto de Keycloak)
@@ -61,9 +66,11 @@ services:
     # Esto permite que Keycloak lea el archivo 'realm-export.json' e importe la configuración automáticamente
     volumes:
       - ./keycloak:/opt/keycloak/data/import/
-    # Dependencia: asegura que Keycloak inicie únicamente después de que el servicio PostgreSQL esté listo
+    # Espera a que Postgres esté REALMENTE listo, no solo arrancado.
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 # Declaración de volúmenes nombrados
 volumes:
