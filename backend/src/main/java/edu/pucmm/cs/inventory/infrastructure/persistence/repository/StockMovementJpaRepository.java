@@ -14,5 +14,5 @@ import java.util.UUID;
  */
 @Repository // Registra el repositorio como un Bean de Spring en el contexto de aplicación
 public interface StockMovementJpaRepository extends JpaRepository<StockMovementEntity, UUID> {
-    // Se proporcionan capacidades CRUD completas de fábrica por Spring Data JPA.
+    void deleteByProductId(UUID productId);
 }
