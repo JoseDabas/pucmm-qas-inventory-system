@@ -1,3 +1,4 @@
+# Configuración de la aplicación Spring Boot para el sistema de inventario
 spring:
   application:
     name: inventory-system
@@ -25,3 +26,13 @@ spring:
     baseline-on-migrate: true
 server:
   port: 8080
+
+# Actuadores para monitoreo y métricas
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: inventory-system

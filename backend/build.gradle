@@ -41,6 +41,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers' // Proporciona soporte para usar Testcontainers en pruebas de Spring Boot, facilitando la integración de contenedores Docker para pruebas de integración.
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'
+
+	implementation 'io.micrometer:micrometer-registry-prometheus' // Proporciona soporte para exportar métricas a Prometheus, lo que permite monitorear el rendimiento y la salud de la aplicación utilizando esta popular herramienta de monitoreo.
+
 }
 
 tasks.named('test') {
