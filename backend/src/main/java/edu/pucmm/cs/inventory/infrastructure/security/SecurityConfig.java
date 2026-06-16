@@ -11,10 +11,15 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -48,38 +53,51 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitar CSRF (Cross-Site Request Forgery)
-                // Dado que nuestra API es Stateless y utiliza tokens JWT en los encabezados
-                // (Authorization: Bearer <token>)
-                // en lugar de cookies de sesión, no es vulnerable a ataques CSRF, por lo que se
-                // debe deshabilitar.
-                .csrf(csrf -> csrf.disable())
+            // Habilitar CORS con la configuración por defecto o el bean proporcionado
+            .cors(Customizer.withDefaults())
 
-                // Configuración de Sesiones a STATELESS
-                // Garantiza que la aplicación no cree sesiones HTTP en el servidor para
-                // almacenar el estado del usuario.
-                // Cada petición debe ser autenticada independientemente con un JWT válido,
-                // cumpliendo con los principios REST.
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Deshabilitar CSRF (Cross-Site Request Forgery)
+            // Dado que nuestra API es Stateless y utiliza tokens JWT en los encabezados (Authorization: Bearer <token>)
+            // en lugar de cookies de sesión, no es vulnerable a ataques CSRF, por lo que se debe deshabilitar.
+            .csrf(csrf -> csrf.disable())
 
-                // Autorización de Peticiones HTTP
-                // Configura las reglas de acceso. Por defecto, exigimos que CUALQUIER petición
-                // (anyRequest())
-                // deba estar autenticada (authenticated()), implementando el principio de
-                // "Seguridad por defecto".
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated())
+            // Configuración de Sesiones a STATELESS
+            // Garantiza que la aplicación no cree sesiones HTTP en el servidor para almacenar el estado del usuario.
+            // Cada petición debe ser autenticada independientemente con un JWT válido, cumpliendo con los principios REST.
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Configuración del Servidor de Recursos OAuth2 (Resource Server)
-                // Habilita a Spring Security para interceptar tokens JWT en el encabezado
-                // Authorization.
-                // Se inyecta un JwtAuthenticationConverter personalizado para extraer los roles
-                // de Keycloak.
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+            // Autorización de Peticiones HTTP
+            // Configura las reglas de acceso. Por defecto, exigimos que CUALQUIER petición (anyRequest())
+            // deba estar autenticada (authenticated()), implementando el principio de "Seguridad por defecto".
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .anyRequest().authenticated()
+            )
+
+            // Configuración del Servidor de Recursos OAuth2 (Resource Server)
+            // Habilita a Spring Security para interceptar tokens JWT en el encabezado Authorization.
+            // Se inyecta un JwtAuthenticationConverter personalizado para extraer los roles de Keycloak.
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            );
 
         return http.build();
+    }
+
+    /**
+     * Configuración global de CORS.
+     * Permite las peticiones desde el frontend de Vite (localhost:5173).
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     /**

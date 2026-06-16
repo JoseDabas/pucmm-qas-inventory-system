@@ -31,6 +31,9 @@ public class ProductResponseDTO {
     @Schema(description = "Precio unitario", example = "1500.00")
     private BigDecimal price;
 
+    @Schema(description = "Stock inicial con el que se creó", example = "10")
+    private Integer initialQuantity;
+
     @Schema(description = "Stock mínimo configurado", example = "5")
     private Integer minimumStock;
 
@@ -44,6 +47,7 @@ public class ProductResponseDTO {
     public String getDescription() { return description; }
     public String getCategory() { return category; }
     public BigDecimal getPrice() { return price; }
+    public Integer getInitialQuantity() { return initialQuantity; }
     public Integer getMinimumStock() { return minimumStock; }
     public Boolean getIsActive() { return isActive; }
 
@@ -54,6 +58,7 @@ public class ProductResponseDTO {
     public void setDescription(String description) { this.description = description; }
     public void setCategory(String category) { this.category = category; }
     public void setPrice(BigDecimal price) { this.price = price; }
+    public void setInitialQuantity(Integer initialQuantity) { this.initialQuantity = initialQuantity; }
     public void setMinimumStock(Integer minimumStock) { this.minimumStock = minimumStock; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }
