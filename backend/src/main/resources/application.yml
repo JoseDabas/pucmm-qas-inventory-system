@@ -1,27 +1,79 @@
+# ===================================================================
+# Configuración principal de Spring Boot
+# ===================================================================
+
 spring:
   application:
     name: inventory-system
+
+  # -----------------------------------------------------------------
+  # Configuración de Seguridad (OAuth2 Resource Server con Keycloak)
+  # -----------------------------------------------------------------
   security:
     oauth2:
       resourceserver:
         jwt:
+          # URI del emisor del token (Issuer URI). Corresponde al Realm 'Inventario' en nuestra instancia local de Keycloak.
+          # Spring Security utilizará esta URL para descargar automáticamente las llaves públicas (JWKS) necesarias
+          # para verificar la firma de los tokens JWT entrantes.
           issuer-uri: http://localhost:9080/realms/Inventario
+
+  # -----------------------------------------------------------------
+  # Configuración de la Base de Datos (Datasource)
+  # -----------------------------------------------------------------
   datasource:
+    # URL de conexión a la base de datos PostgreSQL expuesta en Docker Compose.
+    # jdbc:postgresql://[host]:[puerto]/[base_de_datos]
     url: jdbc:postgresql://localhost:5432/inventory_db
+    # Usuario administrador de la base de datos configurado en el entorno
     username: inventory_user
+    # Contraseña del usuario
     password: inventory_password
+    # Driver JDBC a utilizar
     driver-class-name: org.postgresql.Driver
+
+  # -----------------------------------------------------------------
+  # Configuración de JPA / Hibernate
+  # -----------------------------------------------------------------
   jpa:
+    # Propiedades específicas de Hibernate
     hibernate:
+      # MUY IMPORTANTE: Se configura en 'validate' para asegurar que JPA/Hibernate
+      # no modifique el esquema de la base de datos de forma automática.
+      # La gestión exclusiva del DDL (Data Definition Language) será responsabilidad de Flyway.
       ddl-auto: validate
+    # Mostrar las consultas SQL generadas en los logs (útil para desarrollo)
     show-sql: true
     properties:
       hibernate:
+        # Formatear el SQL en los logs para que sea legible
         format_sql: true
+        # Dialecto específico de PostgreSQL
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # -----------------------------------------------------------------
+  # Configuración de Flyway (Herramienta de Migración de Base de Datos)
+  # -----------------------------------------------------------------
   flyway:
+    # Habilitar Flyway para que se ejecute automáticamente al arrancar la aplicación
     enabled: true
     locations: classpath:db/migration
+    # El baseline-on-migrate permite inicializar Flyway en bases de datos que ya tienen tablas.
     baseline-on-migrate: true
+    # Forzamos la versión base a 0 para asegurar que la migración V1 siempre se ejecute
+    # incluso si Keycloak ya creó tablas en la misma base de datos.
+    baseline-version: 0
+
+# ===================================================================
+# Configuración del Servidor Web (Tomcat embebido)
+# ===================================================================
 server:
+  # Puerto en el que la aplicación Spring Boot aceptará peticiones HTTP
   port: 8080
+
+# ===================================================================
+# Configuración de Logs (Diagnóstico)
+# ===================================================================
+logging:
+  level:
+    org.springframework.security: DEBUG
