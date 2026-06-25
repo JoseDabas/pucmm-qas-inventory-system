@@ -1,0 +1,27 @@
+services:
+  prometheus: # Servicio de Prometheus para monitoreo y recolección de métricas
+    image: prom/prometheus:latest
+    container_name: inventory_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  grafana: # Servicio de Grafana para visualización de métricas
+    image: grafana/grafana:latest
+    container_name: inventory_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  grafana_data:
