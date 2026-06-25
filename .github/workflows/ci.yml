@@ -37,7 +37,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Run unit and API tests
-        run: ./gradlew test --tests "*ProductTest" --tests "*CategoryTest" --tests "*ProductServiceTest" --tests "*ProductControllerApiTest"
+        run: ./gradlew test --tests "*ProductTest" --tests "*CategoryTest" --tests "*ProductServiceTest" --tests "*ProductControllerApiTest" --tests "*ProductApiContractTest"
 
   backend-integration-tests: # Ejecuta las pruebas de integración con Testcontainers
     runs-on: ubuntu-latest
@@ -55,6 +55,32 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         run: chmod +x gradlew
       - name: Run integration tests (Testcontainers)
         run: ./gradlew test --tests "*IntegrationTest"
+
+  backend-security-scan: # Ejecuta pruebas de seguridad
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: OWASP Dependency Check (DEV-6)
+        run: ./gradlew dependencyCheckAnalyze
+      
+      # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
+      # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
+      # para poder acceder al endpoint /v3/api-docs
+      # - name: Validate OpenAPI Contract
+      #   run: |
+      #     docker run --rm --network host schemathesis/schemathesis \
+      #       run http://localhost:8080/v3/api-docs \
+      #       --checks all
 
   frontend-build: # Define el trabajo para construir el frontend
     runs-on: ubuntu-latest
