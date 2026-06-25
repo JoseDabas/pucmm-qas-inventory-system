@@ -77,3 +77,12 @@ server:
 logging:
   level:
     org.springframework.security: DEBUG
+# Actuadores para monitoreo y métricas
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: inventory-system
