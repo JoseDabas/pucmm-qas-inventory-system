@@ -74,3 +74,10 @@ jacocoTestReport {
 tasks.named('test') {
 	finalizedBy jacocoTestReport
 }
+
+dependencyCheck {
+    nvd {
+        // Obliga al plugin a esperar 8 segundos entre cada petición a la NVD para evitar baneos
+        delay = 8000
+    }
+}
