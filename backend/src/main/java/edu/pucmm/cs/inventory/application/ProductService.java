@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de Aplicación (Caso de Uso) para la gestión de Productos.
@@ -110,6 +112,19 @@ public class ProductService {
 
         ProductEntity updatedProduct = productRepository.save(entity);
         return mapToResponseDTO(updatedProduct);
+    }
+
+    /**
+     * Consulta de productos con stock crítico
+     * Delega el cálculo de stock al motor de base de datos para evitar condiciones de carrera.
+     * 
+     * @return Lista de productos en estado crítico.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getCriticalStockAlerts() {
+        return productRepository.findProductsWithCriticalStock().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     /**

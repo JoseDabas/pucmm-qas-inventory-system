@@ -1,13 +1,14 @@
 package edu.pucmm.cs.inventory.infrastructure.persistence.entity;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.envers.Audited;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entidad JPA que representa la tabla 'stock_movements' en la base de datos.
@@ -25,13 +26,9 @@ public class StockMovementEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    // Relacionamos con la entidad producto usando solo su ID, promoviendo
-    // un bajo acoplamiento (Clean Architecture) y evitando problemas de N+1 fetching de JPA.
     @Column(name = "product_id", nullable = false)
     private UUID productId;
 
-    // Almacenamos el enumerado de dominio como String por simplicidad en base de datos.
-    // También se puede usar @Enumerated pero mantener un String puro y mapearlo reduce dependencias.
     @Column(name = "movement_type", nullable = false, length = 50)
     private String movementType; // "IN" o "OUT"
 

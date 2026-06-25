@@ -1,5 +1,23 @@
 package edu.pucmm.cs.inventory.infrastructure.web;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import edu.pucmm.cs.inventory.application.ProductService;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
@@ -7,15 +25,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.lang.NonNull;
-
-import java.util.UUID;
 
 /**
  * Controlador REST (Capa de Infraestructura Web) para el mantenimiento de
@@ -51,6 +60,19 @@ public class ProductController {
 
         Page<ProductResponseDTO> products = productService.getProducts(pageable);
         return ResponseEntity.ok(products);
+    }
+
+    /**
+     * Endpoint GET para consultar alertas de stock crítico
+     * 
+     * Requiere el rol granular 'report:view' (compatible con conversor Keycloak).
+     */
+    @GetMapping("/alerts/critical-stock")
+    @PreAuthorize("hasAuthority('report:view')")
+    @Operation(summary = "Alertas de stock crítico", description = "Calcula el stock al vuelo sumando el historial inmutable de movimientos para devolver productos cuyo stock actual es menor o igual a su stock mínimo, evitando condiciones de carrera.")
+    public ResponseEntity<List<ProductResponseDTO>> getCriticalStockAlerts() {
+        List<ProductResponseDTO> alerts = productService.getCriticalStockAlerts();
+        return ResponseEntity.ok(alerts);
     }
 
     /**
