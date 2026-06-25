@@ -70,8 +70,21 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           distribution: "temurin"
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        
+      # Usar caché para evitar descargar la DB completa cada vez
+      - name: Cache NVD Database
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: ${{ runner.os }}-nvd-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nvd-
+
+      # Ejecutar el escáner pasando la API Key como variable de entorno
       - name: OWASP Dependency Check (DEV-6)
-        run: ./gradlew dependencyCheckAnalyze
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./gradlew dependencyCheckAnalyze -Dnvd.api.key=$NVD_API_KEY
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
