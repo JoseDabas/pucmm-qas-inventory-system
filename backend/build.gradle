@@ -79,5 +79,7 @@ dependencyCheck {
     nvd {
         // Obliga al plugin a esperar 8 segundos entre cada petición a la NVD para evitar baneos
         delay = 8000
+        // Lee la API Key directamente de las variables de entorno
+        apiKey = System.getenv("NVD_API_KEY")
     }
 }
