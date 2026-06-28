@@ -81,11 +81,7 @@ dependencyCheck {
         delay = 12000
         // Read API Key from environment variable
         apiKey = System.getenv("NVD_API_KEY")
-        // Disable validation of API key in CI to prevent early failures
-        validationEnabled = false
     }
-    // Skip check if not in CI, or if we detect NVD access issues
-    skipConfigurations = ['compileClasspath', 'runtimeClasspath']
-    // Use offline mode if running in restricted network (CI)
-    offline = System.getenv("CI") != null && System.getenv("NVD_API_KEY") == null
+    // Skip test dependencies to speed up the scan and focus on production vulnerabilities
+    skipConfigurations = ['testCompileClasspath', 'testRuntimeClasspath']
 }
