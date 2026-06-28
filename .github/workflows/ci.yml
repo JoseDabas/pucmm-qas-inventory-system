@@ -80,11 +80,11 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           restore-keys: |
             ${{ runner.os }}-nvd-
 
-      # Ejecutar el escáner pasando la API Key como variable de entorno
+      # Ejecutar el escáner pasando la API Key y un delay para evitar rate limits
       - name: OWASP Dependency Check (DEV-6)
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./gradlew dependencyCheckAnalyze
+        run: ./gradlew dependencyCheckAnalyze -Dnvd.api.key=$NVD_API_KEY -Dnvd.api.delay=8000
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
