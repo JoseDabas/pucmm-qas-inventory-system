@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
 	id 'jacoco'
-	id 'org.springframework.boot' version '3.5.14'
+	id 'org.springframework.boot' version '3.5.15'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -25,12 +25,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.flywaydb:flyway-database-postgresql'
+	implementation 'org.flywaydb:flyway-core:11.8.1'
+	implementation 'org.flywaydb:flyway-database-postgresql:11.8.1'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 	implementation 'org.hibernate.orm:hibernate-envers'
 	compileOnly 'org.projectlombok:lombok' // Lombok es una biblioteca que reduce el código boilerplate en Java, como getters, setters, constructores, etc.
-	runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly 'org.postgresql:postgresql:42.7.11'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test' // Incluye dependencias para pruebas unitarias y de integración, como JUnit, Mockito, etc.
 	testCompileOnly 'org.projectlombok:lombok' 
@@ -44,7 +44,7 @@ dependencies {
 	
 	testImplementation 'io.rest-assured:rest-assured' // Para pruebas de API/Contrato
 
-	implementation 'io.micrometer:micrometer-registry-prometheus' // Proporciona soporte para exportar métricas a Prometheus, lo que permite monitorear el rendimiento y la salud de la aplicación ut[...]
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.15.12' // Proporciona soporte para exportar métricas a Prometheus, lo que permite monitorear el rendimiento y la salud de la aplicación ut[...]
 
 }
 
