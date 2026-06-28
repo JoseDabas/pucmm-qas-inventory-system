@@ -71,13 +71,15 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
+      # Instalar Snyk CLI nativo para respetar el working-directory
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
       # Ejecutar Snyk Security Scan para el backend
       - name: Snyk Security Scan (DEV-6)
-        uses: snyk/actions/gradle@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --all-subprojects
+        run: snyk test --all-subprojects
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
