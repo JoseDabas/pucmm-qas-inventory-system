@@ -71,9 +71,10 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
-      # Usar caché para evitar descargar la DB completa cada vez
-      - name: Cache NVD Database
-        uses: actions/cache@v3
+      # 1. Restaurar el caché (si existe de ejecuciones anteriores)
+      - name: Restore NVD Database Cache
+        uses: actions/cache/restore@v4
+        id: cache-nvd
         with:
           path: ~/.gradle/dependency-check-data
           key: ${{ runner.os }}-nvd-${{ github.run_id }}
@@ -89,11 +90,19 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
             echo "✅ El secreto NVD_API_KEY sí está cargando correctamente."
           fi
 
-      # Ejecutar el escáner pasando la API Key como variable de entorno
+      # 2. Ejecutar OWASP pasando la API Key como variable de entorno para que Gradle la lea
       - name: OWASP Dependency Check (DEV-6)
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: ./gradlew dependencyCheckAnalyze
+
+      # 3. EL FIX CRÍTICO: Guardar el caché INCLUSO SI EL PASO ANTERIOR FALLA (403)
+      - name: Save NVD Database Cache
+        uses: actions/cache/save@v4
+        if: always() # <-- Esto obliga a GitHub a guardar lo que logró descargar
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: ${{ runner.os }}-nvd-${{ github.run_id }}
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
