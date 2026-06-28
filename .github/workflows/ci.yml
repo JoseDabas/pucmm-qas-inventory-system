@@ -80,6 +80,15 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           restore-keys: |
             ${{ runner.os }}-nvd-
 
+      - name: Debug Secret Availability
+        run: |
+          if [ -z "${{ secrets.NVD_API_KEY }}" ]; then
+            echo "❌ El secreto NVD_API_KEY está VACÍO. GitHub no lo está inyectando en esta rama."
+            exit 1
+          else
+            echo "✅ El secreto NVD_API_KEY sí está cargando correctamente."
+          fi
+
       # Ejecutar el escáner pasando la API Key como variable de entorno
       - name: OWASP Dependency Check (DEV-6)
         env:

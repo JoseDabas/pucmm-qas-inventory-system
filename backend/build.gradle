@@ -78,7 +78,7 @@ tasks.named('test') {
 dependencyCheck {
     nvd {
         // Increase delay significantly for CI environments to avoid rate limiting
-        delay = 12000
+        delay = 18000
         // Read API Key from environment variable
         apiKey = System.getenv("NVD_API_KEY")
     }
