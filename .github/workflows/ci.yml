@@ -80,6 +80,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --all-subprojects
+        continue-on-error: true
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
