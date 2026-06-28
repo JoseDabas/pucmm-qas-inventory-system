@@ -77,7 +77,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --file=backend/build.gradle --all-subprojects
+          args: --all-subprojects
       
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
