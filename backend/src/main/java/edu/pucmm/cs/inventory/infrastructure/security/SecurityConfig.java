@@ -106,6 +106,19 @@ public class SecurityConfig {
     }
 
     /**
+     * Configuración del Firewall HTTP estricto de Spring Security.
+     * Permite explícitamente el método TRACE para que la petición no sea bloqueada
+     * prematuramente con un 400 Bad Request, permitiendo que Spring MVC la rechace
+     * apropiadamente con un 405 Method Not Allowed, cumpliendo con el contrato de la API.
+     */
+    @Bean
+    public org.springframework.security.web.firewall.HttpFirewall allowTraceFirewall() {
+        org.springframework.security.web.firewall.StrictHttpFirewall firewall = new org.springframework.security.web.firewall.StrictHttpFirewall();
+        firewall.setAllowedHttpMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE"));
+        return firewall;
+    }
+
+    /**
      * Conversor de Autenticación JWT personalizado.
      * <p>
      * Este bean es fundamental para la integración con Keycloak. Por defecto,

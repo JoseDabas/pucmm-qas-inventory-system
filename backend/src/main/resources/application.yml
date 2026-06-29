@@ -7,6 +7,15 @@ spring:
     name: inventory-system
 
   # -----------------------------------------------------------------
+  # Configuración de Jackson (Parseador JSON)
+  # -----------------------------------------------------------------
+  jackson:
+    mapper:
+      # Deshabilita la coerción automática (ej. no permitir booleans donde se espera String, o ints donde se espera String).
+      # Requerido por pruebas estrictas de Schemathesis.
+      allow-coercion-of-scalars: false
+
+  # -----------------------------------------------------------------
   # Configuración de Seguridad (OAuth2 Resource Server con Keycloak)
   # -----------------------------------------------------------------
   security:

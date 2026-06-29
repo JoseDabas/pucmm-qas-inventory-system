@@ -16,11 +16,11 @@ import java.math.BigDecimal;
 @Schema(description = "Objeto de transferencia de datos para la creación o actualización de un Producto.")
 public class ProductRequestDTO {
 
-    @Schema(description = "Nombre descriptivo del producto", example = "Laptop Dell XPS 15")
+    @Schema(description = "Nombre descriptivo del producto", example = "Laptop Dell XPS 15", minLength = 1)
     @NotBlank(message = "El nombre es obligatorio")
     private String name;
 
-    @Schema(description = "Código SKU (Stock Keeping Unit) único", example = "LAP-DELL-XPS15")
+    @Schema(description = "Código SKU (Stock Keeping Unit) único", example = "LAP-DELL-XPS15", minLength = 1)
     @NotBlank(message = "El código SKU es obligatorio")
     private String skuCode;
 
