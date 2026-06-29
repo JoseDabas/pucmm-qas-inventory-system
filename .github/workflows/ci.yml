@@ -115,6 +115,11 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         working-directory: infrastructure
         run: docker compose up -d postgres keycloak
         
+      - name: Wait for Keycloak to be ready
+        run: |
+          echo "Esperando a que Keycloak inicie completamente..."
+          timeout 120 bash -c 'until curl -s http://localhost:9080/realms/Inventario/.well-known/openid-configuration > /dev/null; do sleep 5; done'
+          
       - name: Start Spring Boot Application in Background
         working-directory: backend
         env:
@@ -125,12 +130,26 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:9080/realms/Inventario
         run: |
           chmod +x gradlew
-          ./gradlew bootRun &
+          ./gradlew bootRun > boot.log 2>&1 &
           
       - name: Wait for API to be ready
+        working-directory: backend
         run: |
           echo "Esperando a que Spring Boot levante..."
-          timeout 60 bash -c 'until curl -s http://localhost:8080/v3/api-docs > /dev/null; do sleep 2; done'
+          for i in {1..60}; do
+            if curl -s http://localhost:8080/v3/api-docs > /dev/null 2>&1; then
+              echo "API is ready"
+              break
+            fi
+            echo "Attempt $i/60: API not ready yet, waiting..."
+            sleep 2
+          done
+          
+          if ! curl -s http://localhost:8080/v3/api-docs > /dev/null 2>&1; then
+            echo "API never became ready. Spring Boot logs:"
+            cat boot.log
+            exit 1
+          fi
           
       - name: Run Schemathesis
         run: |
