@@ -1,6 +1,7 @@
 package edu.pucmm.cs.inventory.infrastructure.web.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
  * evitando acoplar las entidades JPA (ProductEntity) directamente a las respuestas HTTP.
  */
 @Schema(description = "Objeto de transferencia de datos de respuesta que representa un Producto.")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductResponseDTO {
 
     @Schema(description = "Identificador único universal del producto", example = "123e4567-e89b-12d3-a456-426614174000")
