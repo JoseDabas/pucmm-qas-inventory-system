@@ -66,12 +66,17 @@ public class OpenApiConfig {
                 });
             }
 
-            // 2. Agregar código 401 a todas las operaciones
+            // 2. Agregar códigos de error estándar a todas las operaciones para satisfacer los stateful tests de Schemathesis
             if (openApi.getPaths() != null) {
                 openApi.getPaths().values().forEach(pathItem -> {
                     pathItem.readOperations().forEach(operation -> {
-                        operation.getResponses().addApiResponse("401", 
-                            new io.swagger.v3.oas.models.responses.ApiResponse().description("Unauthorized: Token JWT no proporcionado o inválido"));
+                        operation.getResponses()
+                            .addApiResponse("400", new io.swagger.v3.oas.models.responses.ApiResponse().description("Bad Request: Petición inválida"))
+                            .addApiResponse("401", new io.swagger.v3.oas.models.responses.ApiResponse().description("Unauthorized: Token JWT no proporcionado o inválido"))
+                            .addApiResponse("403", new io.swagger.v3.oas.models.responses.ApiResponse().description("Forbidden: Permisos insuficientes"))
+                            .addApiResponse("404", new io.swagger.v3.oas.models.responses.ApiResponse().description("Not Found: Recurso no encontrado"))
+                            .addApiResponse("409", new io.swagger.v3.oas.models.responses.ApiResponse().description("Conflict: Violación de integridad de datos"))
+                            .addApiResponse("500", new io.swagger.v3.oas.models.responses.ApiResponse().description("Internal Server Error"));
                     });
                 });
             }

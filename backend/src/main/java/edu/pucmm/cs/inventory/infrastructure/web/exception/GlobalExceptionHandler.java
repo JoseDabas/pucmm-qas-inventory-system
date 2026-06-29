@@ -65,6 +65,13 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.FORBIDDEN, "No tienes permisos suficientes para realizar esta acción.");
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Conflicto de integridad de datos: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.CONFLICT, "Violación de integridad de datos en la base de datos.");
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleException(Exception ex) {
