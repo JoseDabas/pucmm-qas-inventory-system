@@ -113,6 +113,9 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           
       - name: Start Database and Keycloak via Docker Compose
         working-directory: infrastructure
+        env:
+          KEYCLOAK_CLIENT_SECRET: "dummy-secret-for-ci"
+          KEYCLOAK_TEST_USER_PASSWORD: "dummy-password-for-ci"
         run: docker compose up -d postgres keycloak
         
       - name: Wait for Keycloak to be ready
