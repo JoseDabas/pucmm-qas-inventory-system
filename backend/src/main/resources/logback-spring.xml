@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                            "traceId": "%mdc{trace_id:-}",
+                            "spanId": "%mdc{span_id:-}",
+                            "correlationId": "%mdc{correlationId:-}",
+                            "level": "%level",
+                            "user": "%mdc{user:-}",
+                            "endpoint": "%mdc{endpoint:-}",
+                            "message": "%message",
+                            "logger": "%logger{40}",
+                            "thread": "%thread"
+                        }
+                    </pattern>
+                </pattern>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Configure Spring to use the JSON appender instead of default -->
+    <root level="INFO">
+        <appender-ref ref="jsonConsoleAppender" />
+    </root>
+
+</configuration>
