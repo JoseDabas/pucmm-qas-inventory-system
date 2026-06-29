@@ -169,8 +169,29 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
             exit 1
           fi
           
+      - name: Fetch Keycloak Token
+        id: fetch-token
+        run: |
+          TOKEN=$(curl -s -X POST http://localhost:9080/realms/Inventario/protocol/openid-connect/token \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=inventory-client" \
+            -d "client_secret=dummy-secret-for-ci" \
+            -d "grant_type=password" \
+            -d "username=admin-user" \
+            -d "password=dummy-password-for-ci" | jq -r '.access_token')
+          
+          if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
+            echo "Failed to retrieve Keycloak token."
+            exit 1
+          fi
+          
+          # Enmascarar el token en los logs por seguridad
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          
       - name: Run Schemathesis
         run: |
           docker run --rm --network host schemathesis/schemathesis \
             run http://localhost:8080/v3/api-docs \
+            -H "Authorization: Bearer ${{ steps.fetch-token.outputs.token }}" \
             --checks all
