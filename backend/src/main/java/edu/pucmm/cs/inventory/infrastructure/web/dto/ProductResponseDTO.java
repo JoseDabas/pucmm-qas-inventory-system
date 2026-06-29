@@ -22,10 +22,10 @@ public class ProductResponseDTO {
     @Schema(description = "Código SKU", example = "LAP-DELL-XPS15")
     private String skuCode;
 
-    @Schema(description = "Descripción del producto", example = "Laptop de 15 pulgadas, 16GB RAM")
+    @Schema(description = "Descripción del producto", example = "Laptop de 15 pulgadas, 16GB RAM", nullable = true)
     private String description;
 
-    @Schema(description = "Categoría", example = "Electrónica")
+    @Schema(description = "Categoría", example = "Electrónica", nullable = true)
     private String category;
 
     @Schema(description = "Precio unitario", example = "1500.00")

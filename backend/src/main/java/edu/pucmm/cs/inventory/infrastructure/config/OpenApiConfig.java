@@ -48,4 +48,33 @@ public class OpenApiConfig {
                                 .bearerFormat("JWT")
                                 .description("Ingrese su token JWT provisto por Keycloak. No es necesario escribir 'Bearer ', Swagger lo hace automáticamente.")));
     }
+
+    /**
+     * Bean que intercepta la generación del OpenAPI y modifica sus componentes
+     * para alinear la documentación con el comportamiento estricto del backend.
+     */
+    @Bean
+    public org.springdoc.core.customizers.OpenApiCustomizer globalOpenApiCustomizer() {
+        return openApi -> {
+            // 1. Agregar 'additionalProperties: false' a todos los esquemas (objetos)
+            if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
+                openApi.getComponents().getSchemas().values().forEach(schema -> {
+                    // Si el esquema es un objeto (o tipo por defecto), prohibir campos extras
+                    if (schema.getType() == null || "object".equals(schema.getType())) {
+                        schema.setAdditionalProperties(Boolean.FALSE);
+                    }
+                });
+            }
+
+            // 2. Agregar código 401 a todas las operaciones
+            if (openApi.getPaths() != null) {
+                openApi.getPaths().values().forEach(pathItem -> {
+                    pathItem.readOperations().forEach(operation -> {
+                        operation.getResponses().addApiResponse("401", 
+                            new io.swagger.v3.oas.models.responses.ApiResponse().description("Unauthorized: Token JWT no proporcionado o inválido"));
+                    });
+                });
+            }
+        };
+    }
 }
