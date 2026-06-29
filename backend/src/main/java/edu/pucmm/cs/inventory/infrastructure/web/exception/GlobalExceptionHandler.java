@@ -27,41 +27,55 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         log.warn("Error de parseo JSON o mensaje malformado: {}", ex.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Formato de petición inválido o tipo de dato incorrecto.");
+        return createProblemDetail(HttpStatus.BAD_REQUEST, "Formato de petición inválido o tipo de dato incorrecto.");
+    }
+    
+    @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleTypeMismatchException(org.springframework.beans.TypeMismatchException ex) {
+        log.warn("Tipo de dato incorrecto en parámetro de URL: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.BAD_REQUEST, "Formato de parámetro de URL inválido.");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn("Argumento inválido: {}", ex.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return createProblemDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.warn("Error de validación de argumentos: {}", ex.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Datos de entrada no cumplen con las reglas de validación.");
+        return createProblemDetail(HttpStatus.BAD_REQUEST, "Datos de entrada no cumplen con las reglas de validación.");
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ProblemDetail handleEntityNotFoundException(EntityNotFoundException ex) {
         log.warn("Recurso no encontrado: {}", ex.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        return createProblemDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
     
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ProblemDetail handleAccessDeniedException(AccessDeniedException ex) {
         log.warn("Acceso denegado: {}", ex.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "No tienes permisos suficientes para realizar esta acción.");
+        return createProblemDetail(HttpStatus.FORBIDDEN, "No tienes permisos suficientes para realizar esta acción.");
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleException(Exception ex) {
         log.error("Error interno del servidor no controlado", ex);
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor.");
+        return createProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor.");
+    }
+    
+    private ProblemDetail createProblemDetail(HttpStatus status, String detail) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        // Evita que Spring ponga la ruta relativa (ej. /api/v1/products/0) que Schemathesis rechaza como URI inválido
+        pd.setInstance(java.net.URI.create("about:blank"));
+        return pd;
     }
 }
