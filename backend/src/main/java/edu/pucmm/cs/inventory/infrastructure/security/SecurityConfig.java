@@ -76,6 +76,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        // Permitir TRACE explícitamente para que no devuelva 401, sino que llegue a Spring MVC y devuelva 405
+                        .requestMatchers(org.springframework.http.HttpMethod.TRACE, "/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Configuración del Servidor de Recursos OAuth2 (Resource Server)
