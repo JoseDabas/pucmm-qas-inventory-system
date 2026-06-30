@@ -76,8 +76,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // Permitir TRACE explícitamente para que no devuelva 401, sino que llegue a Spring MVC y devuelva 405
+                        // Permitir TRACE y QUERY explícitamente para que no devuelva 401, sino que llegue a Spring MVC y devuelva 405
                         .requestMatchers(org.springframework.http.HttpMethod.TRACE, "/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.valueOf("QUERY"), "/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Configuración del Servidor de Recursos OAuth2 (Resource Server)
@@ -116,7 +117,7 @@ public class SecurityConfig {
     @Bean
     public org.springframework.security.web.firewall.HttpFirewall allowTraceFirewall() {
         org.springframework.security.web.firewall.StrictHttpFirewall firewall = new org.springframework.security.web.firewall.StrictHttpFirewall();
-        firewall.setAllowedHttpMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE"));
+        firewall.setAllowedHttpMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE", "QUERY"));
         return firewall;
     }
 
