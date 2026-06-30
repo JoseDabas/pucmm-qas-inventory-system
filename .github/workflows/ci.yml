@@ -81,15 +81,6 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --all-subprojects
         continue-on-error: true
-      
-      # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
-      # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
-      # para poder acceder al endpoint /v3/api-docs
-      # - name: Validate OpenAPI Contract
-      #   run: |
-      #     docker run --rm --network host schemathesis/schemathesis \
-      #       run http://localhost:8080/v3/api-docs \
-      #       --checks all
 
   frontend-build: # Define el trabajo para construir el frontend
     runs-on: ubuntu-latest
@@ -108,3 +99,98 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         run: npm ci
       - name: Build frontend
         run: npm run build
+
+  openapi-contract-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          
+      - name: Start Database and Keycloak via Docker Compose
+        working-directory: infrastructure
+        env:
+          KEYCLOAK_CLIENT_SECRET: "dummy-secret-for-ci"
+          KEYCLOAK_TEST_USER_PASSWORD: "dummy-password-for-ci"
+        run: docker compose up -d postgres keycloak
+        
+      - name: Wait for Keycloak to be ready
+        working-directory: infrastructure
+        run: |
+          echo "Waiting for Keycloak to become ready (up to 5 minutes)..."
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:9080/realms/Inventario/.well-known/openid-configuration >/dev/null 2>&1; then
+              echo "Keycloak is ready"
+              break
+            fi
+            echo "Attempt $i/60: Keycloak not ready yet, sleeping 5s..."
+            sleep 5
+          done
+          
+          if ! curl -fsS http://localhost:9080/realms/Inventario/.well-known/openid-configuration >/dev/null 2>&1; then
+            echo "Keycloak never became ready. Dumping docker compose status and Keycloak logs for debugging:"
+            docker compose ps
+            docker compose logs keycloak --tail=500 || true
+            exit 1
+          fi
+          
+      - name: Start Spring Boot Application in Background
+        working-directory: backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/inventory_db
+          SPRING_DATASOURCE_USERNAME: inventory_user
+          SPRING_DATASOURCE_PASSWORD: inventory_password
+          SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://localhost:9080/realms/Inventario/protocol/openid-connect/certs
+          SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:9080/realms/Inventario
+        run: |
+          chmod +x gradlew
+          ./gradlew bootRun > boot.log 2>&1 &
+          
+      - name: Wait for API to be ready
+        working-directory: backend
+        run: |
+          echo "Esperando a que Spring Boot levante..."
+          for i in {1..60}; do
+            if curl -s http://localhost:8080/v3/api-docs > /dev/null 2>&1; then
+              echo "API is ready"
+              break
+            fi
+            echo "Attempt $i/60: API not ready yet, waiting..."
+            sleep 2
+          done
+          
+          if ! curl -s http://localhost:8080/v3/api-docs > /dev/null 2>&1; then
+            echo "API never became ready. Spring Boot logs:"
+            cat boot.log
+            exit 1
+          fi
+          
+      - name: Fetch Keycloak Token
+        id: fetch-token
+        run: |
+          TOKEN=$(curl -s -X POST http://localhost:9080/realms/Inventario/protocol/openid-connect/token \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=inventory-client" \
+            -d "client_secret=dummy-secret-for-ci" \
+            -d "grant_type=password" \
+            -d "username=admin-user" \
+            -d "password=dummy-password-for-ci" | jq -r '.access_token')
+          
+          if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
+            echo "Failed to retrieve Keycloak token."
+            exit 1
+          fi
+          
+          # Enmascarar el token en los logs por seguridad
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          
+      - name: Run Schemathesis
+        run: |
+          docker run --rm --network host schemathesis/schemathesis \
+            run http://localhost:8080/v3/api-docs \
+            -H "Authorization: Bearer ${{ steps.fetch-token.outputs.token }}"

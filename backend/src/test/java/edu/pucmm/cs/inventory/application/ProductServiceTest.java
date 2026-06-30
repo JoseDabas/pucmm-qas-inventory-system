@@ -95,7 +95,7 @@ public class ProductServiceTest {
         UUID id = UUID.randomUUID();
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(jakarta.persistence.EntityNotFoundException.class,
                 () -> productService.updateProduct(id, request));
     }
 
@@ -133,7 +133,7 @@ public class ProductServiceTest {
         UUID id = UUID.randomUUID();
         when(productRepository.existsById(id)).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(jakarta.persistence.EntityNotFoundException.class,
                 () -> productService.deleteProduct(id));
         verify(productRepository, never()).deleteById(any());
     }

@@ -100,7 +100,7 @@ public class ProductService {
     @Transactional
     public ProductResponseDTO updateProduct(@NonNull UUID id, ProductRequestDTO request) {
         ProductEntity entity = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
                         "El producto no fue encontrado con el ID proporcionado: " + id));
 
         entity.setName(request.getName());
@@ -150,7 +150,7 @@ public class ProductService {
     @Transactional
     public void deleteProduct(@NonNull UUID id) {
         if (!productRepository.existsById(id)) {
-            throw new IllegalArgumentException("Operación denegada. El producto especificado no existe.");
+            throw new jakarta.persistence.EntityNotFoundException("Operación denegada. El producto especificado no existe.");
         }
         // Eliminar primero los movimientos de stock para evitar violaciones de clave foránea
         stockMovementRepository.deleteByProductId(id);
