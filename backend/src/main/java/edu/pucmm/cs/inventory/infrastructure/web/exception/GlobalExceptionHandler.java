@@ -72,6 +72,13 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.CONFLICT, "Violación de integridad de datos en la base de datos.");
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ProblemDetail handleHttpRequestMethodNotSupportedException(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        log.warn("Método HTTP no soportado: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, "El método HTTP utilizado no está soportado para esta ruta.");
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleException(Exception ex) {
