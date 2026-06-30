@@ -26,10 +26,12 @@ public class ProductRequestDTO {
     @jakarta.validation.constraints.Pattern(regexp = "(?s).*[a-zA-Z0-9].*", message = "Debe contener al menos un carácter alfanumérico")
     private String skuCode;
 
-    @Schema(description = "Descripción detallada de las características", example = "Laptop de 15 pulgadas, 16GB RAM", nullable = true)
+    @Schema(description = "Descripción detallada de las características", example = "Laptop de 15 pulgadas, 16GB RAM")
+    @NotNull(message = "La descripción no puede ser nula")
     private String description;
 
-    @Schema(description = "Categoría de clasificación del producto", example = "Electrónica", nullable = true)
+    @Schema(description = "Categoría de clasificación del producto", example = "Electrónica")
+    @NotNull(message = "La categoría no puede ser nula")
     private String category;
 
     @Schema(description = "Precio unitario de venta", example = "1500.00", maximum = "100000000")
