@@ -119,8 +119,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Permite que SonarCloud decore el PR
         # El comando de prueba excluye InventorySystemApplicationTests para evitar que falle el pipeline debido a la falta de configuración de la base de datos en el entorno de CI.
-        run: ./gradlew test jacocoTestReport sonar --tests "*ProductTest" --tests "*CategoryTest" --tests "*ProductServiceTest"
-  --tests "*ProductControllerApiTest" --tests "*ProductApiContractTest" --tests "*IntegrationTest"
+        run: ./gradlew test jacocoTestReport sonar --tests "*ProductTest" --tests "*CategoryTest" --tests "*ProductServiceTest" --tests "*ProductControllerApiTest" --tests "*ProductApiContractTest" --tests "*IntegrationTest"
 
   frontend-build: # Define el trabajo para construir el frontend
     runs-on: ubuntu-latest
