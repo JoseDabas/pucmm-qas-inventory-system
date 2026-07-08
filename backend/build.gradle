@@ -1,12 +1,27 @@
 plugins {
 	id 'java'
 	id 'jacoco'
+	id 'org.sonarqube' version '5.1.0.4882'
 	id 'org.springframework.boot' version '3.5.14'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'edu.pucmm.cs'
 version = '0.0.1-SNAPSHOT'
+
+// Configuración del análisis de calidad en SonarCloud.
+// El token se pasa por la variable de entorno SONAR_TOKEN desde el pipeline (no va en el código).
+sonar {
+	properties {
+		property 'sonar.projectKey', 'pucmm-qas-inventory-system'
+		property 'sonar.organization', 'qa-pucmm'
+		property 'sonar.host.url', 'https://sonarcloud.io'
+		// Reporte de cobertura que ya genera JaCoCo (habilita la métrica Coverage).
+		property 'sonar.coverage.jacoco.xmlReportPaths', "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
+		// Se excluyen de la cobertura las mismas clases excluidas en JaCoCo, para que la métrica sea coherente.
+		property 'sonar.coverage.exclusions', '**/dto/**,**/infrastructure/persistence/entity/**,**/config/**,**/InventorySystemApplication.java'
+	}
+}
 
 java {
 	toolchain {
