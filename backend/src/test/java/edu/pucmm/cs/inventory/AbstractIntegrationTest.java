@@ -21,6 +21,8 @@ public abstract class AbstractIntegrationTest {
             .withUsername("test_user")
             .withPassword("test_password");
 
+    // Configura las propiedades dinámicas de Spring Boot para que apunten al
+    // contenedor PostgreSQL efímero.
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);

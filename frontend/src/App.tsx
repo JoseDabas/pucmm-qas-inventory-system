@@ -1,5 +1,5 @@
 import { AuthProvider, useAuth } from 'react-oidc-context';
-import { oidcConfig } from './auth/oidcConfig';
+import { oidcConfig, clearStaleOidcState } from './auth/oidcConfig';
 import { ProductList } from './components/ProductList';
 import { LogOut, Loader2 } from 'lucide-react';
 
@@ -17,9 +17,28 @@ const MainContent = () => {
   }
 
   // Lógica OIDC:
-  // Si ocurrió un error en la redirección o validación del token, lo mostramos.
+  // Si ocurrió un error en la redirección o validación del token (p. ej.
+  // "No matching state found in storage" cuando el callback se reprocesa con un
+  // `state` ya consumido), limpiamos el state huérfano y la URL, y ofrecemos
+  // reintentar el login en lugar de quedar atascados en un bucle de error.
   if (auth.error) {
-    return <div className="text-red-500 text-center p-8">Error de autenticación: {auth.error.message}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="max-w-md w-full bg-surface border border-border p-8 rounded-2xl shadow-2xl text-center">
+          <h1 className="text-2xl font-bold text-white mb-2">Error de autenticación</h1>
+          <p className="text-red-400 mb-6 break-words">{auth.error.message}</p>
+          <button
+            onClick={() => {
+              clearStaleOidcState();
+              void auth.signinRedirect();
+            }}
+            className="btn-primary w-full py-3 text-lg"
+          >
+            Reintentar inicio de sesión
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Lógica OIDC:
@@ -37,7 +56,7 @@ const MainContent = () => {
                 Usuario: {auth.user?.profile.preferred_username || auth.user?.profile.name || 'Admin'}
               </span>
               <button
-                onClick={() => void auth.removeUser()}
+                onClick={() => void auth.signoutRedirect()}
                 className="btn-secondary flex items-center gap-2 text-sm"
               >
                 <LogOut size={16} /> Cerrar Sesión
