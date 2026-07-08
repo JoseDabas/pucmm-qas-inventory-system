@@ -70,7 +70,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           distribution: "temurin"
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-        
+
       # Instalar Snyk CLI nativo para respetar el working-directory
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
@@ -81,9 +81,9 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --all-subprojects
         continue-on-error: true
-      
+
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
-      # Este paso está comentado hasta que la aplicación esté levantada en el pipeline 
+      # Este paso está comentado hasta que la aplicación esté levantada en el pipeline
       # para poder acceder al endpoint /v3/api-docs
       # - name: Validate OpenAPI Contract
       #   run: |
@@ -118,7 +118,8 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Permite que SonarCloud decore el PR
-        run: ./gradlew test jacocoTestReport sonar
+          # Se excluyen las pruebas de integración y la clase principal de Spring Boot para evitar que se ejecuten durante el análisis de SonarCloud
+          run: ./gradlew test jacocoTestReport sonar --tests * -–tests !*InventorySystemApplicationTests
 
   frontend-build: # Define el trabajo para construir el frontend
     runs-on: ubuntu-latest
