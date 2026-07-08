@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main] # Corre en cada PR a main
+  push:
+    branches: [main] # Analiza main al mergear, para que el dashboard de SonarCloud muestre su Quality Gate
 
 jobs: # Define los trabajos que se ejecutarán en el workflow
   backend-build: # Define el trabajo para construir el backend
