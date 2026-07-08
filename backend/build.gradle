@@ -14,7 +14,7 @@ version = '0.0.1-SNAPSHOT'
 sonar {
 	properties {
 		property 'sonar.projectKey', 'pucmm-qas-inventory-system'
-		property 'sonar.organization', 'jose-dabas'
+		property 'sonar.organization', 'QA PUCMM'
 		property 'sonar.host.url', 'https://sonarcloud.io'
 		// Reporte de cobertura que ya genera JaCoCo (habilita la métrica Coverage).
 		property 'sonar.coverage.jacoco.xmlReportPaths', "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
