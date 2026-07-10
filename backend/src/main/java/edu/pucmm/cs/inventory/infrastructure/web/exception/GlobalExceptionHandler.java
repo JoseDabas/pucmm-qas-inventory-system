@@ -2,6 +2,7 @@ package edu.pucmm.cs.inventory.infrastructure.web.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Set;
 
 /**
  * Manejador global de excepciones para traducir errores internos en respuestas
@@ -75,12 +77,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     public org.springframework.http.ResponseEntity<ProblemDetail> handleHttpRequestMethodNotSupportedException(
             org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        
         log.warn("Método HTTP no soportado: {}", ex.getMessage());
         ProblemDetail pd = createProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, "El método HTTP utilizado no está soportado para esta ruta.");
         
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        if (ex.getSupportedHttpMethods() != null) {
-            headers.setAllow(ex.getSupportedHttpMethods());
+        
+        // FIX: Asignar a una variable local para evitar múltiples llamadas y advertencias de SonarQube
+        Set<HttpMethod> supportedMethods = ex.getSupportedHttpMethods();
+        if (supportedMethods != null) {
+            headers.setAllow(supportedMethods);
         }
         
         return new org.springframework.http.ResponseEntity<>(pd, headers, HttpStatus.METHOD_NOT_ALLOWED);
