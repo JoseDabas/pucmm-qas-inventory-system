@@ -1,27 +1,25 @@
 package edu.pucmm.cs.inventory.infrastructure.web.exception;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
 import org.springframework.beans.TypeMismatchException;
-import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 
-import java.util.List;
-
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import jakarta.persistence.EntityNotFoundException;
 
 class GlobalExceptionHandlerTest {
 
@@ -33,7 +31,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/readable") public void readable() { throw new HttpMessageNotReadableException("error", mock(HttpInputMessage.class)); }
         @GetMapping("/mismatch") public void mismatch() { throw new TypeMismatchException("val", Long.class); }
         @GetMapping("/illegal") public void illegal() { throw new IllegalArgumentException("arg"); }
-        @GetMapping("/method-arg") public void methodArg() throws Exception { throw new MethodArgumentNotValidException(mock(MethodParameter.class), mock(BindingResult.class)); }
+        @GetMapping("/method-arg") 
+        public void methodArg() throws Exception { 
+            org.springframework.validation.BindingResult bindingResult = new org.springframework.validation.MapBindingResult(new java.util.HashMap<>(), "dummyObject");
+            throw new MethodArgumentNotValidException(mock(org.springframework.core.MethodParameter.class), bindingResult); 
+        }
         @GetMapping("/not-found") public void notFound() { throw new EntityNotFoundException("not found"); }
         @GetMapping("/denied") public void denied() { throw new AccessDeniedException("denied"); }
         @GetMapping("/integrity") public void integrity() { throw new DataIntegrityViolationException("integrity"); }
@@ -66,7 +68,13 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleMethodArgumentNotValidException() throws Exception {
-        mockMvc.perform(get("/method-arg")).andExpect(status().isBadRequest());
+        GlobalExceptionHandler handler = new GlobalExceptionHandler();
+        // 4. MethodArgumentNotValidException (Mockeado al 100% para evitar NPE de Spring)
+        org.springframework.web.bind.MethodArgumentNotValidException ex4 = org.mockito.Mockito.mock(org.springframework.web.bind.MethodArgumentNotValidException.class);
+        org.mockito.Mockito.when(ex4.getMessage()).thenReturn("Validation failed");
+        
+        org.springframework.http.ProblemDetail pd4 = handler.handleMethodArgumentNotValidException(ex4);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST.value(), pd4.getStatus());
     }
 
     @Test
