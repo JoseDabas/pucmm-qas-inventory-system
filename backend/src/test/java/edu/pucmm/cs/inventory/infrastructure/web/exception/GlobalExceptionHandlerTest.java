@@ -4,15 +4,12 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,6 +17,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class GlobalExceptionHandlerTest {
 
@@ -67,11 +69,11 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldHandleMethodArgumentNotValidException() throws Exception {
+    void shouldHandleMethodArgumentNotValidException() {
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
         // 4. MethodArgumentNotValidException (Mockeado al 100% para evitar NPE de Spring)
-        org.springframework.web.bind.MethodArgumentNotValidException ex4 = org.mockito.Mockito.mock(org.springframework.web.bind.MethodArgumentNotValidException.class);
-        org.mockito.Mockito.when(ex4.getMessage()).thenReturn("Validation failed");
+        org.springframework.web.bind.MethodArgumentNotValidException ex4 = mock(org.springframework.web.bind.MethodArgumentNotValidException.class);
+        when(ex4.getMessage()).thenReturn("Validation failed");
         
         org.springframework.http.ProblemDetail pd4 = handler.handleMethodArgumentNotValidException(ex4);
         org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST.value(), pd4.getStatus());

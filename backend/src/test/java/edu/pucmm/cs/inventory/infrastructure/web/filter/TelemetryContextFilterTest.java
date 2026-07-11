@@ -1,27 +1,19 @@
 package edu.pucmm.cs.inventory.infrastructure.web.filter;
 
-import java.io.IOException;
-
-import org.junit.jupiter.api.AfterEach;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.slf4j.MDC;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class TelemetryContextFilterTest {
 
@@ -48,7 +40,7 @@ class TelemetryContextFilterTest {
     }
 
     @Test
-    void doFilterInternal_WithNullCorrelationId_GeneratesNewId() throws ServletException, IOException {
+    void doFilterInternal_WithMissingCorrelationId_GeneratesNewId() throws ServletException, IOException {
         when(request.getHeader("X-Correlation-ID")).thenReturn(null);
 
         // We capture MDC in a custom answer when doFilter is called
@@ -92,8 +84,8 @@ class TelemetryContextFilterTest {
     }
 
     @Test
-    void doFilterInternal_WithValidCorrelationId_UsesProvidedId() throws ServletException, IOException {
-        String customId = "mi-id-personalizado";
+    void doFilterInternal_WithExistingCorrelationId_UsesExistingId() throws ServletException, IOException {
+        String customId = "mi-id-123";
         when(request.getHeader("X-Correlation-ID")).thenReturn(customId);
 
         doAnswer(invocation -> {
@@ -108,51 +100,49 @@ class TelemetryContextFilterTest {
         assertNull(MDC.get("correlationId"));
     }
     
-    @org.junit.jupiter.api.Test
+    @Test
     void doFilterInternal_WithAuthenticatedUser_UsesUsername() throws Exception {
         // Arrange
-        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
-        org.springframework.mock.web.MockHttpServletResponse response = new org.springframework.mock.web.MockHttpServletResponse();
+        org.springframework.mock.web.MockHttpServletRequest mockReq = new org.springframework.mock.web.MockHttpServletRequest();
+        org.springframework.mock.web.MockHttpServletResponse mockRes = new org.springframework.mock.web.MockHttpServletResponse();
         
-        org.springframework.security.core.Authentication auth = org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
-        org.mockito.Mockito.when(auth.isAuthenticated()).thenReturn(true);
-        org.mockito.Mockito.when(auth.getPrincipal()).thenReturn("testUser");
-        org.mockito.Mockito.when(auth.getName()).thenReturn("testUser");
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getPrincipal()).thenReturn("testUser");
+        when(auth.getName()).thenReturn("testUser");
         
-        org.springframework.security.core.context.SecurityContext context = org.mockito.Mockito.mock(org.springframework.security.core.context.SecurityContext.class);
-        org.mockito.Mockito.when(context.getAuthentication()).thenReturn(auth);
+        org.springframework.security.core.context.SecurityContext context = mock(org.springframework.security.core.context.SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
         org.springframework.security.core.context.SecurityContextHolder.setContext(context);
         
-        TelemetryContextFilter filter = new TelemetryContextFilter();
+        TelemetryContextFilter telemetryFilter = new TelemetryContextFilter();
         
         // Act: Capturamos el valor dentro del FilterChain, antes del 'finally'
         final String[] capturedUser = new String[1];
-        jakarta.servlet.FilterChain filterChain = (req, res) -> {
+        jakarta.servlet.FilterChain customFilterChain = (req, res) -> {
             // NOTA: Ajustar la llave "user" si la constante MDC_USER del filtro es diferente (ej. "usuario")
             capturedUser[0] = org.slf4j.MDC.get("user"); 
         };
         
-        filter.doFilter(request, response, filterChain);
+        telemetryFilter.doFilter(mockReq, mockRes, customFilterChain);
         
         // Assert
-        org.junit.jupiter.api.Assertions.assertEquals("testUser", capturedUser[0], "El usuario no se inyectó correctamente en el MDC");
+        assertEquals("testUser", capturedUser[0], "El usuario no se inyectó correctamente en el MDC");
         
         // Cleanup
-        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        SecurityContextHolder.clearContext();
     }
     
     @Test
-    void doFilterInternal_WithAnonymousUser_UsesAnonymous() throws ServletException, IOException {
+    void doFilterInternal_WithoutAuthentication_UsesAnonymous() throws ServletException, IOException {
         when(request.getHeader("X-Correlation-ID")).thenReturn("custom-id");
         
-        // Simulating anonymous user behavior in spring security
-        SecurityContextHolder.getContext().setAuthentication(
-            new UsernamePasswordAuthenticationToken("anonymousUser", "password")
-        );
+        // SecurityContext vacío (auth es null)
+        SecurityContextHolder.clearContext();
 
         doAnswer(invocation -> {
             String user = MDC.get("user");
-            assertEquals("anonymous", user, "User should be anonymous when principal is anonymousUser");
+            assertEquals("anonymous", user, "User should be anonymous when authentication is null");
             return null;
         }).when(filterChain).doFilter(request, response);
 
