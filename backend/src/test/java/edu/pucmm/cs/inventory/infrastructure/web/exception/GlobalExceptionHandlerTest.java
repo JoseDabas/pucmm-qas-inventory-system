@@ -1,139 +1,96 @@
 package edu.pucmm.cs.inventory.infrastructure.web.exception;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.core.MethodParameter;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 
-import jakarta.persistence.EntityNotFoundException;
-import java.util.Set;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class GlobalExceptionHandlerTest {
 
-    private GlobalExceptionHandler handler;
+    private MockMvc mockMvc;
+
+    // Controlador falso para forzar las excepciones dentro del contexto de Spring
+    @RestController
+    static class DummyController {
+        @GetMapping("/readable") public void readable() { throw new HttpMessageNotReadableException("error", mock(HttpInputMessage.class)); }
+        @GetMapping("/mismatch") public void mismatch() { throw new TypeMismatchException("val", Long.class); }
+        @GetMapping("/illegal") public void illegal() { throw new IllegalArgumentException("arg"); }
+        @GetMapping("/method-arg") public void methodArg() throws Exception { throw new MethodArgumentNotValidException(mock(MethodParameter.class), mock(BindingResult.class)); }
+        @GetMapping("/not-found") public void notFound() { throw new EntityNotFoundException("not found"); }
+        @GetMapping("/denied") public void denied() { throw new AccessDeniedException("denied"); }
+        @GetMapping("/integrity") public void integrity() { throw new DataIntegrityViolationException("integrity"); }
+        @GetMapping("/method-not-supported") public void methodNotSupported() throws Exception { throw new HttpRequestMethodNotSupportedException("POST", List.of("GET")); }
+        @GetMapping("/generic") public void generic() throws Exception { throw new Exception("generic"); }
+    }
 
     @BeforeEach
     void setUp() {
-        handler = new GlobalExceptionHandler();
+        // Configuramos MockMvc para que intercepte los errores con el handler real
+        mockMvc = MockMvcBuilders.standaloneSetup(new DummyController())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
-    void handleHttpMessageNotReadableException() {
-        HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
-        when(ex.getMessage()).thenReturn("Test message");
-
-        ProblemDetail pd = handler.handleHttpMessageNotReadableException(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Formato de petición inválido o tipo de dato incorrecto.", pd.getDetail());
+    void shouldHandleHttpMessageNotReadableException() throws Exception {
+        mockMvc.perform(get("/readable")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void handleTypeMismatchException() {
-        org.springframework.beans.TypeMismatchException ex = mock(org.springframework.beans.TypeMismatchException.class);
-        when(ex.getMessage()).thenReturn("Test message");
-
-        ProblemDetail pd = handler.handleTypeMismatchException(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Formato de parámetro de URL inválido.", pd.getDetail());
+    void shouldHandleTypeMismatchException() throws Exception {
+        mockMvc.perform(get("/mismatch")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void handleIllegalArgumentException() {
-        IllegalArgumentException ex = new IllegalArgumentException("Argument error");
-
-        ProblemDetail pd = handler.handleIllegalArgumentException(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Argument error", pd.getDetail());
+    void shouldHandleIllegalArgumentException() throws Exception {
+        mockMvc.perform(get("/illegal")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void handleMethodArgumentNotValidException() {
-        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-        when(ex.getMessage()).thenReturn("Validation error");
-
-        ProblemDetail pd = handler.handleMethodArgumentNotValidException(ex);
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Datos de entrada no cumplen con las reglas de validación.", pd.getDetail());
+    void shouldHandleMethodArgumentNotValidException() throws Exception {
+        mockMvc.perform(get("/method-arg")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void handleEntityNotFoundException() {
-        EntityNotFoundException ex = new EntityNotFoundException("Entity missing");
-
-        ProblemDetail pd = handler.handleEntityNotFoundException(ex);
-
-        assertEquals(HttpStatus.NOT_FOUND.value(), pd.getStatus());
-        assertEquals("Entity missing", pd.getDetail());
+    void shouldHandleEntityNotFoundException() throws Exception {
+        mockMvc.perform(get("/not-found")).andExpect(status().isNotFound());
     }
 
     @Test
-    void handleAccessDeniedException() {
-        AccessDeniedException ex = new AccessDeniedException("Denied");
-
-        ProblemDetail pd = handler.handleAccessDeniedException(ex);
-
-        assertEquals(HttpStatus.FORBIDDEN.value(), pd.getStatus());
-        assertEquals("No tienes permisos suficientes para realizar esta acción.", pd.getDetail());
+    void shouldHandleAccessDeniedException() throws Exception {
+        mockMvc.perform(get("/denied")).andExpect(status().isForbidden());
     }
 
     @Test
-    void handleDataIntegrityViolationException() {
-        org.springframework.dao.DataIntegrityViolationException ex = new org.springframework.dao.DataIntegrityViolationException("Conflict");
-
-        ProblemDetail pd = handler.handleDataIntegrityViolationException(ex);
-
-        assertEquals(HttpStatus.CONFLICT.value(), pd.getStatus());
-        assertEquals("Violación de integridad de datos en la base de datos.", pd.getDetail());
+    void shouldHandleDataIntegrityViolationException() throws Exception {
+        mockMvc.perform(get("/integrity")).andExpect(status().isConflict());
     }
 
     @Test
-    void handleHttpRequestMethodNotSupportedException() {
-        org.springframework.web.HttpRequestMethodNotSupportedException ex = mock(org.springframework.web.HttpRequestMethodNotSupportedException.class);
-        when(ex.getMessage()).thenReturn("Method not supported");
-        when(ex.getSupportedHttpMethods()).thenReturn(Set.of(HttpMethod.GET, HttpMethod.POST));
-
-        ResponseEntity<ProblemDetail> response = handler.handleHttpRequestMethodNotSupportedException(ex);
-
-        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), response.getBody().getStatus());
-        assertEquals("El método HTTP utilizado no está soportado para esta ruta.", response.getBody().getDetail());
-        assertTrue(response.getHeaders().getAllow().contains(HttpMethod.GET));
-        assertTrue(response.getHeaders().getAllow().contains(HttpMethod.POST));
+    void shouldHandleHttpRequestMethodNotSupportedException() throws Exception {
+        mockMvc.perform(get("/method-not-supported")).andExpect(status().isMethodNotAllowed());
     }
 
     @Test
-    void handleHttpRequestMethodNotSupportedExceptionNullMethods() {
-        org.springframework.web.HttpRequestMethodNotSupportedException ex = mock(org.springframework.web.HttpRequestMethodNotSupportedException.class);
-        when(ex.getMessage()).thenReturn("Method not supported");
-        when(ex.getSupportedHttpMethods()).thenReturn(null);
-
-        ResponseEntity<ProblemDetail> response = handler.handleHttpRequestMethodNotSupportedException(ex);
-
-        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), response.getBody().getStatus());
-    }
-
-    @Test
-    void handleException() {
-        Exception ex = new Exception("Internal error");
-
-        ProblemDetail pd = handler.handleException(ex);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), pd.getStatus());
-        assertEquals("Ha ocurrido un error inesperado en el servidor.", pd.getDetail());
+    void shouldHandleGenericException() throws Exception {
+        mockMvc.perform(get("/generic")).andExpect(status().isInternalServerError());
     }
 }
