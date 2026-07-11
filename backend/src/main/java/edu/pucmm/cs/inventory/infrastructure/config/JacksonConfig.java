@@ -15,12 +15,12 @@ public class JacksonConfig {
 
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
-        return builder -> builder.postConfigurer(objectMapper -> {
+        return builder -> builder.postConfigurer(objectMapper -> 
             // Prevenir que enteros, flotantes o booleanos sean aceptados en campos String
             objectMapper.coercionConfigFor(LogicalType.Textual)
                 .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
                 .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)
-                .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail);
-        });
+                .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail)
+        );
     }
 }
