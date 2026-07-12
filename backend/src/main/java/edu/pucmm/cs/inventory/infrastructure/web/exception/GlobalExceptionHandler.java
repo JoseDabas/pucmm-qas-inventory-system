@@ -92,6 +92,19 @@ public class GlobalExceptionHandler {
         return new org.springframework.http.ResponseEntity<>(pd, headers, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
+    // Rutas inexistentes (recurso estático no encontrado o handler no mapeado) -> 404.
+    // Sin estos handlers, estas excepciones caerían en el catch-all Exception.class y
+    // devolverían 500 en lugar de 404 (hallazgo detectado por OWASP ZAP).
+    @ExceptionHandler({
+            org.springframework.web.servlet.resource.NoResourceFoundException.class,
+            org.springframework.web.servlet.NoHandlerFoundException.class
+    })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleNotFoundException(Exception ex) {
+        log.warn("Ruta no encontrada: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.NOT_FOUND, "El recurso solicitado no existe.");
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleException(Exception ex) {

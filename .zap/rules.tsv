@@ -14,3 +14,5 @@
 10021	WARN	(X-Content-Type-Options Header Missing)
 # El 10020 es un hallazgo de ruido en cabeceras X-Frame-Options que no aplica a APIs REST.
 10020	WARN	(Anti-clickjacking Header - API no sirve HTML)
+# El 100001 es un falso positivo: Swagger UI sirve text/html legitimamente, no es un endpoint de la API.
+100001	IGNORE	(Unexpected Content-Type - falso positivo de Swagger UI)
