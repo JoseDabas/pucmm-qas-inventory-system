@@ -76,10 +76,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // Permitir TRACE y QUERY explícitamente para que no devuelva 401, sino que llegue a Spring MVC y devuelva 405
+                        // Permitir TRACE y QUERY explícitamente para que no devuelva 401, sino que
+                        // llegue a Spring MVC y devuelva 405
                         .requestMatchers(org.springframework.http.HttpMethod.TRACE, "/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.valueOf("QUERY"), "/**").permitAll()
                         .anyRequest().authenticated())
+
+                // Configuración de cabeceras HTTP de seguridad. Esto incluye políticas como
+                // Content Security Policy (CSP), X-Content-Type-Options, X-Frame-Options, etc.
+                .headers(headers -> headers
+                        .crossOriginResourcePolicy(corp -> corp.policy(
+                                org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN)))
 
                 // Configuración del Servidor de Recursos OAuth2 (Resource Server)
                 // Habilita a Spring Security para interceptar tokens JWT en el encabezado
@@ -101,7 +108,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "traceparent", "X-Correlation-ID"));
+        configuration.setAllowedHeaders(
+                Arrays.asList("Authorization", "Content-Type", "Accept", "traceparent", "X-Correlation-ID"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -112,12 +120,14 @@ public class SecurityConfig {
      * Configuración del Firewall HTTP estricto de Spring Security.
      * Permite explícitamente el método TRACE para que la petición no sea bloqueada
      * prematuramente con un 400 Bad Request, permitiendo que Spring MVC la rechace
-     * apropiadamente con un 405 Method Not Allowed, cumpliendo con el contrato de la API.
+     * apropiadamente con un 405 Method Not Allowed, cumpliendo con el contrato de
+     * la API.
      */
     @Bean
     public org.springframework.security.web.firewall.HttpFirewall allowTraceFirewall() {
         org.springframework.security.web.firewall.StrictHttpFirewall firewall = new org.springframework.security.web.firewall.StrictHttpFirewall();
-        firewall.setAllowedHttpMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE", "QUERY"));
+        firewall.setAllowedHttpMethods(
+                Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE", "QUERY"));
         return firewall;
     }
 
