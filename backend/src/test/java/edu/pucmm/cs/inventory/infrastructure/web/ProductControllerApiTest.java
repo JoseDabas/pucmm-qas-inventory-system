@@ -176,4 +176,29 @@ class ProductControllerApiTest {
                 .andExpect(status().isNoContent());
     }
 
+    // GET alertas de stock critico con report:view -> 200
+    @Test
+    @DisplayName("GET alertas stock critico con report:view devuelve 200")
+    void getAlertasConReportViewDevuelve200() throws Exception {
+        when(productService.getCriticalStockAlerts()).thenReturn(List.of(sampleResponse));
+        mockMvc.perform(get("/api/v1/products/alerts/critical-stock").with(jwtWith("report:view")))
+                .andExpect(status().isOk());
+    }
+
+    // GET alertas de stock critico con permiso incorrecto -> 403
+    @Test
+    @DisplayName("GET alertas stock critico con product:view devuelve 403")
+    void getAlertasConPermisoIncorrectoDevuelve403() throws Exception {
+        mockMvc.perform(get("/api/v1/products/alerts/critical-stock").with(jwtWith("product:view")))
+                .andExpect(status().isForbidden());
+    }
+
+    // GET alertas de stock critico sin token -> 401
+    @Test
+    @DisplayName("GET alertas stock critico sin token devuelve 401")
+    void getAlertasSinTokenDevuelve401() throws Exception {
+        mockMvc.perform(get("/api/v1/products/alerts/critical-stock"))
+                .andExpect(status().isUnauthorized());
+    }
+
 }

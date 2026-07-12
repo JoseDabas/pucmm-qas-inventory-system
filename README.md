@@ -178,6 +178,32 @@ Tras ejecutar los tests, el reporte detallado está en:
 
 backend/build/reports/tests/test/index.html
 
+## Security Testing (DevSecOps)
+
+El proyecto cubre los controles obligatorios de seguridad combinando tests automatizados y escaneos en CI. Detalle completo y comandos en [`docs/security-testing.md`](docs/security-testing.md).
+
+| Control | Cómo se cubre | Dónde |
+|---------|---------------|-------|
+| **Escaneo OWASP ZAP** | DAST autenticado: API scan sobre el spec OpenAPI (`/v3/api-docs`) con JWT real de Keycloak | Job CI `owasp-zap-dast` + `.zap/rules.tsv` |
+| **Validación JWT** | Token ausente/malformado → 401, válido con rol → 200; mapeo de `realm_access.roles` a autoridades | `JwtValidationApiTest` |
+| **Validación de permisos** | Autorización por scope (`@PreAuthorize`): permiso correcto → 200/201/204, incorrecto → 403 | `ProductControllerApiTest` |
+| **Validación de CORS** | Preflight `OPTIONS`: origen permitido devuelve cabeceras CORS; origen no permitido → 403 | `CorsValidationApiTest` |
+| **OWASP Dependency-Check / Snyk** | SCA de dependencias contra la NVD (Dependency-Check) + Snyk | Job CI `backend-security-scan` + plugin en `build.gradle` |
+| **Validación de autenticación** | Sin token → 401; login real contra Keycloak validado en CI; ZAP corre autenticado | Tests + job `owasp-zap-dast` |
+
+### Ejecución rápida
+
+```bash
+cd backend
+# Tests de seguridad (JWT, CORS, permisos, autenticación)
+./gradlew test --tests "*JwtValidationApiTest" --tests "*CorsValidationApiTest" --tests "*ProductControllerApiTest"
+
+# Análisis de dependencias (requiere la variable de entorno NVD_API_KEY)
+./gradlew dependencyCheckAnalyze
+```
+
+> **Secret requerido:** `NVD_API_KEY` (API key gratuita de la NVD) debe configurarse en **GitHub → Settings → Secrets and variables → Actions**. No va en ningún `.env` del repo.
+
 ## Observabilidad
 
 Stack de Prometheus + Grafana para monitoreo de métricas en tiempo real.
@@ -210,8 +236,12 @@ Se ejecuta automáticamente en cada Pull Request hacia `main`. Definido en `.git
 
 Jobs:
 - `backend-build` — compila el backend.
-- `backend-unit-tests` — pruebas unitarias y de API.
+- `backend-unit-tests` — pruebas unitarias y de API (incluye JWT y CORS).
 - `backend-integration-tests` — pruebas de integración (Testcontainers).
+- `backend-security-scan` — SCA de dependencias (Snyk + OWASP Dependency-Check).
+- `backend-sonarqube` — análisis de calidad y cobertura (SonarCloud).
+- `owasp-zap-dast` — escaneo dinámico OWASP ZAP (API scan autenticado).
+- `openapi-contract-validation` — validación de contrato OpenAPI (Schemathesis).
 - `frontend-build` — compila el frontend.
 
 ### Jenkins

@@ -4,6 +4,7 @@ plugins {
 	id 'org.springframework.boot' version '3.5.15'
 	id 'org.sonarqube' version '5.1.0.4882'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.owasp.dependencycheck' version '12.1.0' // OWASP Dependency-Check (SCA)
 }
 
 group = 'edu.pucmm.cs'
@@ -21,6 +22,22 @@ sonar {
 		// Se excluyen de la cobertura las mismas clases excluidas en JaCoCo, para que la métrica sea coherente.
 		property 'sonar.coverage.exclusions', '**/dto/**,**/infrastructure/persistence/entity/**,**/config/**,**/InventorySystemApplication.java'
 	}
+}
+
+// Análisis de Composición de Software (SCA) con OWASP Dependency-Check.
+// Detecta dependencias con vulnerabilidades públicas conocidas (CVEs) contra la NVD.
+// Ejecutar con: ./gradlew dependencyCheckAnalyze  (reporte en build/reports/dependency-check-report.html)
+dependencyCheck {
+	formats = ['HTML', 'JSON']
+	// La API key del NVD evita el rate-limit al descargar la base de vulnerabilidades.
+	// Se pasa por la variable de entorno NVD_API_KEY desde el pipeline.
+	nvd {
+		apiKey = System.getenv('NVD_API_KEY')
+	}
+	// Falla el build si existe una dependencia con severidad High/Critical (CVSS >= 7.0).
+	failBuildOnCVSS = 7.0
+	// Archivo opcional para suprimir falsos positivos.
+	suppressionFile = 'dependency-check-suppressions.xml'
 }
 
 java {

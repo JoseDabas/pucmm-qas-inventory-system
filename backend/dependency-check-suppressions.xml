@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Supresiones de OWASP Dependency-Check.
+
+  Usar este archivo para descartar falsos positivos o CVEs aceptados tras
+  análisis. Cada supresión debe documentar el motivo. Ejemplo:
+
+  <suppress>
+    <notes>Falso positivo: la app no usa el módulo vulnerable.</notes>
+    <cve>CVE-XXXX-XXXXX</cve>
+  </suppress>
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+</suppressions>
