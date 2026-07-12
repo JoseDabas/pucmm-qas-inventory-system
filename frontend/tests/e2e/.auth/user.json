@@ -1,0 +1,35 @@
+{
+  "cookies": [
+    {
+      "name": "AUTH_SESSION_ID",
+      "value": "8f2c39e9-11bb-4af1-a4c0-7326124904c1",
+      "domain": "localhost",
+      "path": "/realms/Inventario/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KC_RESTART",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..fra8-lhNetbaTlXrF8HR_A.tYlehiA3uGnxhnN5MkNFfpcQ8CEfEOfBzfcQkw3Ydop7YfPlVuBQG4iHinwcYuMaQ5CJDU37uUUNBYNFdLGPXEC8gZ5r3GGvPbyJo5v2HQgawjD6x5Z6vUvSjOVIVUS2j_zWUKMwKocsAHgSNufLt4qcmuar1vfTkbTFgSKxMQ2SlAr3eTZ6gqGHnSg5GaIBrUe9TzuZcqQL2nlpmGa8B4NfBwsY8XpddAVcVWC3XDWNZgXsyRfoDb7syLx3z48HfmHff4w0pu7f0VBoU6ZFitl1z-d4p1WoTLJa3LLT7t6RzSXh9gugHtiUlIBLkwcBpqda-nkERYuaiRHji8XRLzKur_FDaOAIdMqAGM_tFhAiyDTcs-SSk_5XoQOaJ8eMVb8M8QweJ2sqjmcMD092sb7gWIhWV1qWTzQMqxFTVF8dKF9aMODDnKFlZX-QHSCu1nuUB8FFeC6zFE_mzl1KL8b2bZcAEoo2XfJIrM2M-KheeXFW9loocS0Q2SB8DCWS2fK1H9kVr0fhXP3MCC3UFwqOZMdNg1h4Jz-n6IahiQzAEjSl1N7jo5cOZsLdV3C7TgG9SsGDue2sgWSduNVes7i0chy3h7z1zFHQ-yajBFT4WnK0a2zJ9sQGep6ONOQrmiO0ahNb4hJAKASEw6MoZ7ame6iW8AAwf0LblLuC3QTLIRYpBq6LlDqtkvSdw7Zc-8gqa2EGN4iMWBvAfIBv9XUz_Fi_u7hR4pXWAI7c--w66QE7dNnJh9uhA5lK_b-c7cppfbeqvvkDM6ZmLRuUcYyBcF_QgTdq4g3xp0M6FyyTNLUbnIbSvBB-sDt4iFXdfNosyYm7QdXpRBZUXGn9R74DXUZlJix3_hh81W_3Pf7qpcOe0brkatuzgHBOhwfvTtxCprhnAz57vmUK2DAwm71IAlfuCLkXVdHWSD_LOl9hg-_tumeDWlJe0qsHBk4v.G4baYexooyr3nXMV9foyMA",
+      "domain": "localhost",
+      "path": "/realms/Inventario/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "oidc.9f4389635c00449a9848a2ef75f393c8",
+          "value": "{\"id\":\"9f4389635c00449a9848a2ef75f393c8\",\"created\":1783814186,\"request_type\":\"si:r\",\"code_verifier\":\"f0821b5172c540b39436e364cfd0d65ca1ad3e2be3e54a1189cafd420256d258ff4767ef45f147c88c5abe07fcd4a72a\",\"authority\":\"http://localhost:9080/realms/Inventario\",\"client_id\":\"inventory-client\",\"redirect_uri\":\"http://localhost:5173\",\"scope\":\"openid profile email\",\"client_secret\":\"ejemplo-client-secret-12345\",\"extraTokenParams\":{}}"
+        }
+      ]
+    }
+  ]
+}
