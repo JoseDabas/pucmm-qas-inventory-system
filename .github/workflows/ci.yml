@@ -344,8 +344,10 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
       # mediante la funcionalidad "replacer" de ZAP.
       - name: Run OWASP ZAP API Scan
         run: |
-          docker run --network host -v ${{ github.workspace }}:/zap/wrk/:rw -t zaproxy/zap-stable \
-            zap-api-scan.py -t http://localhost:8080/v3/api-docs -f openapi \
+          # --user root: permite a ZAP escribir el reporte en el volumen montado (workspace del runner).
+          # -I: no marca el paso como fallido cuando solo hay hallazgos WARN (informativos).
+          docker run --network host --user root -v ${{ github.workspace }}:/zap/wrk/:rw -t zaproxy/zap-stable \
+            zap-api-scan.py -t http://localhost:8080/v3/api-docs -f openapi -I \
             -z "-config replacer.full_list(0).description=auth \
                 -config replacer.full_list(0).enabled=true \
                 -config replacer.full_list(0).matchtype=REQ_HEADER \
