@@ -1,8 +1,18 @@
 package edu.pucmm.cs.inventory.infrastructure.security;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -11,21 +21,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.lang.NonNull;
-
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
  * Configuración de Seguridad Centralizada (DevSecOps).
@@ -78,6 +76,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        // Permitir TRACE y QUERY explícitamente para que no devuelva 401, sino que llegue a Spring MVC y devuelva 405
+                        .requestMatchers(org.springframework.http.HttpMethod.TRACE, "/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.valueOf("QUERY"), "/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Configuración del Servidor de Recursos OAuth2 (Resource Server)
@@ -100,11 +101,24 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "traceparent", "X-Correlation-ID"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    /**
+     * Configuración del Firewall HTTP estricto de Spring Security.
+     * Permite explícitamente el método TRACE para que la petición no sea bloqueada
+     * prematuramente con un 400 Bad Request, permitiendo que Spring MVC la rechace
+     * apropiadamente con un 405 Method Not Allowed, cumpliendo con el contrato de la API.
+     */
+    @Bean
+    public org.springframework.security.web.firewall.HttpFirewall allowTraceFirewall() {
+        org.springframework.security.web.firewall.StrictHttpFirewall firewall = new org.springframework.security.web.firewall.StrictHttpFirewall();
+        firewall.setAllowedHttpMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "TRACE", "QUERY"));
+        return firewall;
     }
 
     /**

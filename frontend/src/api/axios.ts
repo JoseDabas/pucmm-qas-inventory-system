@@ -22,6 +22,23 @@ api.interceptors.request.use((config) => {
       console.error('Error parsing OIDC user from storage', e);
     }
   }
+
+  // -------------------------------------------------------------
+  // Inyección de W3C Trace Context (Propagación End-to-End)
+  // -------------------------------------------------------------
+  // Generamos un traceparent estándar (00-<trace_id>-<span_id>-01)
+  // para que Grafana Tempo pueda correlacionar la traza desde el clic 
+  // en el UI hasta el backend y la base de datos.
+  const generateHex = (bytes: number) => {
+    const array = new Uint8Array(bytes);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+  
+  const traceId = generateHex(16); // 32 caracteres hex
+  const spanId = generateHex(8);   // 16 caracteres hex
+  config.headers.traceparent = `00-${traceId}-${spanId}-01`;
+
   return config;
 }, (error) => {
   return Promise.reject(error);

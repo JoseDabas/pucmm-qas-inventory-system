@@ -83,6 +83,7 @@ public class ProductController {
     @PostMapping
     @PreAuthorize("hasAuthority('product:manage')")
     @Operation(summary = "Crear un Nuevo Producto", description = "Registra un producto e inicializa su cantidad de stock generando una entrada automática en el historial (StockMovement).")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Producto creado con éxito")
     public ResponseEntity<ProductResponseDTO> createProduct(
             @Valid @RequestBody ProductRequestDTO request) {
 
@@ -115,6 +116,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('product:manage')")
     @Operation(summary = "Eliminar Producto Definitivamente", description = "Borra físicamente (Hard Delete) el registro de un producto. Si cuenta con movimientos de stock, fallará por integridad referencial.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Producto eliminado exitosamente")
     public ResponseEntity<Void> deleteProduct(
             @Parameter(description = "Identificador único UUID del producto a destruir", required = true) @PathVariable @NonNull UUID id) {
 

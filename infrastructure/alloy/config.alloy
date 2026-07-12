@@ -1,0 +1,49 @@
+// -------------------------------------------------------------
+// Configuración de Grafana Alloy (Recolector de Telemetría)
+// -------------------------------------------------------------
+
+// Receiver para OTLP:
+// Escucha en los puertos por defecto 4317 (gRPC) y 4318 (HTTP)
+// y recibe trazas, métricas y logs del backend instrumentado.
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  // Enruta las salidas a los procesadores/exporters correspondientes
+  output {
+    metrics = []
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// -------------------------------------------------------------
+// Exporters (Destinos)
+// -------------------------------------------------------------
+
+// Reenvío de logs a Loki
+// Transforma el formato OTLP a formato Loki nativo
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// Reenvío de trazas a Tempo
+// Usa OTLP gRPC para enviar al contenedor de tempo
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}

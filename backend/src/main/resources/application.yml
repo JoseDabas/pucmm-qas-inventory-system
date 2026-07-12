@@ -7,6 +7,20 @@ spring:
     name: inventory-system
 
   # -----------------------------------------------------------------
+  # Configuración de Jackson (Parseador JSON)
+  # -----------------------------------------------------------------
+  jackson:
+    deserialization:
+      # Rechaza peticiones con campos adicionales no definidos en el DTO (cumple additionalProperties: false de OpenAPI)
+      fail-on-unknown-properties: true
+      # Deshabilita truncar números con punto flotante hacia enteros
+      accept-float-as-int: false
+    mapper:
+      # Deshabilita la coerción automática (ej. no permitir booleans donde se espera String, o ints donde se espera String).
+      # Requerido por pruebas estrictas de Schemathesis.
+      allow-coercion-of-scalars: false
+
+  # -----------------------------------------------------------------
   # Configuración de Seguridad (OAuth2 Resource Server con Keycloak)
   # -----------------------------------------------------------------
   security:

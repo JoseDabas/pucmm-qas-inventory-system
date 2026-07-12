@@ -21,6 +21,43 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
+      - loki
+      - tempo
+    restart: unless-stopped
+
+  loki: # Servicio de recolección de logs centralizados
+    image: grafana/loki:latest
+    container_name: inventory_loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  tempo: # Servicio de recolección de trazas distribuidas
+    image: grafana/tempo:latest
+    container_name: inventory_tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+    restart: unless-stopped
+
+  alloy: # Grafana Alloy como recolector y enrutador principal de telemetría (OTel Collector)
+    image: grafana/alloy:latest
+    container_name: inventory_alloy
+    ports:
+      - "4317:4317" # OTLP gRPC para backend (Mapeado al host para que app/backend lo vea)
+      - "4318:4318" # OTLP HTTP
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+      - tempo
     restart: unless-stopped
 
 volumes:
