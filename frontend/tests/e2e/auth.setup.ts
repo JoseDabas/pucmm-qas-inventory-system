@@ -51,7 +51,15 @@ setup('authenticate as admin', async ({ page }) => {
   // Asegura que el redireccionamiento OIDC se completó esperando ver la UI del Inventario
   await expect(page.getByText('Inventario')).toBeVisible({ timeout: 15000 });
 
-  // Consolida y exporta el contexto de seguridad capturado
+  // Espera explícita estática (2 segundos) para garantizar que oidc-client-ts termine 
+  // de persistir el token en el SessionStorage, independientemente del nombre de la llave.
+  await page.waitForTimeout(2000);
+
+  // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
+  const sessionStorageAdmin = await page.evaluate(() => JSON.stringify(window.sessionStorage));
+  fs.writeFileSync('tests/e2e/.auth/admin-session.json', sessionStorageAdmin);
+
+  // Consolida y exporta el contexto de seguridad capturado (Cookies)
   await page.context().storageState({ path: authFileAdmin });
 });
 
@@ -82,6 +90,13 @@ setup('authenticate as user', async ({ page }) => {
 
   // Verificación de redirección exitosa
   await expect(page.getByText('Inventario')).toBeVisible({ timeout: 15000 });
+
+  // Espera explícita estática (2 segundos) para asegurar la persistencia en SessionStorage
+  await page.waitForTimeout(2000);
+
+  // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
+  const sessionStorageUser = await page.evaluate(() => JSON.stringify(window.sessionStorage));
+  fs.writeFileSync('tests/e2e/.auth/user-session.json', sessionStorageUser);
 
   // Exportación del estado para su reutilización
   await page.context().storageState({ path: authFileUser });

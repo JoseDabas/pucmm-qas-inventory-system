@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import type { Product } from '../types/Product';
 import api from '../api/axios';
 import { ProductForm } from './ProductForm';
@@ -8,6 +9,21 @@ export const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const auth = useAuth();
+
+  // Función auxiliar para leer los roles desde el access_token
+  const canManageProducts = () => {
+    if (!auth.user?.access_token) return false;
+    try {
+      const payload = JSON.parse(atob(auth.user.access_token.split('.')[1]));
+      const roles = payload.realm_access?.roles || [];
+      return roles.includes('product:manage');
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const canManage = canManageProducts();
 
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -66,14 +82,16 @@ export const ProductList: React.FC = () => {
           </h1>
           <p className="text-gray-400 mt-1">Gestiona los productos de tu empresa</p>
         </div>
-        <button
-          onClick={handleCreate}
-          data-testid="create-product-button"
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          <span>Nuevo Producto</span>
-        </button>
+        {canManage && (
+          <button
+            onClick={handleCreate}
+            data-testid="create-product-button"
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={20} />
+            <span>Nuevo Producto</span>
+          </button>
+        )}
       </div>
 
       {error && (
@@ -131,24 +149,26 @@ export const ProductList: React.FC = () => {
                     </td>
                     <td className="p-4 text-gray-300">{product.initialQuantity}</td>
                     <td className="p-4">
-                      <div className="flex justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          data-testid="edit-product-button"
-                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          data-testid="delete-product-button"
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      {canManage && (
+                        <div className="flex justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            data-testid="edit-product-button"
+                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            data-testid="delete-product-button"
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))

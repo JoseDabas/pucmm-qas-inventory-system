@@ -1,6 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
-import path from 'path';
 
 // Cargar variables de entorno desde el archivo .env
 // dotenv por defecto busca el archivo .env en el directorio actual (frontend)
@@ -20,22 +19,22 @@ dotenv.config();
 export default defineConfig({
   // Directorio raíz donde se alojan los archivos de pruebas E2E
   testDir: './tests/e2e',
-  
+
   // Ejecuta todas las pruebas en paralelo para reducir el tiempo de integración
   fullyParallel: true,
-  
+
   // Falla la ejecución en CI si accidentalmente se deja un test.only en el código
   forbidOnly: !!process.env.CI,
-  
+
   // Estrategia de reintentos: 2 intentos en CI para evitar "flaky tests", 0 en desarrollo local
   retries: process.env.CI ? 2 : 0,
-  
+
   // Limita a un solo worker en CI para evitar sobrecarga del runner, indefinido localmente
   workers: process.env.CI ? 1 : undefined,
-  
+
   // Genera un reporte HTML detallado al finalizar la ejecución
   reporter: 'html',
-  
+
   use: {
     /*
      * URL base del frontend. Facilita la navegación relativa (ej. page.goto('/'))

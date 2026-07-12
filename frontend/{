@@ -1,0 +1,1 @@
+import { test } from '@playwright/test'; test('check storage', async ({ page }) = await page.goto('http://localhost:5173'); await page.getByRole('button', { name: /Iniciar Sesi¢n con SSO/i }).click(); await page.fill('input[name=\" "username\]', process.env.KEYCLOAK_ADMIN_USERNAME 
