@@ -10,3 +10,10 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Playwright auth
+frontend/tests/e2e/.auth/
+frontend/tests/e2e/.auth/admin-session.json
+frontend/tests/e2e/.auth/admin.json
+frontend/tests/e2e/.auth/user-session.json
+frontend/tests/e2e/.auth/user.json

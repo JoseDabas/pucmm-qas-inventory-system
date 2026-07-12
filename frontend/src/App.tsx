@@ -37,7 +37,7 @@ const MainContent = () => {
                 Usuario: {auth.user?.profile.preferred_username || auth.user?.profile.name || 'Admin'}
               </span>
               <button
-                onClick={() => void auth.removeUser()}
+                onClick={() => void auth.signoutRedirect()}
                 className="btn-secondary flex items-center gap-2 text-sm"
               >
                 <LogOut size={16} /> Cerrar Sesión
