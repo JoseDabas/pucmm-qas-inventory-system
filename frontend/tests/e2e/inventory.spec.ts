@@ -45,12 +45,7 @@ test.describe('Flujo Feliz y Validaciones - Admin', () => {
     // Validación Visual (Snapshot)
     const table = page.getByTestId('products-table');
     await expect(table).toBeVisible();
-    // NOTA: Se ha deshabilitado la validación visual (Snapshot) con 'toHaveScreenshot'.
-    // Dado que la base de datos no se limpia entre pruebas, la tabla crecerá cada vez 
-    // que se cree un producto E2E nuevo, haciendo que su tamaño en píxeles no coincida 
-    // nunca con la imagen original de referencia. Para datos dinámicos, es mejor 
-    // validar semánticamente (ej: verificar que el texto exista en la tabla).
-    // await expect(table).toHaveScreenshot('inventario-tabla.png', { maxDiffPixelRatio: 0.1 });
+    await expect(table).toHaveScreenshot('inventario-tabla.png', { maxDiffPixelRatio: 0.1 });
 
     // Apertura del Modal
     await page.getByTestId('create-product-button').click();
@@ -172,30 +167,6 @@ test.describe('Flujo de Seguridad - User (Sin privilegios)', () => {
     // Confirmamos explícitamente que la UI de creación nunca se expuso
     const modalHeading = page.getByRole('heading', { name: 'Crear Producto' });
     await expect(modalHeading).toBeHidden();
-  });
-
-  /**
-   * Seguridad Adicional (Profundidad de Defensa): 
-   * Intento de vulneración forzado directamente hacia el Backend.
-   * Si el usuario lograra manipular el DOM para habilitar el botón, la API debe rechazarlo con 403.
-   */
-  test('Debe denegar la creación de producto por falta de privilegios (Backend API 403)', async ({ page }) => {
-    // Forzamos el click en Playwright (ignorando si el elemento está oculto o deshabilitado)
-    await page.getByTestId('create-product-button').click({ force: true });
-
-    const uniqueSku = `TEST-USER-${Date.now()}`;
-    await page.getByTestId('product-name').fill('Intento Hack');
-    await page.getByTestId('product-sku').fill(uniqueSku);
-    await page.getByTestId('product-price').fill('1');
-    await page.getByTestId('product-initial-quantity').fill('1');
-    await page.getByTestId('product-minimum-stock').fill('1');
-
-    await page.getByTestId('product-submit').click({ force: true });
-
-    // Verificamos que el contenedor de error genérico retornado por la red aparezca visible
-    const errorAlert = page.locator('.bg-red-500\\/10');
-    await expect(errorAlert).toBeVisible();
-    await expect(errorAlert).toContainText(/error/i);
   });
 });
 

@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "AUTH_SESSION_ID",
-      "value": "6b1a0288-abcc-49cd-9658-20476e60edac",
+      "value": "b4ae6cf3-c7ee-46bf-9a91-5640d5671a60",
       "domain": "localhost",
       "path": "/realms/Inventario/",
       "expires": -1,
@@ -12,7 +12,7 @@
     },
     {
       "name": "KEYCLOAK_IDENTITY",
-      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4NTg2Mjg5OC04MDA5LTQ2ZGItOGE4YS01NzVmMmQzOThjZDYifQ.eyJleHAiOjE3ODM4NTU5NzEsImlhdCI6MTc4MzgxOTk3MSwianRpIjoiOTgxODBlZTItOTY2MS00NTliLTgyOWUtNWQ3MWMxZGQ5NGMzIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDgwL3JlYWxtcy9JbnZlbnRhcmlvIiwic3ViIjoiZWVlOWZhZDMtY2MxMy00M2M2LWFhZDMtZjY2ZTM4ZTgxNGRjIiwidHlwIjoiU2VyaWFsaXplZC1JRCIsInNpZCI6IjZiMWEwMjg4LWFiY2MtNDljZC05NjU4LTIwNDc2ZTYwZWRhYyIsInN0YXRlX2NoZWNrZXIiOiJhRXV0cUhfT0tidVhHTzV6WnpPbDZZRWFYUnNzQkNHRGw0RndKRjNRVkw0In0.1qpYfFWRqbSPu4V6G2I5V7u9YDL51drg5YlT50c15yHJBE_ox0KMfyrEh7wF7nmWxxvYIh8tp9mm0GvBhMTk2g",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4NTg2Mjg5OC04MDA5LTQ2ZGItOGE4YS01NzVmMmQzOThjZDYifQ.eyJleHAiOjE3ODM5MTg2MDgsImlhdCI6MTc4Mzg4MjYwOCwianRpIjoiMTdjM2VhODItMWRlMy00OTAxLWIxNzktN2Q1NmM4ODZlMzhjIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDgwL3JlYWxtcy9JbnZlbnRhcmlvIiwic3ViIjoiZWVlOWZhZDMtY2MxMy00M2M2LWFhZDMtZjY2ZTM4ZTgxNGRjIiwidHlwIjoiU2VyaWFsaXplZC1JRCIsInNpZCI6ImI0YWU2Y2YzLWM3ZWUtNDZiZi05YTkxLTU2NDBkNTY3MWE2MCIsInN0YXRlX2NoZWNrZXIiOiJuU3RmR01kelZTVnd6cEFDVE9QZ3BhdzlNMFBVbW1XbG91UUJjalRtWWFrIn0.9DSFSmoMRQofMK9f6VlIUxSEUic-U6NIiDJTm-ysZ7OS7mbsg5WvKfTV1JtM9_FBILOYrmHcBxIsWGyBA2XECA",
       "domain": "localhost",
       "path": "/realms/Inventario/",
       "expires": -1,
@@ -22,10 +22,10 @@
     },
     {
       "name": "KEYCLOAK_SESSION",
-      "value": "\"Inventario/eee9fad3-cc13-43c6-aad3-f66e38e814dc/6b1a0288-abcc-49cd-9658-20476e60edac\"",
+      "value": "\"Inventario/eee9fad3-cc13-43c6-aad3-f66e38e814dc/b4ae6cf3-c7ee-46bf-9a91-5640d5671a60\"",
       "domain": "localhost",
       "path": "/realms/Inventario/",
-      "expires": 1783855971.399893,
+      "expires": 1783918608.981579,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"

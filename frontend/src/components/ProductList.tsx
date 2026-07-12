@@ -11,14 +11,25 @@ export const ProductList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
 
-  // Función auxiliar para leer los roles desde el access_token
   const canManageProducts = () => {
     if (!auth.user?.access_token) return false;
     try {
-      const payload = JSON.parse(atob(auth.user.access_token.split('.')[1]));
+      let base64Url = auth.user.access_token.split('.')[1];
+      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) {
+        base64 += '=';
+      }
+      const jsonPayload = decodeURIComponent(
+        window.atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const payload = JSON.parse(jsonPayload);
       const roles = payload.realm_access?.roles || [];
       return roles.includes('product:manage');
     } catch (e) {
+      console.error("Error al decodificar el access_token:", e);
       return false;
     }
   };
