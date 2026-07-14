@@ -153,6 +153,7 @@ pipeline {
                         export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
                         export VITE_KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
                         export FRONTEND_URL=http://localhost:5173
+                        export VITE_API_BASE_URL=$API_BASE_URL
                         export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
                         export KEYCLOAK_ADMIN_PASSWORD=ejemplo12345
                         export KEYCLOAK_USER_USERNAME=test-user
@@ -165,7 +166,7 @@ pipeline {
                         # Esperar a que Vite inicie
                         sleep 3
                         
-                        npx playwright test tests/e2e/inventory.spec.ts || (kill $FRONTEND_PID && exit 1)
+                        npx playwright test tests/e2e/inventory.spec.ts --update-snapshots || (kill $FRONTEND_PID && exit 1)
                         
                         kill $FRONTEND_PID
                     '''
