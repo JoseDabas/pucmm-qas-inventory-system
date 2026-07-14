@@ -72,7 +72,8 @@ public class ProductService {
         entity.setPrice(request.getPrice());
         entity.setInitialQuantity(request.getInitialQuantity());
         entity.setMinimumStock(request.getMinimumStock());
-        entity.setIsActive(true); // Se fuerza a activo por defecto en la creación
+        // Activo por defecto si no se especifica; permite crear inactivo si el cliente lo indica
+        entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         // Guardamos el producto en la base de datos
         ProductEntity savedProduct = productRepository.save(entity);
@@ -109,6 +110,10 @@ public class ProductService {
         entity.setCategory(resolveCategory(request.getCategory()));
         entity.setPrice(request.getPrice());
         entity.setMinimumStock(request.getMinimumStock());
+        // Permite alternar el estado activo/inactivo desde la edición
+        if (request.getIsActive() != null) {
+            entity.setIsActive(request.getIsActive());
+        }
 
         ProductEntity updatedProduct = productRepository.save(entity);
         return mapToResponseDTO(updatedProduct);

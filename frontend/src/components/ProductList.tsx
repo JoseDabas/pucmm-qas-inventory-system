@@ -8,7 +8,6 @@ import { Plus, Edit2, Trash2, Package } from 'lucide-react';
 
 export const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
 
@@ -46,14 +45,11 @@ export const ProductList: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
       setError(null);
       const response = await api.get('/api/v1/products');
       setProducts(response.data.content || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al cargar los productos');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -118,31 +114,24 @@ export const ProductList: React.FC = () => {
 
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse" data-testid="products-table">
+          <table className="w-full table-fixed text-left border-collapse" data-testid="products-table">
             <thead>
               <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
                 <th className="p-4 font-semibold">SKU</th>
                 <th className="p-4 font-semibold">Nombre</th>
+                <th className="p-4 font-semibold">Descripción</th>
                 <th className="p-4 font-semibold">Categoría</th>
                 <th className="p-4 font-semibold">Precio</th>
                 <th className="p-4 font-semibold">Stock Inicial</th>
+                <th className="p-4 font-semibold">Stock Mínimo</th>
+                <th className="p-4 font-semibold">Estado</th>
                 <th className="p-4 font-semibold text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {loading ? (
+              {products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400">
-                    <div className="flex justify-center items-center space-x-2">
-                      <div className="w-4 h-4 bg-primary-500 rounded-full animate-pulse" />
-                      <div className="w-4 h-4 bg-primary-500 rounded-full animate-pulse delay-75" />
-                      <div className="w-4 h-4 bg-primary-500 rounded-full animate-pulse delay-150" />
-                    </div>
-                  </td>
-                </tr>
-              ) : products.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400">
+                  <td colSpan={9} className="p-8 text-center text-gray-400">
                     No hay productos registrados.
                   </td>
                 </tr>
@@ -154,6 +143,11 @@ export const ProductList: React.FC = () => {
                   >
                     <td className="p-4 text-gray-600 text-sm">{product.skuCode}</td>
                     <td className="p-4 text-gray-900 font-medium">{product.name}</td>
+                    <td className="p-4 text-gray-600">
+                      <div className="truncate" title={product.description}>
+                        {product.description || 'N/A'}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <span className="bg-accent-500/10 text-accent-500 px-2.5 py-1 rounded-full text-xs font-medium">
                         {product.category || 'N/A'}
@@ -163,6 +157,18 @@ export const ProductList: React.FC = () => {
                       ${product.price.toFixed(2)}
                     </td>
                     <td className="p-4 text-gray-600">{product.initialQuantity}</td>
+                    <td className="p-4 text-gray-600">{product.minimumStock}</td>
+                    <td className="p-4">
+                      <span
+                        className={
+                          product.isActive
+                            ? 'bg-primary-50 text-primary-700 px-2.5 py-1 rounded-full text-xs font-medium'
+                            : 'bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-xs font-medium'
+                        }
+                      >
+                        {product.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
                     <td className="p-4">
                       {canManage && (
                         <div className="flex justify-center space-x-2">

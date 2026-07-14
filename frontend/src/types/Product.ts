@@ -18,4 +18,5 @@ export interface ProductRequestDTO {
   price: number;
   initialQuantity: number;
   minimumStock: number;
+  isActive: boolean;
 }

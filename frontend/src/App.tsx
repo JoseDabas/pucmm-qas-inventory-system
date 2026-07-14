@@ -5,19 +5,15 @@ import { DashboardLayout } from './layouts/DashboardLayout';
 import { HomePage } from './pages/HomePage';
 import { InventoryPage } from './pages/InventoryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
-import { Loader2 } from 'lucide-react';
 
 const MainContent = () => {
   const auth = useAuth();
 
   // Lógica OIDC:
-  // Si el contexto de autenticación indica que está cargando el estado del usuario, mostramos un loader
+  // Mientras se resuelve el estado de la sesión no renderizamos nada.
+  // Evita que la pantalla de login parpadee en cada recarga antes de saber si hay sesión.
   if (auth.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary-600" size={48} />
-      </div>
-    );
+    return null;
   }
 
   // Lógica OIDC:
