@@ -153,10 +153,10 @@ pipeline {
                         export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
                         export VITE_KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
                         export FRONTEND_URL=http://localhost:5173
-                        export VITE_API_BASE_URL=$API_BASE_URL
+                        export VITE_API_BASE_URL=http://host.docker.internal:8080
                         export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
                         export KEYCLOAK_ADMIN_PASSWORD=ejemplo12345
-                        export KEYCLOAK_USER_USERNAME=test-user
+                        export KEYCLOAK_USER_USERNAME=viewer-user
                         export KEYCLOAK_USER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                         
                         # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
