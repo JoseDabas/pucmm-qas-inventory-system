@@ -1,6 +1,8 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk21
+    build: 
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: inventory_jenkins
     user: root  # Para acceder al socket de Docker del host
     ports:

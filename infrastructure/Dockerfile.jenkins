@@ -1,0 +1,35 @@
+FROM jenkins/jenkins:lts-jdk21
+
+USER root
+
+# Instalar dependencias base
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    apt-transport-https
+
+# Instalar Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Instalar k6 (binario estático)
+RUN curl -L -o /tmp/k6.tar.gz "https://github.com/grafana/k6/releases/download/v0.52.0/k6-v0.52.0-linux-amd64.tar.gz" && \
+    tar -xzf /tmp/k6.tar.gz -C /tmp/ && \
+    mv /tmp/k6-v0.52.0-linux-amd64/k6 /usr/bin/k6 && \
+    chmod +x /usr/bin/k6
+
+# Instalar Docker CLI (binario estático)
+RUN curl -fsSL -o /tmp/docker.tgz "https://download.docker.com/linux/static/stable/x86_64/docker-27.0.3.tgz" && \
+    tar -xzf /tmp/docker.tgz -C /tmp/ && \
+    mv /tmp/docker/docker /usr/bin/docker && \
+    chmod +x /usr/bin/docker
+
+# Limpiar caché
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
+
+# Instalar Playwright globalmente y descargar navegadores y sus dependencias OS
+RUN npm install -g playwright && \
+    npx playwright install --with-deps
+
+# El compose file ya corre el contenedor como root para acceder a /var/run/docker.sock
+# por lo tanto no cambiamos de USER jenkins
