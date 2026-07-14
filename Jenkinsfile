@@ -143,14 +143,31 @@ pipeline {
                     sh 'npm install'
                     sh 'npx playwright install --with-deps'
                     
-                    // Ejecutamos apuntando al entorno simulado (host.docker.internal)
+                    // Ejecutamos apuntando al entorno de desarrollo local dentro de Jenkins
                     sh '''
                         if [ ! -f ../infrastructure/.env ]; then
                             cp ../infrastructure/.env.example ../infrastructure/.env
                         fi
                         export $(grep -v "^#" ../infrastructure/.env | tr -d '\\r' | xargs)
-                        export FRONTEND_URL=http://host.docker.internal:5173
-                        npx playwright test tests/e2e/inventory.spec.ts
+                        export VITE_KEYCLOAK_URL=http://host.docker.internal:9080/realms/Inventario
+                        export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
+                        export VITE_KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
+                        export FRONTEND_URL=http://localhost:5173
+                        export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
+                        export KEYCLOAK_ADMIN_PASSWORD=ejemplo12345
+                        export KEYCLOAK_USER_USERNAME=test-user
+                        export KEYCLOAK_USER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
+                        
+                        # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
+                        npm run dev -- --port 5173 &
+                        FRONTEND_PID=$!
+                        
+                        # Esperar a que Vite inicie
+                        sleep 3
+                        
+                        npx playwright test tests/e2e/inventory.spec.ts || (kill $FRONTEND_PID && exit 1)
+                        
+                        kill $FRONTEND_PID
                     '''
                 }
             }
