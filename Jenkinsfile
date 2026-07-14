@@ -124,6 +124,9 @@ pipeline {
                 echo 'Ejecutando pruebas de rendimiento (Load Test) contra la API en Staging'
                 // Extraemos secretos dinamicamente del archivo .env para que k6 los tome 
                 sh '''
+                    if [ ! -f infrastructure/.env ]; then
+                        cp infrastructure/.env.example infrastructure/.env
+                    fi
                     export $(grep -v "^#" infrastructure/.env | xargs)
                     export KEYCLOAK_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                     k6 run performance/api-performance.js
@@ -142,6 +145,9 @@ pipeline {
                     
                     // Ejecutamos apuntando al entorno simulado (host.docker.internal)
                     sh '''
+                        if [ ! -f ../infrastructure/.env ]; then
+                            cp ../infrastructure/.env.example ../infrastructure/.env
+                        fi
                         export $(grep -v "^#" ../infrastructure/.env | xargs)
                         export FRONTEND_URL=http://host.docker.internal:5173
                         npx playwright test tests/e2e/inventory.spec.ts
