@@ -65,13 +65,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-border">
-          <h2 className="text-xl font-bold text-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800">
             {product ? 'Editar Producto' : 'Crear Producto'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-800 transition-colors">
             <X size={24} />
           </button>
         </div>

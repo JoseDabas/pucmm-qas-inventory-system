@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context';
 import type { Product } from '../types/Product';
 import api from '../api/axios';
 import { ProductForm } from './ProductForm';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Plus, Edit2, Trash2, Package } from 'lucide-react';
 
 export const ProductList: React.FC = () => {
@@ -40,6 +41,9 @@ export const ProductList: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Producto pendiente de confirmación de borrado (null = diálogo cerrado)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -67,14 +71,15 @@ export const ProductList: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
-      try {
-        await api.delete(`/api/v1/products/${id}`);
-        fetchProducts();
-      } catch (err: any) {
-        alert(err.response?.data?.message || 'Error al eliminar el producto');
-      }
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    try {
+      await api.delete(`/api/v1/products/${productToDelete.id}`);
+      setProductToDelete(null);
+      fetchProducts();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al eliminar el producto');
+      setProductToDelete(null);
     }
   };
 
@@ -87,11 +92,11 @@ export const ProductList: React.FC = () => {
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Package className="text-primary-500" size={32} />
+          <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3">
+            <Package className="text-primary-600" size={28} />
             Inventario
           </h1>
-          <p className="text-gray-400 mt-1">Gestiona los productos de tu empresa</p>
+          <p className="text-gray-500 mt-1">Gestiona los productos de tu empresa</p>
         </div>
         {canManage && (
           <button
@@ -111,11 +116,11 @@ export const ProductList: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse" data-testid="products-table">
             <thead>
-              <tr className="bg-surface-hover border-b border-border text-gray-300 text-sm uppercase tracking-wider">
+              <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
                 <th className="p-4 font-semibold">SKU</th>
                 <th className="p-4 font-semibold">Nombre</th>
                 <th className="p-4 font-semibold">Categoría</th>
@@ -146,34 +151,33 @@ export const ProductList: React.FC = () => {
                   <tr
                     key={product.id}
                     data-testid="product-row"
-                    className="hover:bg-surface-hover/50 transition-colors group"
                   >
-                    <td className="p-4 text-gray-300 font-mono text-sm">{product.skuCode}</td>
-                    <td className="p-4 text-white font-medium">{product.name}</td>
+                    <td className="p-4 text-gray-600 text-sm">{product.skuCode}</td>
+                    <td className="p-4 text-gray-900 font-medium">{product.name}</td>
                     <td className="p-4">
-                      <span className="bg-accent-500/20 text-accent-500 px-2.5 py-1 rounded-full text-xs font-medium">
+                      <span className="bg-accent-500/10 text-accent-500 px-2.5 py-1 rounded-full text-xs font-medium">
                         {product.category || 'N/A'}
                       </span>
                     </td>
-                    <td className="p-4 text-primary-400 font-medium">
+                    <td className="p-4 text-gray-900 font-semibold">
                       ${product.price.toFixed(2)}
                     </td>
-                    <td className="p-4 text-gray-300">{product.initialQuantity}</td>
+                    <td className="p-4 text-gray-600">{product.initialQuantity}</td>
                     <td className="p-4">
                       {canManage && (
-                        <div className="flex justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-center space-x-2">
                           <button
                             onClick={() => handleEdit(product)}
                             data-testid="edit-product-button"
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-surface-hover rounded-lg transition-colors"
                             title="Editar"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => setProductToDelete(product)}
                             data-testid="delete-product-button"
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Eliminar"
                           >
                             <Trash2 size={18} />
@@ -194,6 +198,16 @@ export const ProductList: React.FC = () => {
           product={selectedProduct}
           onClose={() => setIsFormOpen(false)}
           onSave={handleFormSave}
+        />
+      )}
+
+      {productToDelete && (
+        <ConfirmDialog
+          title="Eliminar producto"
+          message={`¿Estás seguro de eliminar "${productToDelete.name}"? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          onConfirm={confirmDelete}
+          onCancel={() => setProductToDelete(null)}
         />
       )}
     </div>
