@@ -127,7 +127,7 @@ pipeline {
                     if [ ! -f infrastructure/.env ]; then
                         cp infrastructure/.env.example infrastructure/.env
                     fi
-                    export $(grep -v "^#" infrastructure/.env | xargs)
+                    export $(grep -v "^#" infrastructure/.env | tr -d '\\r' | xargs)
                     export KEYCLOAK_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                     k6 run performance/api-performance.js
                 '''
@@ -148,7 +148,7 @@ pipeline {
                         if [ ! -f ../infrastructure/.env ]; then
                             cp ../infrastructure/.env.example ../infrastructure/.env
                         fi
-                        export $(grep -v "^#" ../infrastructure/.env | xargs)
+                        export $(grep -v "^#" ../infrastructure/.env | tr -d '\\r' | xargs)
                         export FRONTEND_URL=http://host.docker.internal:5173
                         npx playwright test tests/e2e/inventory.spec.ts
                     '''
