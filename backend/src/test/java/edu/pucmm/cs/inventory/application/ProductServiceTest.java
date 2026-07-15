@@ -15,7 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -136,6 +142,35 @@ public class ProductServiceTest {
         assertThrows(jakarta.persistence.EntityNotFoundException.class,
                 () -> productService.deleteProduct(id));
         verify(productRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("getProducts sin busqueda consulta findAll paginado")
+    void getProductsSinBusquedaUsaFindAll() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+
+        Page<ProductResponseDTO> result = productService.getProducts(null, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        verify(productRepository, times(1)).findAll(pageable);
+        verify(productRepository, never())
+                .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("getProducts con termino usa busqueda por nombre o SKU")
+    void getProductsConBusquedaUsaFiltro() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(productRepository.findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable))
+                .thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+
+        Page<ProductResponseDTO> result = productService.getProducts("  lap  ", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        verify(productRepository, times(1))
+                .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable);
+        verify(productRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test

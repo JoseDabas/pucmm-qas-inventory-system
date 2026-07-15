@@ -4,17 +4,44 @@ import type { Product } from '../types/Product';
 import api from '../api/axios';
 import { ProductForm } from './ProductForm';
 import { ConfirmDialog } from './ConfirmDialog';
-import { Plus, Edit2, Trash2, Package } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Search, ArrowUp, ArrowDown} from 'lucide-react';
 
 export const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
 
+  // Búsqueda y paginación (page en base 0, igual que Spring Data)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const PAGE_SIZE = 10;
+
+  // Ordenamiento server-side (usa el parámetro sort de Spring Data: "campo,dir")
+  const [sortBy, setSortBy] = useState<'name' | 'price' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  // Alterna la dirección si ya se ordena por ese campo; si no, ordena asc por él.
+  const handleSort = (field: 'name' | 'price') => {
+    if (sortBy === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
+    }
+    setPage(0);
+  };
+
+  // Muestra la flecha activa (asc/desc) o un icono neutro si la columna no ordena.
+  const renderSortIcon = (field: 'name' | 'price') => {
+    if (sortBy !== field) return <ArrowUp size={14} />;
+    return sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
+  };
+
   const canManageProducts = () => {
     if (!auth.user?.access_token) return false;
     try {
-      let base64Url = auth.user.access_token.split('.')[1];
+      const base64Url = auth.user.access_token.split('.')[1];
       let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       while (base64.length % 4) {
         base64 += '=';
@@ -46,16 +73,27 @@ export const ProductList: React.FC = () => {
   const fetchProducts = async () => {
     try {
       setError(null);
-      const response = await api.get('/api/v1/products');
+      const response = await api.get('/api/v1/products', {
+        params: {
+          page,
+          size: PAGE_SIZE,
+          search: searchTerm || undefined,
+          sort: sortBy ? `${sortBy},${sortDir}` : undefined,
+        },
+      });
       setProducts(response.data.content || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar los productos');
+      setTotalPages(response.data.totalPages ?? 0);
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al cargar los productos');
     }
   };
 
+  // Recarga al cambiar de página o el término de búsqueda. El debounce evita
+  // pegarle al API en cada tecla mientras se escribe la búsqueda.
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(fetchProducts, 300);
+    return () => clearTimeout(timer);
+  }, [fetchProducts, searchTerm, sortBy, sortDir]);
 
   const handleCreate = () => {
     setSelectedProduct(null);
@@ -73,8 +111,8 @@ export const ProductList: React.FC = () => {
       await api.delete(`/api/v1/products/${productToDelete.id}`);
       setProductToDelete(null);
       fetchProducts();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Error al eliminar el producto');
+    } catch (err: unknown) {
+      alert((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al eliminar el producto');
       setProductToDelete(null);
     }
   };
@@ -112,16 +150,46 @@ export const ProductList: React.FC = () => {
         </div>
       )}
 
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
+          placeholder="Buscar por SKU o nombre..."
+          data-testid="product-search-input"
+          className="w-full max-w-sm pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed text-left border-collapse" data-testid="products-table">
             <thead>
               <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
                 <th className="p-4 font-semibold">SKU</th>
-                <th className="p-4 font-semibold">Nombre</th>
+                <th className="p-4 font-semibold">
+                  <button
+                    onClick={() => handleSort('name')}
+                    data-testid="sort-name"
+                    className="flex items-center gap-1 uppercase tracking-wider hover:text-gray-700 transition-colors"
+                  >
+                    Nombre
+                    {renderSortIcon('name')}
+                  </button>
+                </th>
                 <th className="p-4 font-semibold">Descripción</th>
                 <th className="p-4 font-semibold">Categoría</th>
-                <th className="p-4 font-semibold">Precio</th>
+                <th className="p-4 font-semibold">
+                  <button
+                    onClick={() => handleSort('price')}
+                    data-testid="sort-price"
+                    className="flex items-center gap-1 uppercase tracking-wider hover:text-gray-700 transition-colors"
+                  >
+                    Precio
+                    {renderSortIcon('price')}
+                  </button>
+                </th>
                 <th className="p-4 font-semibold">Stock Inicial</th>
                 <th className="p-4 font-semibold">Stock Mínimo</th>
                 <th className="p-4 font-semibold">Estado</th>
@@ -132,7 +200,7 @@ export const ProductList: React.FC = () => {
               {products.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-8 text-center text-gray-400">
-                    No hay productos registrados.
+                    {searchTerm ? 'No se encontraron productos.' : 'No hay productos registrados.'}
                   </td>
                 </tr>
               ) : (
@@ -198,6 +266,31 @@ export const ProductList: React.FC = () => {
           </table>
         </div>
       </div>
+
+      
+      {totalPages >= 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-sm text-gray-500">Página {page + 1} de {totalPages}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              data-testid="prev-page-button"
+              className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              data-testid="next-page-button"
+              className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
 
       {isFormOpen && (
         <ProductForm

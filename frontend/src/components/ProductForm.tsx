@@ -75,13 +75,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
         await api.post('/api/v1/products', payload);
       }
       onSave();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 409 = conflicto de unicidad en BD: el SKU ya existe
-      if (err.response?.status === 409) {
+      if ((err as { response?: { status?: number } }).response?.status === 409) {
         setError(`El SKU "${formData.skuCode}" ya está registrado. Usa uno diferente.`);
       } else {
         // ProblemDetail (RFC 7807) trae el texto en 'detail'; dejamos 'message' como respaldo
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Error al guardar el producto');
+        setError((err as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.detail || (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al guardar el producto');
       }
     } finally {
       setLoading(false);
