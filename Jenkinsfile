@@ -152,15 +152,14 @@ pipeline {
                             cp ../infrastructure/.env.example ../infrastructure/.env
                         fi
                         export $(grep -v "^#" ../infrastructure/.env | tr -d '\\r' | xargs)
-                        export VITE_KEYCLOAK_URL=http://host.docker.internal:9080/realms/Inventario
+                        export VITE_KEYCLOAK_URL=${KEYCLOAK_URL%/protocol/openid-connect/token}
                         export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
                         export VITE_KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
                         export FRONTEND_URL=http://localhost:5173
-                        export VITE_API_BASE_URL=http://host.docker.internal:8080
+                        export VITE_API_BASE_URL=${API_BASE_URL%/api/v1}
+                        
                         export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
-                        export KEYCLOAK_ADMIN_PASSWORD=ejemplo12345
-                        export KEYCLOAK_USER_USERNAME=viewer-user
-                        export KEYCLOAK_USER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
+                        export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                         
                         # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
                         npm run dev -- --port 5173 &

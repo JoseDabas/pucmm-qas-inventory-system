@@ -4,7 +4,6 @@ import * as path from 'path';
 
 // Rutas locales donde se guardarán las cookies y el almacenamiento local capturado
 const authFileAdmin = 'tests/e2e/.auth/admin.json';
-const authFileUser = 'tests/e2e/.auth/user.json';
 
 /**
  * Hook global que se ejecuta antes de todas las pruebas de setup.
@@ -63,41 +62,3 @@ setup('authenticate as admin', async ({ page }) => {
   await page.context().storageState({ path: authFileAdmin });
 });
 
-/**
- * Script de configuración de estado: Autenticación como Usuario Regular.
- * 
- * Realiza el mismo flujo de Single Sign-On (SSO) en Keycloak, pero utilizando
- * credenciales de un usuario sin privilegios administrativos.
- * El estado capturado se guarda en un archivo separado para simular un
- * flujo de seguridad estricto donde las acciones privilegiadas serán denegadas.
- */
-setup('authenticate as user', async ({ page }) => {
-  await page.goto('/');
-
-  // Inicia el flujo OIDC
-  await page.getByRole('button', { name: /Iniciar Sesión con SSO/i }).click();
-
-  // Resolución de credenciales de bajo privilegio
-  const normalUser = process.env.KEYCLOAK_USER_USERNAME || 'user_placeholder';
-  const normalPass = process.env.KEYCLOAK_USER_PASSWORD || 'user_placeholder';
-
-  // Inserción de credenciales
-  await page.fill('input[name="username"]', normalUser);
-  await page.fill('input[name="password"]', normalPass);
-
-  // Ejecución del login
-  await page.click('input[name="login"], button[name="login"]');
-
-  // Verificación de redirección exitosa
-  await expect(page.getByText('Inventario')).toBeVisible({ timeout: 15000 });
-
-  // Espera explícita estática (2 segundos) para asegurar la persistencia en SessionStorage
-  await page.waitForTimeout(2000);
-
-  // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
-  const sessionStorageUser = await page.evaluate(() => JSON.stringify(window.sessionStorage));
-  fs.writeFileSync('tests/e2e/.auth/user-session.json', sessionStorageUser);
-
-  // Exportación del estado para su reutilización
-  await page.context().storageState({ path: authFileUser });
-});
