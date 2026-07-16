@@ -145,6 +145,9 @@ pipeline {
                     
                     // Ejecutamos apuntando al entorno de desarrollo local dentro de Jenkins
                     sh '''
+                        # Limpiar BD de los datos sucios generados por las pruebas de rendimiento (k6)
+                        docker exec inventory_postgres psql -U inventory_user -d inventory_db -c "TRUNCATE TABLE products CASCADE;"
+                        
                         if [ ! -f ../infrastructure/.env ]; then
                             cp ../infrastructure/.env.example ../infrastructure/.env
                         fi

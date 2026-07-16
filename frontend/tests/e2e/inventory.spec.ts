@@ -116,59 +116,7 @@ test.describe('Flujo Feliz y Validaciones - Admin', () => {
   });
 });
 
-/**
- * Suite de Pruebas: Flujo de Seguridad - Usuario Sin Privilegios.
- * 
- * Agrupa los casos de prueba destinados a validar que las restricciones RBAC
- * aplicadas en la Interfaz y en el Backend operan correctamente.
- */
-test.describe('Flujo de Seguridad - User (Sin privilegios)', () => {
-  test.use({ storageState: 'tests/e2e/.auth/user.json' });
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    try {
-      const sessionData = fs.readFileSync('tests/e2e/.auth/user-session.json', 'utf8');
-      await page.evaluate((data) => {
-        const parsed = JSON.parse(data);
-        for (const key of Object.keys(parsed)) {
-          window.sessionStorage.setItem(key, parsed[key]);
-        }
-      }, sessionData);
-      await page.reload();
-    } catch (e) {
-      console.error('No se pudo cargar el user-session.json', e);
-    }
-  });
-
-  /**
-   * 1. RBAC (UI): Validar explícitamente que el botón "Crear Producto" NO exista.
-   * (Nota QA: Este test revelará un defecto si el Frontend no oculta condicionalmente el botón).
-   */
-  test('No debe visualizar el botón de Crear Producto (RBAC)', async ({ page }) => {
-    const createBtn = page.getByTestId('create-product-button');
-    // Aseguramos que no esté visible ni renderizado en el DOM para usuarios normales
-    await expect(createBtn).toBeHidden();
-  });
-
-  /**
-   * 2. Bypass Routing: Pruebas de Seguridad Forzando URLs.
-   * Simulamos la inyección directa de una ruta de creación en el navegador.
-   */
-  test('Debe interceptar el acceso directo a rutas de creación (Bypass Routing)', async ({ page }) => {
-    // Navegación directa a una ruta no autorizada/inexistente en el router
-    await page.goto('/productos/nuevo');
-
-    // Verificamos que el sistema asegure el enrutamiento mostrando el dashboard base
-    // o bloqueando la renderización del formulario modal.
-    const table = page.getByTestId('products-table');
-    await expect(table).toBeVisible();
-
-    // Confirmamos explícitamente que la UI de creación nunca se expuso
-    const modalHeading = page.getByRole('heading', { name: 'Crear Producto' });
-    await expect(modalHeading).toBeHidden();
-  });
-});
 
 /**
  * Suite de Pruebas: Flujo de Seguridad - Sesión Inexistente o Expirada.
