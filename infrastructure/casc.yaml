@@ -1,0 +1,42 @@
+jenkins:
+  systemMessage: "Jenkins configurado via JCasC - Inventory System QA"
+  numExecutors: 2
+  mode: NORMAL
+  scmCheckoutRetryCount: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+security:
+  queueItemAuthenticator:
+    authenticators:
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
+
+jobs:
+  - script: >
+      pipelineJob('inventory-pipeline') {
+          description('Pipeline for the Inventory System')
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                          remote {
+                              url('https://github.com/Nier561/pucmm-qas-inventory-system.git')
+                          }
+                          branches('*/feature/jenkins-performance-qa')
+                          extensions {
+                              cleanBeforeCheckout()
+                          }
+                      }
+                  }
+                  scriptPath('Jenkinsfile')
+              }
+          }
+      }

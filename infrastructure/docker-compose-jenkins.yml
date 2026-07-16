@@ -12,6 +12,8 @@ services:
       - jenkins_home:/var/jenkins_home
       # Monta el socket de Docker del host para que Jenkins pueda lanzar contenedores
       - /var/run/docker.sock:/var/run/docker.sock
+      # Monta la configuración de JCasC
+      - ./casc.yaml:/var/jenkins_home/casc.yaml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway" # Para que Jenkins pueda acceder a servicios en el host
     restart: unless-stopped

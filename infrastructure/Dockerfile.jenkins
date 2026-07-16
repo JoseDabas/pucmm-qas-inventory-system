@@ -33,3 +33,12 @@ RUN npm install -g playwright && \
 
 # El compose file ya corre el contenedor como root para acceder a /var/run/docker.sock
 # por lo tanto no cambiamos de USER jenkins
+
+# Deshabilitar el asistente de configuración (Setup Wizard)
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+
+# Instalar plugins de Jenkins requeridos para JCasC y el pipeline
+RUN jenkins-plugin-cli --plugins "configuration-as-code job-dsl workflow-aggregator git docker-workflow authorize-project"
+
+# Definir la ruta del archivo de configuración JCasC
+ENV CASC_JENKINS_CONFIG="/var/jenkins_home/casc.yaml"
