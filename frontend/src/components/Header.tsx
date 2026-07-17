@@ -1,6 +1,5 @@
 import { useLocation } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
-import { LogOut } from 'lucide-react';
 import { navItems } from '../config/navigation';
 
 /**
@@ -21,12 +20,12 @@ export const Header: React.FC = () => {
       <h1 className="text-lg font-semibold text-gray-800">{title}</h1>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-500 hidden md:inline">{username}</span>
+        <span className="text-sm text-black hidden md:inline">{username}</span>
         <button
-          onClick={() => void auth.signoutRedirect()}
+          onClick={() => void auth.removeUser()}
           className="btn-secondary flex items-center gap-2 text-sm"
         >
-          <LogOut size={16} /> Cerrar Sesión
+          Cerrar Sesión
         </button>
       </div>
     </header>

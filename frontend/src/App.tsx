@@ -5,6 +5,7 @@ import { DashboardLayout } from './layouts/DashboardLayout';
 import { HomePage } from './pages/HomePage';
 import { InventoryPage } from './pages/InventoryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+import { LoginPage } from './pages/LoginPage';
 
 const MainContent = () => {
   const auth = useAuth();
@@ -12,13 +13,17 @@ const MainContent = () => {
   // Lógica OIDC:
   // Mientras se resuelve el estado de la sesión no renderizamos nada.
   // Evita que la pantalla de login parpadee en cada recarga antes de saber si hay sesión.
-  if (auth.isLoading) {
+  // Excepción: si el "loading" proviene del envío del formulario (grant password), NO blanqueamos
+  // la pantalla; así el LoginPage sigue montado y puede mostrar su spinner y su error en línea.
+  if (auth.isLoading && auth.activeNavigator !== 'signinResourceOwnerCredentials') {
     return null;
   }
 
   // Lógica OIDC:
-  // Si ocurrió un error en la redirección o validación del token, lo mostramos.
-  if (auth.error) {
+  // Si ocurrió un error en la redirección o validación del token, lo mostramos a pantalla completa.
+  // Excepción: los errores de credenciales del formulario (grant password) NO se muestran aquí;
+  // el propio LoginPage los presenta en línea, debajo de los campos, sin perder el formulario.
+  if (auth.error && auth.error.source !== 'signinResourceOwnerCredentials') {
     return <div className="text-red-600 text-center p-8">Error de autenticación: {auth.error.message}</div>;
   }
 
@@ -45,20 +50,16 @@ const MainContent = () => {
   }
 
   // Lógica OIDC:
-  // Si no está autenticado, mostramos un botón para iniciar sesión en Keycloak.
+  // Si no está autenticado, mostramos el formulario de login. Las credenciales se validan
+  // directamente contra Keycloak mediante el grant "password" (Direct Access Grants), sin
+  // redirigir a la pantalla de Keycloak. En caso de éxito, react-oidc-context guarda el JWT
+  // en sessionStorage y actualiza isAuthenticated, montando el dashboard automáticamente.
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="max-w-md w-full bg-surface border border-border p-8 rounded-2xl shadow-sm text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Bienvenido</h1>
-        <p className="text-gray-500 mb-8">Por favor, inicia sesión para acceder al sistema de inventario empresarial.</p>
-        <button
-          onClick={() => void auth.signinRedirect()}
-          className="btn-primary w-full py-3 text-lg flex justify-center items-center gap-2"
-        >
-          Iniciar Sesión con SSO
-        </button>
-      </div>
-    </div>
+    <LoginPage
+      onLogin={(username, password) =>
+        auth.signinResourceOwnerCredentials({ username, password })
+      }
+    />
   );
 };
 
