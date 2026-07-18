@@ -1,4 +1,4 @@
-import { Home, Package, Tags, BarChart3, Settings } from 'lucide-react';
+import { Home, Package, History, Tags, BarChart3, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
@@ -15,6 +15,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { to: '/', label: 'Inicio', icon: Home },
   { to: '/inventario', label: 'Inventario', icon: Package },
+  { to: '/historial', label: 'Historial', icon: History },
   { to: '/categorias', label: 'Categorías', icon: Tags },
   { to: '/reportes', label: 'Reportes', icon: BarChart3 },
   { to: '/configuracion', label: 'Configuración', icon: Settings },

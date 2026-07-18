@@ -191,6 +191,9 @@ public class ProductService {
         movement.setProductId(productId);
         movement.setMovementType(type.name());
         movement.setQuantity(quantity);
+        // Movimiento inicial del producto: el stock pasa de 0 a la cantidad registrada.
+        movement.setPreviousQuantity(0);
+        movement.setNewQuantity(quantity);
         movement.setDate(LocalDateTime.now());
         // Proveemos un nombre por defecto en caso de operaciones fuera de un contexto
         // seguro (ej. tareas asíncronas internas)

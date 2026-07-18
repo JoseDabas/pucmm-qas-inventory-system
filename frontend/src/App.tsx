@@ -4,6 +4,7 @@ import { oidcConfig } from './auth/oidcConfig';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { HomePage } from './pages/HomePage';
 import { InventoryPage } from './pages/InventoryPage';
+import { MovementHistoryPage } from './pages/MovementHistoryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { LoginPage } from './pages/LoginPage';
 
@@ -38,6 +39,7 @@ const MainContent = () => {
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/inventario" element={<InventoryPage />} />
+            <Route path="/historial" element={<MovementHistoryPage />} />
             <Route path="/categorias" element={<PlaceholderPage title="Categorías" />} />
             <Route path="/reportes" element={<PlaceholderPage title="Reportes" />} />
             <Route path="/configuracion" element={<PlaceholderPage title="Configuración" />} />
