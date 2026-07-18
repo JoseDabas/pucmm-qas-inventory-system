@@ -61,6 +61,7 @@ class ProductControllerApiTest {
         validRequest.setPrice(new BigDecimal("100.00"));
         validRequest.setInitialQuantity(10);
         validRequest.setMinimumStock(2);
+        validRequest.setIsActive(true);
 
         sampleResponse = new ProductResponseDTO();
         sampleResponse.setId(UUID.randomUUID());

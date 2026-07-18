@@ -52,7 +52,8 @@ public class ProductRequestDTO {
     @jakarta.validation.constraints.Max(value = 1000000, message = "El stock mínimo excede el límite permitido")
     private Integer minimumStock;
 
-    @Schema(description = "Estado del producto (activo/inactivo). Opcional; por defecto activo en la creación.", example = "true")
+    @Schema(description = "Estado del producto (activo/inactivo). Obligatorio: debe enviarse en cada petición.", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "El estado (activo/inactivo) es obligatorio")
     private Boolean isActive;
 
     // Getters
