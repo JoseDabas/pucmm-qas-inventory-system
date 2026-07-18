@@ -6,6 +6,7 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.StockMovementEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.CategoryJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
+import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductStockView;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
@@ -17,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -86,8 +89,10 @@ public class ProductService {
                     "Registro inicial del producto");
         }
 
-        // 3. Devolvemos la representación segura
-        return mapToResponseDTO(savedProduct);
+        // 3. Devolvemos la representación segura. Recién creado, el stock actual equivale
+        // a la cantidad inicial (único movimiento existente en el ledger).
+        int initialStock = savedProduct.getInitialQuantity() != null ? savedProduct.getInitialQuantity() : 0;
+        return mapToResponseDTO(savedProduct, initialStock);
     }
 
     /**
@@ -116,7 +121,8 @@ public class ProductService {
         }
 
         ProductEntity updatedProduct = productRepository.save(entity);
-        return mapToResponseDTO(updatedProduct);
+        // La edición no altera el stock; se calcula desde el ledger para la respuesta.
+        return mapToResponseDTO(updatedProduct, currentStock(id));
     }
 
     /**
@@ -127,8 +133,10 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<ProductResponseDTO> getCriticalStockAlerts() {
-        return productRepository.findProductsWithCriticalStock().stream()
-                .map(this::mapToResponseDTO)
+        List<ProductEntity> criticalProducts = productRepository.findProductsWithCriticalStock();
+        Map<UUID, Integer> stocks = stockMap(criticalProducts);
+        return criticalProducts.stream()
+                .map(entity -> mapToResponseDTO(entity, stocks.getOrDefault(entity.getId(), 0)))
                 .collect(Collectors.toList());
     }
 
@@ -153,9 +161,10 @@ public class ProductService {
             productEntities = productRepository
                     .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(term, term, pageable);
         }
-        // Mapea internamente la Page de entidades a una Page de DTOs utilizando el
-        // método helper
-        return productEntities.map(this::mapToResponseDTO);
+        // Calcula el stock actual de todos los productos de la página en una sola consulta
+        // (evita N+1) y mapea cada entidad a DTO con su stock correspondiente.
+        Map<UUID, Integer> stocks = stockMap(productEntities.getContent());
+        return productEntities.map(entity -> mapToResponseDTO(entity, stocks.getOrDefault(entity.getId(), 0)));
     }
 
     /**
@@ -226,7 +235,7 @@ public class ProductService {
      * Aisla los cambios de modelo de base de datos respecto a los consumidores de
      * la API.
      */
-    private ProductResponseDTO mapToResponseDTO(ProductEntity entity) {
+    private ProductResponseDTO mapToResponseDTO(ProductEntity entity, int stockActual) {
         ProductResponseDTO dto = new ProductResponseDTO();
         dto.setId(entity.getId());
         dto.setName(entity.getName());
@@ -236,7 +245,34 @@ public class ProductService {
         dto.setPrice(entity.getPrice());
         dto.setInitialQuantity(entity.getInitialQuantity());
         dto.setMinimumStock(entity.getMinimumStock());
+        dto.setStockActual(stockActual);
         dto.setIsActive(entity.getIsActive());
         return dto;
+    }
+
+    /**
+     * Calcula el stock actual de un único producto desde el ledger de movimientos,
+     * devolviendo 0 si aún no tiene movimientos registrados.
+     */
+    private int currentStock(UUID productId) {
+        Integer sum = stockMovementRepository.sumSignedQuantityByProductId(productId);
+        return sum != null ? sum : 0;
+    }
+
+    /**
+     * Calcula el stock actual de un conjunto de productos en una sola consulta y lo
+     * devuelve como un mapa productId -> stock. Los productos sin movimientos quedan
+     * fuera del mapa (se resuelven como 0 al consultar con getOrDefault).
+     */
+    private Map<UUID, Integer> stockMap(List<ProductEntity> products) {
+        List<UUID> productIds = products.stream()
+                .map(ProductEntity::getId)
+                .collect(Collectors.toList());
+        if (productIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return stockMovementRepository.sumSignedQuantitiesByProductIds(productIds).stream()
+                .collect(Collectors.toMap(ProductStockView::getProductId,
+                        view -> view.getTotal() != null ? view.getTotal().intValue() : 0));
     }
 }

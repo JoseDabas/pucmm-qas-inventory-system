@@ -39,6 +39,9 @@ public class ProductResponseDTO {
     @Schema(description = "Stock mínimo configurado", example = "5")
     private Integer minimumStock;
 
+    @Schema(description = "Stock actual vigente, derivado del historial de movimientos (entradas menos salidas)", example = "42")
+    private Integer stockActual;
+
     @Schema(description = "Indica si el producto está activo en el sistema", example = "true")
     private Boolean isActive;
 
@@ -51,6 +54,7 @@ public class ProductResponseDTO {
     public BigDecimal getPrice() { return price; }
     public Integer getInitialQuantity() { return initialQuantity; }
     public Integer getMinimumStock() { return minimumStock; }
+    public Integer getStockActual() { return stockActual; }
     public Boolean getIsActive() { return isActive; }
 
     // Setters
@@ -62,5 +66,6 @@ public class ProductResponseDTO {
     public void setPrice(BigDecimal price) { this.price = price; }
     public void setInitialQuantity(Integer initialQuantity) { this.initialQuantity = initialQuantity; }
     public void setMinimumStock(Integer minimumStock) { this.minimumStock = minimumStock; }
+    public void setStockActual(Integer stockActual) { this.stockActual = stockActual; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

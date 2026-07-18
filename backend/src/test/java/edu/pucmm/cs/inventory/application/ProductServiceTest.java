@@ -4,6 +4,7 @@ import edu.pucmm.cs.inventory.domain.Category;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.CategoryJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
+import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductStockView;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
@@ -162,6 +163,7 @@ public class ProductServiceTest {
     void getProductsSinBusquedaUsaFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
         when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+        when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
         Page<ProductResponseDTO> result = productService.getProducts(null, pageable);
 
@@ -177,6 +179,7 @@ public class ProductServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         when(productRepository.findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable))
                 .thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+        when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
         Page<ProductResponseDTO> result = productService.getProducts("  lap  ", pageable);
 
@@ -184,6 +187,26 @@ public class ProductServiceTest {
         verify(productRepository, times(1))
                 .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable);
         verify(productRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("getProducts calcula el stock actual desde el ledger de movimientos")
+    void getProductsCalculaStockActualDesdeLedger() {
+        UUID productId = UUID.randomUUID();
+        ProductEntity product = new ProductEntity();
+        product.setId(productId);
+        product.setName("Laptop");
+        Pageable pageable = PageRequest.of(0, 10);
+        when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(product)));
+
+        ProductStockView view = mock(ProductStockView.class);
+        when(view.getProductId()).thenReturn(productId);
+        when(view.getTotal()).thenReturn(35L);
+        when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of(view));
+
+        Page<ProductResponseDTO> result = productService.getProducts(null, pageable);
+
+        assertEquals(35, result.getContent().get(0).getStockActual());
     }
 
     @Test
@@ -205,12 +228,25 @@ public class ProductServiceTest {
         critico.setId(UUID.randomUUID());
         critico.setName("Producto critico");
         when(productRepository.findProductsWithCriticalStock()).thenReturn(List.of(critico));
+        when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
         List<ProductResponseDTO> result = productService.getCriticalStockAlerts();
 
         assertEquals(1, result.size());
         assertEquals("Producto critico", result.get(0).getName());
         verify(productRepository, times(1)).findProductsWithCriticalStock();
+    }
+
+    @Test
+    @DisplayName("createProduct expone stockActual igual a la cantidad inicial")
+    void createProductStockActualIgualaCantidadInicial() {
+        when(categoryRepository.findByName(any())).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productRepository.save(any(ProductEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ProductResponseDTO result = productService.createProduct(request);
+
+        assertEquals(10, result.getStockActual());
     }
 
 }

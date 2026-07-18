@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,6 +32,17 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
            "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END), 0) " +
            "FROM StockMovementEntity m WHERE m.productId = :productId")
     Integer sumSignedQuantityByProductId(@Param("productId") UUID productId);
+
+    /**
+     * Versión por lote de {@link #sumSignedQuantityByProductId}: calcula el stock actual
+     * de varios productos en una sola consulta (evita el problema N+1 al listar). Los
+     * productos sin movimientos no aparecen en el resultado y se interpretan como stock 0.
+     */
+    @Query("SELECT m.productId AS productId, " +
+           "SUM(CASE WHEN m.movementType = 'IN' THEN m.quantity " +
+           "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END) AS total " +
+           "FROM StockMovementEntity m WHERE m.productId IN :productIds GROUP BY m.productId")
+    List<ProductStockView> sumSignedQuantitiesByProductIds(@Param("productIds") List<UUID> productIds);
 
     /**
      * Búsqueda paginada del historial filtrando por nombre de producto o usuario
