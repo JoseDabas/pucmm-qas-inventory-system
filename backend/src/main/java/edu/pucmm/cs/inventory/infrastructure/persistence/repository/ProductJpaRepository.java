@@ -2,6 +2,8 @@ package edu.pucmm.cs.inventory.infrastructure.persistence.repository;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -27,4 +29,12 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
            "GROUP BY p " +
            "HAVING (p.initialQuantity + COALESCE(SUM(CASE WHEN sm.movementType = 'OUT' THEN -sm.quantity WHEN sm.movementType = 'IN' THEN sm.quantity ELSE 0 END), 0)) <= p.minimumStock")
     List<ProductEntity> findProductsWithCriticalStock();
+
+    /**
+     * Busca de forma paginada los productos cuyo nombre o código SKU contengan el
+     * término indicado, ignorando mayúsculas/minúsculas. Spring Data genera la
+     * implementación automáticamente a partir del nombre del método.
+     */
+    Page<ProductEntity> findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(
+            String name, String skuCode, Pageable pageable);
 }

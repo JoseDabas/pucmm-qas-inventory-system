@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pucmm.cs.inventory.application.ProductService;
@@ -54,11 +55,12 @@ public class ProductController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('product:view')")
-    @Operation(summary = "Consultar Catálogo", description = "Recupera una lista paginada de todos los productos registrados. Soporta filtros y ordenamiento mediante el objeto Pageable.")
+    @Operation(summary = "Consultar Catálogo", description = "Recupera una lista paginada de todos los productos registrados. Admite un término de búsqueda opcional (?search=) que filtra por nombre o código SKU, además de filtros y ordenamiento mediante el objeto Pageable.")
     public ResponseEntity<Page<ProductResponseDTO>> getProducts(
+            @Parameter(description = "Término de búsqueda opcional que filtra por nombre o código SKU (case-insensitive).") @RequestParam(required = false) String search,
             @Parameter(description = "Inyección automática de Spring. Parámetros de URL soportados: ?page=0&size=10&sort=name,asc", hidden = true) @NonNull Pageable pageable) {
 
-        Page<ProductResponseDTO> products = productService.getProducts(pageable);
+        Page<ProductResponseDTO> products = productService.getProducts(search, pageable);
         return ResponseEntity.ok(products);
     }
 

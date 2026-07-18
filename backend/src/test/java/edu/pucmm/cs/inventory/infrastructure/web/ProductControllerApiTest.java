@@ -61,6 +61,7 @@ class ProductControllerApiTest {
         validRequest.setPrice(new BigDecimal("100.00"));
         validRequest.setInitialQuantity(10);
         validRequest.setMinimumStock(2);
+        validRequest.setIsActive(true);
 
         sampleResponse = new ProductResponseDTO();
         sampleResponse.setId(UUID.randomUUID());
@@ -85,8 +86,17 @@ class ProductControllerApiTest {
     @Test
     @DisplayName("GET productos con product:view devuelve 200")
     void getConPermisoDevuelve200() throws Exception {
-        when(productService.getProducts(any())).thenReturn(new PageImpl<>(List.of(sampleResponse)));
+        when(productService.getProducts(any(), any())).thenReturn(new PageImpl<>(List.of(sampleResponse)));
         mockMvc.perform(get("/api/v1/products").with(jwtWith("product:view")))
+                .andExpect(status().isOk());
+    }
+
+    // GET con parametro de busqueda -> 200
+    @Test
+    @DisplayName("GET productos con ?search filtra y devuelve 200")
+    void getConBusquedaDevuelve200() throws Exception {
+        when(productService.getProducts(any(), any())).thenReturn(new PageImpl<>(List.of(sampleResponse)));
+        mockMvc.perform(get("/api/v1/products").param("search", "lap").with(jwtWith("product:view")))
                 .andExpect(status().isOk());
     }
 

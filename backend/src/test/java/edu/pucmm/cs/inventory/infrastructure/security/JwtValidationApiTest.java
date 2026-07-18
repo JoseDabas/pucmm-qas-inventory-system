@@ -86,7 +86,7 @@ class JwtValidationApiTest {
     @DisplayName("Token JWT válido con rol product:view devuelve 200")
     void tokenValidoConRolDevuelve200() throws Exception {
         when(jwtDecoder.decode(anyString())).thenReturn(jwtWithRoles(List.of("product:view")));
-        when(productService.getProducts(any())).thenReturn(new PageImpl<>(List.of(new ProductResponseDTO())));
+        when(productService.getProducts(any(), any())).thenReturn(new PageImpl<>(List.of(new ProductResponseDTO())));
 
         mockMvc.perform(get("/api/v1/products")
                 .header("Authorization", "Bearer valid-token"))

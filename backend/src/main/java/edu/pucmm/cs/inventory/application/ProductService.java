@@ -72,7 +72,8 @@ public class ProductService {
         entity.setPrice(request.getPrice());
         entity.setInitialQuantity(request.getInitialQuantity());
         entity.setMinimumStock(request.getMinimumStock());
-        entity.setIsActive(true); // Se fuerza a activo por defecto en la creación
+        // Activo por defecto si no se especifica; permite crear inactivo si el cliente lo indica
+        entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         // Guardamos el producto en la base de datos
         ProductEntity savedProduct = productRepository.save(entity);
@@ -109,6 +110,10 @@ public class ProductService {
         entity.setCategory(resolveCategory(request.getCategory()));
         entity.setPrice(request.getPrice());
         entity.setMinimumStock(request.getMinimumStock());
+        // Permite alternar el estado activo/inactivo desde la edición
+        if (request.getIsActive() != null) {
+            entity.setIsActive(request.getIsActive());
+        }
 
         ProductEntity updatedProduct = productRepository.save(entity);
         return mapToResponseDTO(updatedProduct);
@@ -128,15 +133,26 @@ public class ProductService {
     }
 
     /**
-     * Ejecuta una consulta paginada de todos los productos.
-     * 
+     * Ejecuta una consulta paginada de productos, opcionalmente filtrada por un
+     * término de búsqueda que se compara contra el nombre o el código SKU.
+     *
+     * @param search   Término de búsqueda opcional (null/vacío devuelve todo).
      * @param pageable Configuración de paginación provista por Spring Web.
      * @return Página de resultados estructurada en DTOs.
      */
     @Transactional(readOnly = true) // Optimiza la transacción marcándola como de solo lectura (evita flush
                                     // innecesario)
-    public Page<ProductResponseDTO> getProducts(@NonNull Pageable pageable) {
-        Page<ProductEntity> productEntities = productRepository.findAll(pageable);
+    public Page<ProductResponseDTO> getProducts(String search, @NonNull Pageable pageable) {
+        Page<ProductEntity> productEntities;
+        if (search == null || search.isBlank()) {
+            productEntities = productRepository.findAll(pageable);
+        } else {
+            // Búsqueda en toda la base de datos por nombre o SKU (case-insensitive),
+            // respetando la paginación provista por Spring Web.
+            String term = search.trim();
+            productEntities = productRepository
+                    .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(term, term, pageable);
+        }
         // Mapea internamente la Page de entidades a una Page de DTOs utilizando el
         // método helper
         return productEntities.map(this::mapToResponseDTO);

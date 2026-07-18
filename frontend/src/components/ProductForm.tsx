@@ -9,15 +9,24 @@ interface ProductFormProps {
   onSave: () => void;
 }
 
+// Estado del formulario: los campos numéricos permiten '' para que arranquen vacíos
+// (en vez de mostrar un 0). Se convierten a número al enviar.
+type ProductFormState = Omit<ProductRequestDTO, 'price' | 'initialQuantity' | 'minimumStock'> & {
+  price: number | '';
+  initialQuantity: number | '';
+  minimumStock: number | '';
+};
+
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) => {
-  const [formData, setFormData] = useState<ProductRequestDTO>({
+  const [formData, setFormData] = useState<ProductFormState>({
     name: '',
     skuCode: '',
     description: '',
     category: '',
-    price: 0,
-    initialQuantity: 0,
-    minimumStock: 0,
+    price: '',
+    initialQuantity: '',
+    minimumStock: '',
+    isActive: true,
   });
 
   const [loading, setLoading] = useState(false);
@@ -33,6 +42,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
         price: product.price,
         initialQuantity: product.initialQuantity,
         minimumStock: product.minimumStock,
+        isActive: product.isActive,
       });
     }
   }, [product]);
@@ -41,7 +51,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value,
+      // Si el campo numérico está vacío lo dejamos como '' (input vacío); si no, lo convertimos a número
+      [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value,
     }));
   };
 
@@ -51,27 +62,40 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
     setError(null);
 
     try {
+      // Convertimos los campos numéricos ('' → 0) para cumplir con el DTO del backend
+      const payload: ProductRequestDTO = {
+        ...formData,
+        price: Number(formData.price),
+        initialQuantity: Number(formData.initialQuantity),
+        minimumStock: Number(formData.minimumStock),
+      };
       if (product) {
-        await api.put(`/api/v1/products/${product.id}`, formData);
+        await api.put(`/api/v1/products/${product.id}`, payload);
       } else {
-        await api.post('/api/v1/products', formData);
+        await api.post('/api/v1/products', payload);
       }
       onSave();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al guardar el producto');
+    } catch (err: unknown) {
+      // 409 = conflicto de unicidad en BD: el SKU ya existe
+      if ((err as { response?: { status?: number } }).response?.status === 409) {
+        setError(`El SKU "${formData.skuCode}" ya está registrado. Usa uno diferente.`);
+      } else {
+        // ProblemDetail (RFC 7807) trae el texto en 'detail'; dejamos 'message' como respaldo
+        setError((err as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.detail || (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Error al guardar el producto');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-border">
-          <h2 className="text-xl font-bold text-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800">
             {product ? 'Editar Producto' : 'Crear Producto'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-800 transition-colors">
             <X size={24} />
           </button>
         </div>
@@ -118,7 +142,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
                   value={formData.description}
                   onChange={handleChange}
                   data-testid="product-description"
-                  className="input-field min-h-[100px] resize-y"
+                  className="input-field min-h-25 resize-y"
                   placeholder="Descripción detallada del producto..."
                 />
               </div>
@@ -146,10 +170,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
                   min="0"
                   step="0.01"
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
               <div>
-                <label className="label-text">Cantidad Inicial</label>
+                <label className="label-text">Stock Inicial</label>
                 <input
                   type="number"
                   name="initialQuantity"
@@ -159,6 +184,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
                   required
                   min="0"
                   className="input-field"
+                  placeholder="0"
                   disabled={!!product} // La cantidad inicial solo se define en la creación
                 />
               </div>
@@ -173,8 +199,35 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
                   required
                   min="0"
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
+              {product && (
+                <div className="md:col-span-2">
+                  <label className="label-text">Estado</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={formData.isActive}
+                      onClick={() => setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                      data-testid="product-active-switch"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        formData.isActive ? 'bg-primary-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          formData.isActive ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      {formData.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </form>
         </div>
