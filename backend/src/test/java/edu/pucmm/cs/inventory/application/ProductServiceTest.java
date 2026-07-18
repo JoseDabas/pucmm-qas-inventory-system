@@ -96,6 +96,19 @@ public class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("createProduct respeta isActive explicito cuando el cliente lo indica")
+    void createProductRespetaIsActiveExplicito() {
+        request.setIsActive(false);
+        when(categoryRepository.findByName(any())).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productRepository.save(any(ProductEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ProductResponseDTO result = productService.createProduct(request);
+
+        assertFalse(result.getIsActive());
+    }
+
+    @Test
     @DisplayName("updateProduct con ID inexistente lanza excepcion")
     void updateProductInexistenteLanzaExcepcion() {
         UUID id = UUID.randomUUID();
@@ -183,6 +196,21 @@ public class ProductServiceTest {
         productService.createProduct(request);
 
         verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("getCriticalStockAlerts devuelve los productos con stock critico mapeados a DTO")
+    void getCriticalStockAlertsDevuelveProductos() {
+        ProductEntity critico = new ProductEntity();
+        critico.setId(UUID.randomUUID());
+        critico.setName("Producto critico");
+        when(productRepository.findProductsWithCriticalStock()).thenReturn(List.of(critico));
+
+        List<ProductResponseDTO> result = productService.getCriticalStockAlerts();
+
+        assertEquals(1, result.size());
+        assertEquals("Producto critico", result.get(0).getName());
+        verify(productRepository, times(1)).findProductsWithCriticalStock();
     }
 
 }
