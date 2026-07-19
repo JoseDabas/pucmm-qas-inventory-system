@@ -37,4 +37,19 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
      */
     Page<ProductEntity> findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(
             String name, String skuCode, Pageable pageable);
+
+    /**
+     * Cuenta cuántos productos referencian una categoría específica. Se usa para
+     * validar que una categoría no se elimine mientras tenga productos asociados.
+     */
+    long countByCategory_Id(UUID categoryId);
+
+    /**
+     * Cuenta los productos agrupados por categoría para un conjunto de categorías,
+     * en una sola consulta (evita N+1 al listar la tabla de categorías). Las
+     * categorías sin productos no aparecen en el resultado (se interpretan como 0).
+     */
+    @Query("SELECT p.category.id AS categoryId, COUNT(p) AS total FROM ProductEntity p " +
+           "WHERE p.category.id IN :categoryIds GROUP BY p.category.id")
+    List<CategoryProductCountView> countProductsByCategoryIds(List<UUID> categoryIds);
 }

@@ -153,6 +153,11 @@ public class SecurityConfig {
         // token JWT
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRealmRoleConverter());
 
+        // Configura el nombre del claim que representa al usuario principal (subject)
+        // en el token JWT. Keycloak utiliza 'preferred_username' para representar el
+        // nombre de usuario.
+        converter.setPrincipalClaimName("preferred_username");
+
         return converter;
     }
 

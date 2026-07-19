@@ -74,6 +74,13 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.CONFLICT, "Violación de integridad de datos en la base de datos.");
     }
 
+    @ExceptionHandler(CategoryInUseException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleCategoryInUseException(CategoryInUseException ex) {
+        log.warn("Categoría en uso: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     public org.springframework.http.ResponseEntity<ProblemDetail> handleHttpRequestMethodNotSupportedException(
             org.springframework.web.HttpRequestMethodNotSupportedException ex) {

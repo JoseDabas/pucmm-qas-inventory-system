@@ -165,8 +165,8 @@ export const StockMovementList: React.FC = () => {
                         </span>
                       )}
                     </td>
-                    <td className="p-4 text-gray-600 text-right">{m.previousQuantity}</td>
-                    <td className="p-4 text-gray-900 font-semibold text-right">{m.newQuantity}</td>
+                    <td className="p-4 text-gray-600">{m.previousQuantity}</td>
+                    <td className="p-4 text-gray-900 font-semibold">{m.newQuantity}</td>
                     <td className="p-4 text-gray-600">
                       <div className="truncate max-w-xs" title={m.observations}>
                         {m.observations || '—'}

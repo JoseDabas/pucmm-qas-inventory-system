@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.application.ProductService;
 import edu.pucmm.cs.inventory.infrastructure.security.SecurityConfig;
 import org.springframework.context.annotation.Import;
@@ -47,6 +48,11 @@ class ProductControllerApiTest {
     // implementación real.
     @MockitoBean
     private ProductService productService;
+
+    // El ProductController también depende de ProductAuditService (endpoint de auditoría);
+    // se mockea para que el slice @WebMvcTest pueda instanciar el controlador.
+    @MockitoBean
+    private ProductAuditService productAuditService;
 
     private ProductRequestDTO validRequest;
     private ProductResponseDTO sampleResponse;
