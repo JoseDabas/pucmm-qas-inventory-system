@@ -3,7 +3,7 @@ package edu.pucmm.cs.inventory.infrastructure.web.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * DTO de salida que representa una revisión de auditoría de un producto generada por
@@ -23,8 +23,8 @@ public class ProductAuditResponseDTO {
     @Schema(description = "Tipo de cambio: CREATED (alta), UPDATED (modificación) o DELETED (baja)", example = "UPDATED")
     private String revisionType;
 
-    @Schema(description = "Fecha y hora en que se registró la revisión", example = "2026-07-18T14:30:00")
-    private LocalDateTime revisionDate;
+    @Schema(description = "Fecha y hora en que se registró la revisión", example = "2026-07-18T14:30:00-04:00")
+    private OffsetDateTime revisionDate;
 
     @Schema(description = "Nombre del producto en esta revisión", example = "Laptop Dell XPS 15", nullable = true)
     private String name;
@@ -53,7 +53,7 @@ public class ProductAuditResponseDTO {
     // Getters
     public Integer getRevision() { return revision; }
     public String getRevisionType() { return revisionType; }
-    public LocalDateTime getRevisionDate() { return revisionDate; }
+    public OffsetDateTime getRevisionDate() { return revisionDate; }
     public String getName() { return name; }
     public String getSkuCode() { return skuCode; }
     public String getDescription() { return description; }
@@ -66,7 +66,7 @@ public class ProductAuditResponseDTO {
     // Setters
     public void setRevision(Integer revision) { this.revision = revision; }
     public void setRevisionType(String revisionType) { this.revisionType = revisionType; }
-    public void setRevisionDate(LocalDateTime revisionDate) { this.revisionDate = revisionDate; }
+    public void setRevisionDate(OffsetDateTime revisionDate) { this.revisionDate = revisionDate; }
     public void setName(String name) { this.name = name; }
     public void setSkuCode(String skuCode) { this.skuCode = skuCode; }
     public void setDescription(String description) { this.description = description; }

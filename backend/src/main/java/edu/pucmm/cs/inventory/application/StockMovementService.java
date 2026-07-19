@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -151,7 +153,11 @@ public class StockMovementService {
         dto.setQuantity(entity.getQuantity());
         dto.setPreviousQuantity(entity.getPreviousQuantity());
         dto.setNewQuantity(entity.getNewQuantity());
-        dto.setDate(entity.getDate());
+        // El movimiento se guarda como LocalDateTime (hora del servidor); se expone con
+        // el offset de zona para cumplir el formato date-time (RFC 3339) del contrato.
+        dto.setDate(entity.getDate() != null
+                ? entity.getDate().atZone(ZoneId.systemDefault()).toOffsetDateTime()
+                : null);
         dto.setUsername(entity.getUsername());
         dto.setObservations(entity.getObservations());
         return dto;

@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.application.ProductService;
 import edu.pucmm.cs.inventory.infrastructure.web.ProductController;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
@@ -50,6 +51,11 @@ class JwtValidationApiTest {
 
     @MockitoBean
     private ProductService productService;
+
+    // El ProductController también depende de ProductAuditService; se mockea para
+    // que el slice @WebMvcTest pueda instanciar el controlador.
+    @MockitoBean
+    private ProductAuditService productAuditService;
 
     // Construye un JWT válido con los roles indicados dentro de realm_access.roles.
     private Jwt jwtWithRoles(List<String> roles) {

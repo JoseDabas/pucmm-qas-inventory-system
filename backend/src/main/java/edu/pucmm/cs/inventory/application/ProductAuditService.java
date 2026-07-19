@@ -1,6 +1,7 @@
 package edu.pucmm.cs.inventory.application;
 
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
+import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,7 +14,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +36,12 @@ public class ProductAuditService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    private final ProductJpaRepository productRepository;
+
+    public ProductAuditService(ProductJpaRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
     /**
      * Devuelve el historial de revisiones de un producto, de la más reciente a la
      * más antigua.
@@ -46,6 +53,13 @@ public class ProductAuditService {
      */
     @Transactional(readOnly = true)
     public List<ProductAuditResponseDTO> getProductAuditHistory(UUID productId) {
+        // Si el producto ya no existe (nunca existió o fue eliminado), devolvemos 404:
+        // no se debe consultar el historial de un recurso que ya no está disponible.
+        if (!productRepository.existsById(productId)) {
+            throw new EntityNotFoundException(
+                    "El producto no fue encontrado con el ID proporcionado: " + productId);
+        }
+
         AuditReader auditReader = AuditReaderFactory.get(entityManager);
 
         // forRevisionsOfEntity(clase, selectEntitiesOnly=false,
@@ -60,11 +74,6 @@ public class ProductAuditService {
                 .add(AuditEntity.id().eq(productId))
                 .addOrder(AuditEntity.revisionNumber().desc())
                 .getResultList();
-
-        if (revisions.isEmpty()) {
-            throw new EntityNotFoundException(
-                    "No existe historial de auditoría para el producto con ID: " + productId);
-        }
 
         return revisions.stream()
                 .map(this::mapRevision)
@@ -82,7 +91,7 @@ public class ProductAuditService {
 
         ProductAuditResponseDTO dto = new ProductAuditResponseDTO();
         dto.setRevision(revisionInfo.getId());
-        dto.setRevisionDate(LocalDateTime.ofInstant(
+        dto.setRevisionDate(OffsetDateTime.ofInstant(
                 revisionInfo.getRevisionDate().toInstant(), ZoneId.systemDefault()));
         dto.setRevisionType(mapRevisionType(revisionType));
 

@@ -2,7 +2,7 @@ package edu.pucmm.cs.inventory.infrastructure.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -35,8 +35,8 @@ public class StockMovementResponseDTO {
     @Schema(description = "Stock del producto después del movimiento", example = "50")
     private Integer newQuantity;
 
-    @Schema(description = "Fecha y hora del movimiento", example = "2026-07-18T14:30:00")
-    private LocalDateTime date;
+    @Schema(description = "Fecha y hora del movimiento", example = "2026-07-18T14:30:00-04:00")
+    private OffsetDateTime date;
 
     @Schema(description = "Usuario que realizó el movimiento", example = "jariel")
     private String username;
@@ -52,7 +52,7 @@ public class StockMovementResponseDTO {
     public Integer getQuantity() { return quantity; }
     public Integer getPreviousQuantity() { return previousQuantity; }
     public Integer getNewQuantity() { return newQuantity; }
-    public LocalDateTime getDate() { return date; }
+    public OffsetDateTime getDate() { return date; }
     public String getUsername() { return username; }
     public String getObservations() { return observations; }
 
@@ -64,7 +64,7 @@ public class StockMovementResponseDTO {
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setPreviousQuantity(Integer previousQuantity) { this.previousQuantity = previousQuantity; }
     public void setNewQuantity(Integer newQuantity) { this.newQuantity = newQuantity; }
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public void setDate(OffsetDateTime date) { this.date = date; }
     public void setUsername(String username) { this.username = username; }
     public void setObservations(String observations) { this.observations = observations; }
 }
