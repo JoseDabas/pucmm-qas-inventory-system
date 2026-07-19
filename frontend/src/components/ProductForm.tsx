@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product, ProductRequestDTO } from '../types/Product';
+import type { Category } from '../types/Category';
 import api from '../api/axios';
 import { X } from 'lucide-react';
 
@@ -31,6 +32,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Carga las categorías disponibles para el dropdown. Si falla, no bloquea el
+  // formulario (se puede seguir sin categoría).
+  useEffect(() => {
+    api
+      .get('/api/v1/categories')
+      .then((res) => setCategories(res.data || []))
+      .catch(() => setCategories([]));
+  }, []);
 
   useEffect(() => {
     if (product) {
@@ -47,7 +58,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
     }
   }, [product]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -148,15 +161,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
               </div>
               <div>
                 <label className="label-text">Categoría</label>
-                <input
-                  type="text"
+                <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
                   data-testid="product-category"
                   className="input-field"
-                  placeholder="Ej: Electrónica"
-                />
+                >
+                  <option value="">Sin categoría</option>
+                  {/* Preserva la categoría actual del producto aunque no esté en la lista cargada */}
+                  {formData.category &&
+                    !categories.some((c) => c.name === formData.category) && (
+                      <option value={formData.category}>{formData.category}</option>
+                    )}
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="label-text">Precio</label>
