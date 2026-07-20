@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.application.ProductService;
+import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,9 +45,11 @@ import jakarta.validation.Valid;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductAuditService productAuditService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductAuditService productAuditService) {
         this.productService = productService;
+        this.productAuditService = productAuditService;
     }
 
     /**
@@ -75,6 +79,21 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> getCriticalStockAlerts() {
         List<ProductResponseDTO> alerts = productService.getCriticalStockAlerts();
         return ResponseEntity.ok(alerts);
+    }
+
+    /**
+     * Endpoint GET para consultar el historial de auditoría (Hibernate Envers) de un producto.
+     *
+     * Requiere el rol granular 'report:view' (consulta de solo lectura / auditoría).
+     */
+    @GetMapping("/{id}/audit")
+    @PreAuthorize("hasAuthority('report:view')")
+    @Operation(summary = "Historial de auditoría del producto", description = "Devuelve las revisiones registradas por Hibernate Envers para un producto (alta, modificaciones y baja), ordenadas de la más reciente a la más antigua, con la foto de sus datos en cada cambio. Nota: Envers registra qué cambió y cuándo, no el usuario.")
+    public ResponseEntity<List<ProductAuditResponseDTO>> getProductAuditHistory(
+            @Parameter(description = "Identificador único UUID del producto", required = true) @PathVariable @NonNull UUID id) {
+
+        List<ProductAuditResponseDTO> history = productAuditService.getProductAuditHistory(id);
+        return ResponseEntity.ok(history);
     }
 
     /**

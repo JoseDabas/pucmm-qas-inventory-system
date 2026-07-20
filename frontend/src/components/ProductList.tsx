@@ -192,6 +192,7 @@ export const ProductList: React.FC = () => {
                 </th>
                 <th className="p-4 font-semibold">Stock Inicial</th>
                 <th className="p-4 font-semibold">Stock Mínimo</th>
+                <th className="p-4 font-semibold">Stock Actual</th>
                 <th className="p-4 font-semibold">Estado</th>
                 <th className="p-4 font-semibold text-center">Acciones</th>
               </tr>
@@ -199,7 +200,7 @@ export const ProductList: React.FC = () => {
             <tbody className="divide-y divide-border">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-400">
+                  <td colSpan={10} className="p-8 text-center text-gray-400">
                     {searchTerm ? 'No se encontraron productos.' : 'No hay productos registrados.'}
                   </td>
                 </tr>
@@ -226,6 +227,22 @@ export const ProductList: React.FC = () => {
                     </td>
                     <td className="p-4 text-gray-600">{product.initialQuantity}</td>
                     <td className="p-4 text-gray-600">{product.minimumStock}</td>
+                    <td className="p-4">
+                      <span
+                        className={
+                          product.stockActual <= product.minimumStock
+                            ? 'font-semibold text-red-600'
+                            : 'font-semibold text-gray-900'
+                        }
+                        title={
+                          product.stockActual <= product.minimumStock
+                            ? 'Stock en nivel crítico (menor o igual al stock mínimo)'
+                            : undefined
+                        }
+                      >
+                        {product.stockActual}
+                      </span>
+                    </td>
                     <td className="p-4">
                       <span
                         className={
