@@ -58,10 +58,12 @@ pipeline {
                 SONAR_TOKEN = credentials('sonar-token')
             }
             steps {
-                echo 'Ejecutando analisis de codigo estatico y validando barreras de calidad (Quality Gate)'
-                dir('backend') {
-                    // El comando debe fallar si no cumple el Quality Gate de SonarQube (se eliminó el || true)
-                    sh './gradlew sonar'
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    echo 'Ejecutando analisis de codigo estatico y validando barreras de calidad (Quality Gate)'
+                    dir('backend') {
+                        // El comando debe fallar si no cumple el Quality Gate de SonarQube (se eliminó el || true)
+                        sh './gradlew sonar'
+                    }
                 }
             }
         }
