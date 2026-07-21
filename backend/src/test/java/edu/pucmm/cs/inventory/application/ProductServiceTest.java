@@ -6,8 +6,10 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.repository.CategoryJpaR
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductStockView;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
+import edu.pucmm.cs.inventory.infrastructure.persistence.repository.TopSellingProductView;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
+import edu.pucmm.cs.inventory.infrastructure.web.dto.TopSellingProductResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -235,6 +237,39 @@ public class ProductServiceTest {
         assertEquals(1, result.size());
         assertEquals("Producto critico", result.get(0).getName());
         verify(productRepository, times(1)).findProductsWithCriticalStock();
+    }
+
+    @Test
+    @DisplayName("getTopSellingProducts mapea la proyeccion a DTO respetando el orden y el limite")
+    void getTopSellingProductsMapeaProyeccion() {
+        UUID id = UUID.randomUUID();
+        TopSellingProductView view = mock(TopSellingProductView.class);
+        when(view.getProductId()).thenReturn(id);
+        when(view.getProductName()).thenReturn("Laptop");
+        when(view.getSkuCode()).thenReturn("SKU-001");
+        when(view.getTotalOut()).thenReturn(128L);
+        when(stockMovementRepository.findTopSellingProducts(PageRequest.of(0, 5)))
+                .thenReturn(List.of(view));
+
+        List<TopSellingProductResponseDTO> result = productService.getTopSellingProducts(5);
+
+        assertEquals(1, result.size());
+        assertEquals(id, result.get(0).getProductId());
+        assertEquals("Laptop", result.get(0).getProductName());
+        assertEquals("SKU-001", result.get(0).getSkuCode());
+        assertEquals(128L, result.get(0).getTotalOut());
+        verify(stockMovementRepository, times(1)).findTopSellingProducts(PageRequest.of(0, 5));
+    }
+
+    @Test
+    @DisplayName("getTopSellingProducts sin ventas devuelve lista vacia")
+    void getTopSellingProductsSinVentasDevuelveVacio() {
+        when(stockMovementRepository.findTopSellingProducts(PageRequest.of(0, 5)))
+                .thenReturn(List.of());
+
+        List<TopSellingProductResponseDTO> result = productService.getTopSellingProducts(5);
+
+        assertTrue(result.isEmpty());
     }
 
     @Test
