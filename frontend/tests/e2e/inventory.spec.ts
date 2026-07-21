@@ -137,3 +137,37 @@ test.describe('Flujo de Seguridad - No Autenticado', () => {
     await expect(page).toHaveURL(/.*(keycloak|auth|realms).*/i, { timeout: 10000 });
   });
 });
+
+/**
+ * Suite de Pruebas: Flujo de Seguridad - Usuario Viewer.
+ *
+ * Agrupa los casos de prueba para usuarios con permisos limitados (ej. solo vista).
+ */
+test.describe('Flujo de Seguridad - Viewer', () => {
+  test.use({ storageState: 'tests/e2e/.auth/viewer.json' });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    try {
+      const sessionData = fs.readFileSync('tests/e2e/.auth/viewer-session.json', 'utf8');
+      await page.evaluate((data) => {
+        const parsed = JSON.parse(data);
+        for (const key of Object.keys(parsed)) {
+          window.sessionStorage.setItem(key, parsed[key]);
+        }
+      }, sessionData);
+      await page.reload();
+    } catch (e) {
+      console.error('No se pudo cargar el viewer-session.json', e);
+    }
+  });
+
+  /**
+   * 1. RBAC (UI): Validar que el botón "Crear Producto" NO sea visible para un viewer.
+   */
+  test('No debe visualizar el botón de Crear Producto (RBAC Restringido)', async ({ page }) => {
+    const createBtn = page.getByTestId('create-product-button');
+    // El botón debería estar oculto o deshabilitado si el frontend implementa RBAC en UI
+    await expect(createBtn).not.toBeVisible();
+  });
+});

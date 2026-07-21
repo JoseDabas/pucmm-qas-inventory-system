@@ -4,6 +4,7 @@ import * as path from 'path';
 
 // Rutas locales donde se guardarán las cookies y el almacenamiento local capturado
 const authFileAdmin = 'tests/e2e/.auth/admin.json';
+const authFileViewer = 'tests/e2e/.auth/viewer.json';
 
 /**
  * Hook global que se ejecuta antes de todas las pruebas de setup.
@@ -16,6 +17,10 @@ setup.beforeAll(() => {
   const authDirAdmin = path.dirname(authFileAdmin);
   if (!fs.existsSync(authDirAdmin)) {
     fs.mkdirSync(authDirAdmin, { recursive: true });
+  }
+  const authDirViewer = path.dirname(authFileViewer);
+  if (!fs.existsSync(authDirViewer)) {
+    fs.mkdirSync(authDirViewer, { recursive: true });
   }
 });
 
@@ -62,3 +67,36 @@ setup('authenticate as admin', async ({ page }) => {
   await page.context().storageState({ path: authFileAdmin });
 });
 
+/**
+ * Script de configuración de estado: Autenticación como Viewer.
+ */
+setup('authenticate as viewer', async ({ page }) => {
+  await page.goto('/');
+
+  // Inicia el flujo OIDC mediante la interfaz de usuario de la aplicación
+  await page.getByRole('button', { name: /Iniciar Sesión con SSO/i }).click();
+
+  // Resolución de credenciales mediante variables de entorno para CI o desarrollo
+  const viewerUser = process.env.KEYCLOAK_VIEWER_USERNAME || 'viewer-user';
+  // En Keycloak el password del test user es compartido para ambos entornos de prueba
+  const viewerPass = process.env.KEYCLOAK_VIEWER_PASSWORD || process.env.KEYCLOAK_TEST_USER_PASSWORD || 'ejemplo12345';
+
+  // Inserción de credenciales en los campos estándar de Keycloak
+  await page.fill('input[name="username"]', viewerUser);
+  await page.fill('input[name="password"]', viewerPass);
+
+  // Dispara el envío del formulario de inicio de sesión de Keycloak
+  await page.click('input[name="login"], button[name="login"]');
+
+  // Asegura que el redireccionamiento OIDC se completó esperando ver la UI del Inventario
+  await expect(page.getByText('Inventario')).toBeVisible({ timeout: 15000 });
+
+  await page.waitForTimeout(2000);
+
+  // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
+  const sessionStorageViewer = await page.evaluate(() => JSON.stringify(window.sessionStorage));
+  fs.writeFileSync('tests/e2e/.auth/viewer-session.json', sessionStorageViewer);
+
+  // Consolida y exporta el contexto de seguridad capturado (Cookies)
+  await page.context().storageState({ path: authFileViewer });
+});

@@ -173,6 +173,8 @@ pipeline {
                         export VITE_API_BASE_URL=${API_BASE_URL%/api/v1}
                         
                         export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
+                        export KEYCLOAK_VIEWER_USERNAME=$KEYCLOAK_VIEWER_USERNAME
+                        export KEYCLOAK_VIEWER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                         
                         # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
                         npm run dev -- --port 5173 &
