@@ -75,9 +75,10 @@ pipeline {
                 SNYK_TOKEN = credentials('snyk-token')
             }
             steps {
-                echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
-                // El pipeline se detendrá si Snyk detecta vulnerabilidades críticas (se eliminó el || true)
-                sh 'snyk test --all-subprojects'
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
+                    sh 'snyk test --all-subprojects'
+                }
             }
         }
 

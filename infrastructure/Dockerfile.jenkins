@@ -27,8 +27,8 @@ RUN curl -fsSL -o /tmp/docker.tgz "https://download.docker.com/linux/static/stab
 # Limpiar caché
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
-# Instalar Playwright globalmente y descargar navegadores y sus dependencias OS
-RUN npm install -g playwright && \
+# Instalar Snyk y Playwright globalmente y descargar navegadores y sus dependencias OS
+RUN npm install -g snyk playwright && \
     npx playwright install --with-deps
 
 # Instalar plugins de Jenkins para JCasC
