@@ -215,8 +215,9 @@ pipeline {
     // Define acciones a realizar después de la ejecución del pipeline
     post {
         always {
-            echo 'Pipeline finalizado. Limpiando imagenes huérfanas (dangling) de Docker...'
+            echo 'Pipeline finalizado. Limpiando imagenes huérfanas y caché de compilación para liberar disco...'
             sh 'docker image prune -f || true'
+            sh 'docker builder prune -f || true'
             
             echo 'Archivando artefactos...' 
             dir('frontend') {
