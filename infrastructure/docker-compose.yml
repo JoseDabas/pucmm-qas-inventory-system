@@ -54,6 +54,7 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
       KC_DB_USERNAME: inventory_user
       KC_DB_PASSWORD: inventory_password
+      KC_HOSTNAME_URL: http://localhost:9080
       # Variables consumidas por realm-export.json vía sustitución ${...}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
       KEYCLOAK_TEST_USER_PASSWORD: ${KEYCLOAK_TEST_USER_PASSWORD}
@@ -84,7 +85,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=inventory_user
       - SPRING_DATASOURCE_PASSWORD=inventory_password
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/Inventario/protocol/openid-connect/certs
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://host.docker.internal:9080/realms/Inventario
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:9080/realms/Inventario
       # Configuraciones de OpenTelemetry para enrutar telemetría hacia Grafana Alloy
       - OTEL_SERVICE_NAME=inventory-backend
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317
