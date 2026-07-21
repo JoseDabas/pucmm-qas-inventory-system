@@ -1,0 +1,29 @@
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "keycloak-test-user-password"
+              description: "Contraseña del usuario de prueba para Keycloak"
+              secret: "${KEYCLOAK_TEST_USER_PASSWORD}"
+          - string:
+              scope: GLOBAL
+              id: "keycloak-client-secret"
+              description: "Client Secret de la aplicación Inventory"
+              secret: "${KEYCLOAK_CLIENT_SECRET}"
+          - string:
+              scope: GLOBAL
+              id: "keycloak-admin-password"
+              description: "Contraseña del administrador de Keycloak"
+              secret: "${KEYCLOAK_ADMIN_PASSWORD}"
+          - string:
+              scope: GLOBAL
+              id: "sonar-token"
+              description: "Token de autenticación para SonarQube"
+              secret: "${SONAR_TOKEN}"
+          - string:
+              scope: GLOBAL
+              id: "snyk-token"
+              description: "Token de autenticación para Snyk"
+              secret: "${SNYK_TOKEN}"

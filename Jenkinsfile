@@ -4,9 +4,9 @@ pipeline {
     // ========================================================
     // VARIABLES DE ENTORNO GLOBALES
     // ========================================================
-    // NOTA DE SEGURIDAD: Ningun secreto (contraseñas, client secrets) o URL debe estar hardcodeado aquí.
-    // Todas las configuraciones se extraeran dinamicamente del archivo infrastructure/.env
-    // en los stages donde sean requeridas (ej. Performance Tests).
+    // NOTA DE SEGURIDAD: Ningún secreto (contraseñas, client secrets) debe estar hardcodeado aquí.
+    // La configuración no sensible se extraerá del .env, pero los secretos
+    // serán inyectados dinámicamente mediante el gestor de credenciales de Jenkins.
 
     // Define las etapas del pipeline
     stages {
@@ -45,31 +45,37 @@ pipeline {
             steps {
                 echo 'Ejecutando pruebas de integracion con Testcontainers'
                 dir('backend') {
-                    // RYUK_DISABLED: evita problemas de permisos del contenedor de limpieza en CI/CD.
-                    sh 'TESTCONTAINERS_RYUK_DISABLED=true TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal ./gradlew test --tests "*IntegrationTest"'
+                    // Se ha habilitado RYUK (eliminando TESTCONTAINERS_RYUK_DISABLED=true) para que los contenedores se eliminen automáticamente.
+                    sh 'TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal ./gradlew test --tests "*IntegrationTest"'
                 }
             }
         }
 
         // Quality gates
         stage('Quality Gates') {
+            environment {
+                // Inyectamos el token de SonarQube para autenticar el análisis
+                SONAR_TOKEN = credentials('sonar-token')
+            }
             steps {
                 echo 'Ejecutando analisis de codigo estatico y validando barreras de calidad (Quality Gate)'
                 dir('backend') {
-                    // Ejecuta el analisis hacia SonarQube/SonarCloud
-                    // En un entorno productivo con el plugin de Jenkins, aqui se utilizaria la funcion waitForQualityGate()
-                    // Agregamos || true para que no rompa el pipeline local si no hay token configurado
-                    sh './gradlew sonar || true'
+                    // El comando debe fallar si no cumple el Quality Gate de SonarQube (se eliminó el || true)
+                    sh './gradlew sonar'
                 }
             }
         }
 
         // Security scan
         stage('Security Scan') {
+            environment {
+                // Inyectamos el token de Snyk para autenticar el escaneo
+                SNYK_TOKEN = credentials('snyk-token')
+            }
             steps {
                 echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
-                // Ejemplo utilizando Snyk CLI (consistente con el entorno del proyecto)
-                sh 'snyk test --all-subprojects || true'
+                // El pipeline se detendrá si Snyk detecta vulnerabilidades críticas (se eliminó el || true)
+                sh 'snyk test --all-subprojects'
             }
         }
 
@@ -90,14 +96,13 @@ pipeline {
         // CD: CONTINUOUS DELIVERY STAGES
         // ========================================================
 
-        // Despliegue simulado o real hacia el ambiente de Staging
+        // Despliegue hacia el ambiente de Staging
         stage('Deploy to Staging') {
             steps {
                 echo 'Desplegando la aplicacion en el entorno de Staging...'
                 dir('infrastructure') {
-                    // En un pipeline real, esto podria ser:
-                    // sh 'docker compose pull && docker compose up -d'
-                    echo 'Simulando el despliegue de contenedores (Frontend, Backend, DB, Keycloak)...'
+                    sh 'docker compose -f docker-compose.yml pull || true'
+                    sh 'docker compose -f docker-compose.yml up -d'
                 }
             }
         }
@@ -120,15 +125,19 @@ pipeline {
 
         // Ejecutar pruebas de carga/estrés con k6
         stage('Performance Tests (k6)') {
+            environment {
+                // Secrets Management: Inyectando contraseña de forma segura desde Jenkins Credentials
+                KEYCLOAK_PASSWORD = credentials('keycloak-test-user-password')
+            }
             steps {
                 echo 'Ejecutando pruebas de rendimiento (Load Test) contra la API en Staging'
-                // Extraemos secretos dinamicamente del archivo .env para que k6 los tome 
                 sh '''
                     if [ ! -f infrastructure/.env ]; then
                         cp infrastructure/.env.example infrastructure/.env
                     fi
-                    export $(grep -v "^#" infrastructure/.env | tr -d '\\r' | xargs)
-                    export KEYCLOAK_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
+                    # Cargamos configuraciones no sensibles del .env (ignoramos secrets para no sobrescribir)
+                    export $(grep -v "^#" infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                    
                     k6 run performance/api-performance.js
                 '''
             }
@@ -136,14 +145,18 @@ pipeline {
 
         // Ejecutar pruebas E2E con Playwright simulando usuarios reales en el navegador
         stage('E2E Tests (Playwright)') {
+            environment {
+                // Secrets Management: Inyectando secretos críticos desde Jenkins Credentials
+                VITE_KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
+                KEYCLOAK_ADMIN_PASSWORD = credentials('keycloak-admin-password')
+                KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
+            }
             steps {
                 echo 'Ejecutando suite de pruebas End-to-End con Playwright'
                 dir('frontend') {
-                    // Aseguramos que las dependencias existan en el agente
                     sh 'npm install'
                     sh 'npx playwright install --with-deps'
                     
-                    // Ejecutamos apuntando al entorno de desarrollo local dentro de Jenkins
                     sh '''
                         # Limpiar BD de los datos sucios generados por las pruebas de rendimiento (k6)
                         docker exec inventory_postgres psql -U inventory_user -d inventory_db -c "TRUNCATE TABLE products CASCADE;"
@@ -151,15 +164,15 @@ pipeline {
                         if [ ! -f ../infrastructure/.env ]; then
                             cp ../infrastructure/.env.example ../infrastructure/.env
                         fi
-                        export $(grep -v "^#" ../infrastructure/.env | tr -d '\\r' | xargs)
+                        # Cargamos configuraciones base desde el .env excluyendo los secrets y passwords
+                        export $(grep -v "^#" ../infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                        
                         export VITE_KEYCLOAK_URL=${KEYCLOAK_URL%/protocol/openid-connect/token}
                         export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
-                        export VITE_KEYCLOAK_CLIENT_SECRET=$KEYCLOAK_CLIENT_SECRET
                         export FRONTEND_URL=http://localhost:5173
                         export VITE_API_BASE_URL=${API_BASE_URL%/api/v1}
                         
                         export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
-                        export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
                         
                         # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
                         npm run dev -- --port 5173 &
@@ -183,7 +196,10 @@ pipeline {
                 input message: '¿Aprobar el pase a Produccion?', ok: 'Aprobar y Desplegar'
                 
                 echo 'Procediendo con el despliegue en Produccion...'
-                // Acciones de despliegue a PROD irian aqui
+                dir('infrastructure') {
+                    sh 'docker compose -f docker-compose.yml pull || true'
+                    sh 'docker compose -f docker-compose.yml up -d'
+                }
             }
         }
     }
@@ -191,8 +207,10 @@ pipeline {
     // Define acciones a realizar después de la ejecución del pipeline
     post {
         always {
-            echo 'Pipeline finalizado. Archivando artefactos...' 
-            // Archivado de los reportes y rastros (traces) de Playwright para el dashboard de Jenkins
+            echo 'Pipeline finalizado. Limpiando imagenes huérfanas (dangling) de Docker...'
+            sh 'docker image prune -f || true'
+            
+            echo 'Archivando artefactos...' 
             dir('frontend') {
                 archiveArtifacts artifacts: 'playwright-report/**, test-results/**', allowEmptyArchive: true
             }

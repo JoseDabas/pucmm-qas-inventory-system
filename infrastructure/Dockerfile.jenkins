@@ -31,5 +31,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN npm install -g playwright && \
     npx playwright install --with-deps
 
+# Instalar plugins de Jenkins para JCasC
+RUN jenkins-plugin-cli --plugins configuration-as-code credentials plain-credentials
+
 # El compose file ya corre el contenedor como root para acceder a /var/run/docker.sock
 # por lo tanto no cambiamos de USER jenkins
