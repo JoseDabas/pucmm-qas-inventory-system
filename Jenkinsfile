@@ -77,6 +77,7 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
+                    // El pipeline continuará incluso si Snyk detecta vulnerabilidades (para poder ver los demás errores)
                     sh 'snyk test --all-subprojects'
                 }
             }
