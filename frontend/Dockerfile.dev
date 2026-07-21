@@ -1,0 +1,14 @@
+# Dockerfile de DESARROLLO: corre el dev server de Vite con hot-reload (HMR).
+# El código fuente se monta como volumen desde docker-compose.dev.yml,
+# por lo que los cambios se reflejan al instante sin reconstruir la imagen.
+FROM node:20-alpine
+WORKDIR /app
+# Instalar dependencias con binarios de Linux (el node_modules del host es de Windows)
+COPY package*.json ./
+RUN npm install
+# Copiar el código (en runtime queda sobrescrito por el bind mount del compose)
+COPY . .
+# Puerto por defecto del dev server de Vite
+EXPOSE 5173
+# --host 0.0.0.0 expone el servidor fuera del contenedor
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

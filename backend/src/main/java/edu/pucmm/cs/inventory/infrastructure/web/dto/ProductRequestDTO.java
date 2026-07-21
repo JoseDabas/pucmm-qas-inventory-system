@@ -52,6 +52,10 @@ public class ProductRequestDTO {
     @jakarta.validation.constraints.Max(value = 1000000, message = "El stock mínimo excede el límite permitido")
     private Integer minimumStock;
 
+    @Schema(description = "Estado del producto (activo/inactivo). Obligatorio: debe enviarse en cada petición.", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "El estado (activo/inactivo) es obligatorio")
+    private Boolean isActive;
+
     // Getters
     public String getName() { return name; }
     public String getSkuCode() { return skuCode; }
@@ -60,6 +64,7 @@ public class ProductRequestDTO {
     public BigDecimal getPrice() { return price; }
     public Integer getInitialQuantity() { return initialQuantity; }
     public Integer getMinimumStock() { return minimumStock; }
+    public Boolean getIsActive() { return isActive; }
 
     // Setters
     public void setName(String name) { this.name = name; }
@@ -69,4 +74,5 @@ public class ProductRequestDTO {
     public void setPrice(BigDecimal price) { this.price = price; }
     public void setInitialQuantity(Integer initialQuantity) { this.initialQuantity = initialQuantity; }
     public void setMinimumStock(Integer minimumStock) { this.minimumStock = minimumStock; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

@@ -2,6 +2,8 @@ package edu.pucmm.cs.inventory.infrastructure.persistence.repository;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -25,6 +27,29 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
     @Query("SELECT p FROM ProductEntity p LEFT JOIN StockMovementEntity sm ON p.id = sm.productId " +
            "WHERE p.isActive = true " +
            "GROUP BY p " +
-           "HAVING (p.initialQuantity + COALESCE(SUM(CASE WHEN sm.movementType = 'OUT' THEN -sm.quantity WHEN sm.movementType = 'IN' THEN sm.quantity ELSE 0 END), 0)) <= p.minimumStock")
+           "HAVING (COALESCE(SUM(CASE WHEN sm.movementType = 'OUT' THEN -sm.quantity WHEN sm.movementType = 'IN' THEN sm.quantity ELSE 0 END), 0)) <= p.minimumStock")
     List<ProductEntity> findProductsWithCriticalStock();
+
+    /**
+     * Busca de forma paginada los productos cuyo nombre o código SKU contengan el
+     * término indicado, ignorando mayúsculas/minúsculas. Spring Data genera la
+     * implementación automáticamente a partir del nombre del método.
+     */
+    Page<ProductEntity> findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(
+            String name, String skuCode, Pageable pageable);
+
+    /**
+     * Cuenta cuántos productos referencian una categoría específica. Se usa para
+     * validar que una categoría no se elimine mientras tenga productos asociados.
+     */
+    long countByCategory_Id(UUID categoryId);
+
+    /**
+     * Cuenta los productos agrupados por categoría para un conjunto de categorías,
+     * en una sola consulta (evita N+1 al listar la tabla de categorías). Las
+     * categorías sin productos no aparecen en el resultado (se interpretan como 0).
+     */
+    @Query("SELECT p.category.id AS categoryId, COUNT(p) AS total FROM ProductEntity p " +
+           "WHERE p.category.id IN :categoryIds GROUP BY p.category.id")
+    List<CategoryProductCountView> countProductsByCategoryIds(List<UUID> categoryIds);
 }

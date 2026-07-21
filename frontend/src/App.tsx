@@ -1,71 +1,68 @@
 import { AuthProvider, useAuth } from 'react-oidc-context';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { oidcConfig } from './auth/oidcConfig';
-import { ProductList } from './components/ProductList';
-import { LogOut, Loader2 } from 'lucide-react';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import { HomePage } from './pages/HomePage';
+import { InventoryPage } from './pages/InventoryPage';
+import { MovementHistoryPage } from './pages/MovementHistoryPage';
+import { CategoriesPage } from './pages/CategoriesPage';
+import { PlaceholderPage } from './pages/PlaceholderPage';
+import { LoginPage } from './pages/LoginPage';
 
 const MainContent = () => {
   const auth = useAuth();
 
   // Lógica OIDC:
-  // Si el contexto de autenticación indica que está cargando el estado del usuario, mostramos un loader
-  if (auth.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary-500" size={48} />
-      </div>
-    );
+  // Mientras se resuelve el estado de la sesión no renderizamos nada.
+  // Evita que la pantalla de login parpadee en cada recarga antes de saber si hay sesión.
+  // Excepción: si el "loading" proviene del envío del formulario (grant password), NO blanqueamos
+  // la pantalla; así el LoginPage sigue montado y puede mostrar su spinner y su error en línea.
+  if (auth.isLoading && auth.activeNavigator !== 'signinResourceOwnerCredentials') {
+    return null;
   }
 
   // Lógica OIDC:
-  // Si ocurrió un error en la redirección o validación del token, lo mostramos.
-  if (auth.error) {
-    return <div className="text-red-500 text-center p-8">Error de autenticación: {auth.error.message}</div>;
+  // Si ocurrió un error en la redirección o validación del token, lo mostramos a pantalla completa.
+  // Excepción: los errores de credenciales del formulario (grant password) NO se muestran aquí;
+  // el propio LoginPage los presenta en línea, debajo de los campos, sin perder el formulario.
+  if (auth.error && auth.error.source !== 'signinResourceOwnerCredentials') {
+    return <div className="text-red-600 text-center p-8">Error de autenticación: {auth.error.message}</div>;
   }
 
   // Lógica OIDC:
-  // Si auth.isAuthenticated es true, significa que el usuario se logueó correctamente en Keycloak.
-  // El JWT ha sido extraído y guardado en SessionStorage de forma automática por oidc-client-ts.
-  // El interceptor en src/api/axios.ts lee este token para inyectarlo en las peticiones al backend.
+  // Si auth.isAuthenticated es true, el usuario se logueó correctamente en Keycloak.
+  // El JWT ya está en SessionStorage y el interceptor de axios lo inyecta en las peticiones.
+  // Montamos el router con el layout base del dashboard.
   if (auth.isAuthenticated) {
     return (
-      <div>
-        <nav className="bg-surface border-b border-border p-4 sticky top-0 z-10 shadow-sm">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="font-bold text-xl text-primary-500">InventorySystem</div>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-400 text-sm hidden md:inline">
-                Usuario: {auth.user?.profile.preferred_username || auth.user?.profile.name || 'Admin'}
-              </span>
-              <button
-                onClick={() => void auth.signoutRedirect()}
-                className="btn-secondary flex items-center gap-2 text-sm"
-              >
-                <LogOut size={16} /> Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </nav>
-        <ProductList />
-      </div>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/inventario" element={<InventoryPage />} />
+            <Route path="/historial" element={<MovementHistoryPage />} />
+            <Route path="/categorias" element={<CategoriesPage />} />
+            <Route path="/reportes" element={<PlaceholderPage title="Reportes" />} />
+            <Route path="/configuracion" element={<PlaceholderPage title="Configuración" />} />
+            {/* Cualquier ruta desconocida cae al inventario (p. ej. /productos/nuevo) */}
+            <Route path="*" element={<Navigate to="/inventario" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     );
   }
 
   // Lógica OIDC:
-  // Si no está autenticado, mostramos un botón para iniciar sesión en Keycloak.
-  // auth.signinRedirect() redirigirá al usuario a la pantalla de login nativa de Keycloak.
+  // Si no está autenticado, mostramos el formulario de login. Las credenciales se validan
+  // directamente contra Keycloak mediante el grant "password" (Direct Access Grants), sin
+  // redirigir a la pantalla de Keycloak. En caso de éxito, react-oidc-context guarda el JWT
+  // en sessionStorage y actualiza isAuthenticated, montando el dashboard automáticamente.
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="max-w-md w-full bg-surface border border-border p-8 rounded-2xl shadow-2xl text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">Bienvenido</h1>
-        <p className="text-gray-400 mb-8">Por favor, inicia sesión para acceder al sistema de inventario empresarial.</p>
-        <button
-          onClick={() => void auth.signinRedirect()}
-          className="btn-primary w-full py-3 text-lg flex justify-center items-center gap-2 shadow-primary-500/50"
-        >
-          Iniciar Sesión con SSO
-        </button>
-      </div>
-    </div>
+    <LoginPage
+      onLogin={(username, password) =>
+        auth.signinResourceOwnerCredentials({ username, password })
+      }
+    />
   );
 };
 

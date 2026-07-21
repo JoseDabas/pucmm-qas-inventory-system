@@ -35,6 +35,12 @@ public class StockMovementEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
+    @Column(name = "previous_quantity", nullable = false)
+    private Integer previousQuantity; // Stock del producto ANTES de este movimiento
+
+    @Column(name = "new_quantity", nullable = false)
+    private Integer newQuantity; // Stock del producto DESPUÉS de este movimiento
+
     @Column(name = "movement_date", nullable = false)
     private LocalDateTime date;
 
@@ -67,6 +73,12 @@ public class StockMovementEntity {
 
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public Integer getPreviousQuantity() { return previousQuantity; }
+    public void setPreviousQuantity(Integer previousQuantity) { this.previousQuantity = previousQuantity; }
+
+    public Integer getNewQuantity() { return newQuantity; }
+    public void setNewQuantity(Integer newQuantity) { this.newQuantity = newQuantity; }
 
     public LocalDateTime getDate() { return date; }
     public void setDate(LocalDateTime date) { this.date = date; }

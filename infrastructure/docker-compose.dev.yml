@@ -1,0 +1,31 @@
+# Override de DESARROLLO para habilitar hot-reload en el frontend.
+# Reemplaza el servicio 'frontend' (que en producción sirve con nginx) por el
+# dev server de Vite con HMR. No modifica el flujo de producción/CI.
+#
+# Uso:
+#   docker compose -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.dev.yml up --build
+#
+# Requiere Docker Compose v2.24.4+ por el tag !override.
+
+services:
+  frontend:
+    build:
+      # Reusa el context (../frontend) definido en el compose base, pero usa el
+      # Dockerfile de desarrollo en lugar del de producción.
+      dockerfile: Dockerfile.dev
+    # Reemplaza (no concatena) el mapeo "5173:80" del base por el puerto de Vite.
+    ports: !override
+      - "5173:5173"
+    volumes:
+      # Monta el código fuente: al editar un archivo, Vite recarga el navegador.
+      - ../frontend:/app
+      # Volumen anónimo que "tapa" el node_modules del host, conservando los
+      # binarios de Linux instalados dentro de la imagen.
+      - /app/node_modules
+    environment:
+      # Mismas variables que consume oidcConfig.ts vía import.meta.env
+      - VITE_KEYCLOAK_URL=http://localhost:9080/realms/Inventario
+      - VITE_KEYCLOAK_CLIENT_ID=inventory-client
+      - VITE_KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      # File-watching fiable sobre bind mounts de Windows/WSL (Vite hace polling).
+      - CHOKIDAR_USEPOLLING=true

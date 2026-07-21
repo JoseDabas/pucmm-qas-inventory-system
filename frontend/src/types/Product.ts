@@ -7,6 +7,7 @@ export interface Product {
   price: number;
   initialQuantity: number;
   minimumStock: number;
+  stockActual: number;
   isActive: boolean;
 }
 
@@ -18,4 +19,5 @@ export interface ProductRequestDTO {
   price: number;
   initialQuantity: number;
   minimumStock: number;
+  isActive: boolean;
 }

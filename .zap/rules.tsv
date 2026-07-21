@@ -1,0 +1,18 @@
+# Reglas de OWASP ZAP para el API scan (zap-api-scan.py -c .zap/rules.tsv)
+# Formato: ID_REGLA <TAB> ACCION <TAB> (comentario opcional)
+# ACCION: WARN (reporta, no falla), FAIL (falla el scan), IGNORE (oculta)
+#
+# Se silencian hallazgos informativos ruidosos y de bajo riesgo para una API REST
+# stateless con JWT. Revisar periódicamente y endurecer según sea necesario.
+# EL 10096 es un hallazgo de ruido en respuestas JSON que no aplica a APIs REST.
+10096	IGNORE	(Timestamp Disclosure - ruido en respuestas JSON) 
+# El 10027 es un hallazgo de ruido en comentarios de código que no aplica a APIs REST.
+10027	IGNORE	(Information Disclosure - Suspicious Comments)
+# El 10015 es un hallazgo de ruido en cabeceras Cache-Control que no aplica a APIs REST.
+10015	WARN	(Re-examine Cache-control Directives)
+# El 10021 es un hallazgo de ruido en cabeceras X-Content-Type-Options que no aplica a APIs REST.
+10021	WARN	(X-Content-Type-Options Header Missing)
+# El 10020 es un hallazgo de ruido en cabeceras X-Frame-Options que no aplica a APIs REST.
+10020	WARN	(Anti-clickjacking Header - API no sirve HTML)
+# El 100001 es un falso positivo: Swagger UI sirve text/html legitimamente, no es un endpoint de la API.
+100001	IGNORE	(Unexpected Content-Type - falso positivo de Swagger UI)
