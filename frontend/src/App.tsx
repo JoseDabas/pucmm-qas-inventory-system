@@ -2,7 +2,7 @@ import { AuthProvider, useAuth } from 'react-oidc-context';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { oidcConfig } from './auth/oidcConfig';
 import { DashboardLayout } from './layouts/DashboardLayout';
-import { HomePage } from './pages/HomePage';
+import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { MovementHistoryPage } from './pages/MovementHistoryPage';
 import { CategoriesPage } from './pages/CategoriesPage';
@@ -38,14 +38,14 @@ const MainContent = () => {
       <BrowserRouter>
         <Routes>
           <Route element={<DashboardLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/inventario" element={<InventoryPage />} />
             <Route path="/historial" element={<MovementHistoryPage />} />
             <Route path="/categorias" element={<CategoriesPage />} />
             <Route path="/reportes" element={<PlaceholderPage title="Reportes" />} />
             <Route path="/configuracion" element={<PlaceholderPage title="Configuración" />} />
-            {/* Cualquier ruta desconocida cae al inventario (p. ej. /productos/nuevo) */}
-            <Route path="*" element={<Navigate to="/inventario" replace />} />
+            {/* Cualquier ruta desconocida cae al dashboard (p. ej. /productos/nuevo) */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>
