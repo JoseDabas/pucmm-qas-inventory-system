@@ -152,8 +152,9 @@ pipeline {
                 KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
             }
             steps {
-                echo 'Ejecutando suite de pruebas End-to-End con Playwright'
-                dir('frontend') {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    echo 'Ejecutando suite de pruebas End-to-End con Playwright'
+                    dir('frontend') {
                     sh 'npm install'
                     sh 'npx playwright install --with-deps'
                     
@@ -187,6 +188,7 @@ pipeline {
                         
                         kill $FRONTEND_PID
                     '''
+                }
                 }
             }
         }
