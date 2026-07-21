@@ -58,19 +58,4 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
                         "LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
                         "LOWER(m.username) LIKE LOWER(CONCAT('%', :term, '%')))")
     Page<StockMovementEntity> searchByProductNameOrUsername(@Param("term") String term, Pageable pageable);
-
-    /**
-     * Ranking de productos más vendidos: agrupa por producto y suma la cantidad
-     * histórica de todas sus salidas (movimientos OUT), de mayor a menor. Se usa
-     * un join implícito por 'productId' con ProductEntity para traer el nombre y
-     * el SKU en la misma consulta (evita el problema N+1). El límite se controla
-     * con el Pageable (p. ej. PageRequest.of(0, limit)).
-     */
-    @Query("SELECT p.id AS productId, p.name AS productName, p.skuCode AS skuCode, " +
-           "SUM(m.quantity) AS totalOut " +
-           "FROM StockMovementEntity m, ProductEntity p " +
-           "WHERE m.productId = p.id AND m.movementType = 'OUT' " +
-           "GROUP BY p.id, p.name, p.skuCode " +
-           "ORDER BY SUM(m.quantity) DESC")
-    List<TopSellingProductView> findTopSellingProducts(Pageable pageable);
 }

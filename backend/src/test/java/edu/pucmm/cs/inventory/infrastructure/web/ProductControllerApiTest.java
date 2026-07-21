@@ -242,21 +242,4 @@ class ProductControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET mas vendidos con cualquier usuario autenticado -> 200
-    @Test
-    @DisplayName("GET mas vendidos con usuario autenticado devuelve 200")
-    void getTopSellingAutenticadoDevuelve200() throws Exception {
-        when(productService.getTopSellingProducts(any(Integer.class))).thenReturn(List.of());
-        mockMvc.perform(get("/api/v1/products/top-selling").with(jwt()))
-                .andExpect(status().isOk());
-    }
-
-    // GET mas vendidos sin token -> 401
-    @Test
-    @DisplayName("GET mas vendidos sin token devuelve 401")
-    void getTopSellingSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/v1/products/top-selling"))
-                .andExpect(status().isUnauthorized());
-    }
-
 }

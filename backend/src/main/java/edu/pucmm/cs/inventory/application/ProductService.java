@@ -10,9 +10,7 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductStock
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
-import edu.pucmm.cs.inventory.infrastructure.web.dto.TopSellingProductResponseDTO;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -139,25 +137,6 @@ public class ProductService {
         Map<UUID, Integer> stocks = stockMap(criticalProducts);
         return criticalProducts.stream()
                 .map(entity -> mapToResponseDTO(entity, stocks.getOrDefault(entity.getId(), 0)))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Devuelve el ranking de productos más vendidos según la suma histórica de sus
-     * salidas (movimientos OUT). Delega la agregación y el ordenamiento al motor de
-     * base de datos y usa el Pageable para limitar la cantidad de resultados.
-     *
-     * @param limit Cantidad máxima de productos a devolver.
-     * @return Lista de productos ordenada de mayor a menor total de unidades salidas.
-     */
-    @Transactional(readOnly = true)
-    public List<TopSellingProductResponseDTO> getTopSellingProducts(int limit) {
-        return stockMovementRepository.findTopSellingProducts(PageRequest.of(0, limit)).stream()
-                .map(view -> new TopSellingProductResponseDTO(
-                        view.getProductId(),
-                        view.getProductName(),
-                        view.getSkuCode(),
-                        view.getTotalOut()))
                 .collect(Collectors.toList());
     }
 

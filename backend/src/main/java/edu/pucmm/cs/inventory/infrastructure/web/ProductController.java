@@ -24,7 +24,6 @@ import edu.pucmm.cs.inventory.application.ProductService;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
-import edu.pucmm.cs.inventory.infrastructure.web.dto.TopSellingProductResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -80,21 +79,6 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> getCriticalStockAlerts() {
         List<ProductResponseDTO> alerts = productService.getCriticalStockAlerts();
         return ResponseEntity.ok(alerts);
-    }
-
-    /**
-     * Endpoint GET para consultar el ranking de productos más vendidos.
-     *
-     * A diferencia de otros reportes, no exige el rol 'report:view': basta con estar
-     * autenticado, ya que alimenta el tablero de control disponible para cualquier
-     * usuario logueado.
-     */
-    @GetMapping("/top-selling")
-    @Operation(summary = "Productos más vendidos", description = "Devuelve el ranking de productos ordenados por la suma histórica de sus salidas (movimientos OUT), de mayor a menor. El parámetro opcional ?limit= controla cuántos productos se devuelven (por defecto 5).")
-    public ResponseEntity<List<TopSellingProductResponseDTO>> getTopSellingProducts(
-            @Parameter(description = "Cantidad máxima de productos a devolver.") @RequestParam(defaultValue = "5") int limit) {
-        List<TopSellingProductResponseDTO> topSelling = productService.getTopSellingProducts(limit);
-        return ResponseEntity.ok(topSelling);
     }
 
     /**
