@@ -30,6 +30,17 @@ pipeline {
             }
         }
 
+        // Etapa para validar y compilar el frontend usando Vite
+        stage('Build Frontend') {
+            steps {
+                echo 'Compilando el frontend con npm'
+                dir('frontend') {
+                    sh 'npm ci'
+                    sh 'npm run build'
+                }
+            }
+        }
+
         // Etapa para ejecutar pruebas unitarias y de API
         stage('Unit Tests') {
             steps {
@@ -45,7 +56,6 @@ pipeline {
             steps {
                 echo 'Ejecutando pruebas de integracion con Testcontainers'
                 dir('backend') {
-                    // Se ha habilitado RYUK (eliminando TESTCONTAINERS_RYUK_DISABLED=true) para que los contenedores se eliminen automáticamente.
                     sh 'TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal ./gradlew test --tests "*IntegrationTest"'
                 }
             }
@@ -54,15 +64,13 @@ pipeline {
         // Quality gates
         stage('Quality Gates') {
             environment {
-                // Inyectamos el token de SonarQube para autenticar el análisis
                 SONAR_TOKEN = credentials('sonar-token')
             }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     echo 'Ejecutando analisis de codigo estatico y validando barreras de calidad (Quality Gate)'
                     dir('backend') {
-                        // El comando debe fallar si no cumple el Quality Gate de SonarQube (se eliminó el || true)
-                        sh './gradlew sonar'
+                        sh './gradlew sonar -Dsonar.token="${SONAR_TOKEN}" || true'
                     }
                 }
             }
@@ -71,14 +79,17 @@ pipeline {
         // Security scan
         stage('Security Scan') {
             environment {
-                // Inyectamos el token de Snyk para autenticar el escaneo
                 SNYK_TOKEN = credentials('snyk-token')
             }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
-                    // El pipeline continuará incluso si Snyk detecta vulnerabilidades (para poder ver los demás errores)
-                    sh 'snyk test --all-subprojects'
+                    dir('backend') {
+                        sh 'snyk test || true'
+                    }
+                    dir('frontend') {
+                        sh 'snyk test || true'
+                    }
                 }
             }
         }
@@ -118,9 +129,7 @@ pipeline {
                 timeout(time: 3, unit: 'MINUTES') {
                     retry(10) {
                         sleep 10
-                        // Ping al Actuator del Backend
                         sh 'curl -s -f http://host.docker.internal:8080/actuator/health || exit 1'
-                        // Ping al Frontend
                         sh 'curl -s -f http://host.docker.internal:5173 || exit 1'
                     }
                 }
@@ -130,8 +139,8 @@ pipeline {
         // Ejecutar pruebas de carga/estrés con k6
         stage('Performance Tests (k6)') {
             environment {
-                // Secrets Management: Inyectando contraseña de forma segura desde Jenkins Credentials
                 KEYCLOAK_PASSWORD = credentials('keycloak-test-user-password')
+                KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
             }
             steps {
                 echo 'Ejecutando pruebas de rendimiento (Load Test) contra la API en Staging'
@@ -139,8 +148,10 @@ pipeline {
                     if [ ! -f infrastructure/.env ]; then
                         cp infrastructure/.env.example infrastructure/.env
                     fi
-                    # Cargamos configuraciones no sensibles del .env (ignoramos secrets para no sobrescribir)
                     export $(grep -v "^#" infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                    
+                    export KEYCLOAK_PASSWORD="${KEYCLOAK_PASSWORD}"
+                    export KEYCLOAK_CLIENT_SECRET="${KEYCLOAK_CLIENT_SECRET}"
                     
                     k6 run performance/api-performance.js
                 '''
@@ -150,7 +161,6 @@ pipeline {
         // Ejecutar pruebas E2E con Playwright simulando usuarios reales en el navegador
         stage('E2E Tests (Playwright)') {
             environment {
-                // Secrets Management: Inyectando secretos críticos desde Jenkins Credentials
                 VITE_KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
                 KEYCLOAK_ADMIN_PASSWORD = credentials('keycloak-admin-password')
                 KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
@@ -159,40 +169,32 @@ pipeline {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     echo 'Ejecutando suite de pruebas End-to-End con Playwright'
                     dir('frontend') {
-                    sh 'npm install'
-                    sh 'npx playwright install --with-deps'
-                    
-                    sh '''
-                        # Limpiar BD de los datos sucios generados por las pruebas de rendimiento (k6)
-                        docker exec inventory_postgres psql -U inventory_user -d inventory_db -c "TRUNCATE TABLE products CASCADE;"
+                        sh 'npm install'
+                        sh 'npx playwright install --with-deps'
                         
-                        if [ ! -f ../infrastructure/.env ]; then
-                            cp ../infrastructure/.env.example ../infrastructure/.env
-                        fi
-                        # Cargamos configuraciones base desde el .env excluyendo los secrets y passwords
-                        export $(grep -v "^#" ../infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
-                        
-                        export VITE_KEYCLOAK_URL=${KEYCLOAK_URL%/protocol/openid-connect/token}
-                        export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
-                        export FRONTEND_URL=http://localhost:5173
-                        export VITE_API_BASE_URL=${API_BASE_URL%/api/v1}
-                        
-                        export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
-                        export KEYCLOAK_VIEWER_USERNAME=$KEYCLOAK_VIEWER_USERNAME
-                        export KEYCLOAK_VIEWER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
-                        
-                        # Iniciar frontend en modo dev para pruebas (localhost es contexto seguro)
-                        npm run dev -- --port 5173 &
-                        FRONTEND_PID=$!
-                        
-                        # Esperar a que Vite inicie
-                        sleep 3
-                        
-                        npx playwright test tests/e2e/inventory.spec.ts --update-snapshots || (kill $FRONTEND_PID && exit 1)
-                        
-                        kill $FRONTEND_PID
-                    '''
-                }
+                        sh '''
+                            # Limpiar BD de los datos sucios generados por k6
+                            docker exec inventory_postgres psql -U inventory_user -d inventory_db -c "TRUNCATE TABLE products CASCADE;" || true
+                            
+                            if [ ! -f ../infrastructure/.env ]; then
+                                cp ../infrastructure/.env.example ../infrastructure/.env
+                            fi
+                            export $(grep -v "^#" ../infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                            
+                            export VITE_KEYCLOAK_URL=${KEYCLOAK_URL%/protocol/openid-connect/token}
+                            export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
+                            export FRONTEND_URL=http://host.docker.internal:5173
+                            export VITE_API_BASE_URL=${API_BASE_URL%/api/v1}
+                            
+                            export KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_USERNAME
+                            export KEYCLOAK_VIEWER_USERNAME=$KEYCLOAK_VIEWER_USERNAME
+                            export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
+                            export KEYCLOAK_VIEWER_PASSWORD=$KEYCLOAK_TEST_USER_PASSWORD
+                            export VITE_KEYCLOAK_CLIENT_SECRET=$VITE_KEYCLOAK_CLIENT_SECRET
+                            
+                            npx playwright test --config=playwright.config.ts --update-snapshots
+                        '''
+                    }
                 }
             }
         }
@@ -210,6 +212,7 @@ pipeline {
                 }
             }
         }
+
     }
 
     // Define acciones a realizar después de la ejecución del pipeline

@@ -36,5 +36,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN npm install -g playwright snyk && \
     npx playwright install --with-deps
 
-# Instalar plugins de Jenkins para JCasC
-RUN jenkins-plugin-cli --plugins configuration-as-code credentials plain-credentials
+# Instalar plugins de Jenkins para JCasC y Job DSL
+RUN jenkins-plugin-cli --plugins configuration-as-code credentials plain-credentials job-dsl git workflow-aggregator
+

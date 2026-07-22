@@ -27,3 +27,32 @@ credentials:
               id: "snyk-token"
               description: "Token de autenticación para Snyk"
               secret: "${SNYK_TOKEN}"
+
+unclassified:
+  location:
+    url: "http://localhost:8082/"
+
+security:
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false
+
+jobs:
+  - script: |
+      pipelineJob('inventory-pipeline') {
+        description('Pipeline principal de CI/CD para Inventory System')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/Nier561/pucmm-qas-inventory-system.git')
+                }
+                branches('*/feature/jenkins-performance-qa')
+
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }
+
