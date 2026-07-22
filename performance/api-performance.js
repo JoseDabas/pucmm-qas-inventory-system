@@ -1,15 +1,9 @@
-import http from 'k6/http';
-import { check, sleep } from 'k6';
-
 /**
- * Script de Pruebas de Rendimiento (k6) para la API de Inventario
+ * Script de Pruebas de Rendimiento y Carga (k6) para la API REST del Sistema de Inventario.
  * 
- * Este script implementa las pruebas requeridas.
- * Soporta dos modalidades controladas por la variable de entorno TEST_TYPE:
- * - Load Test (por defecto): Carga normal de 50 VUs.
- * - Stress Test (TEST_TYPE=stress): Estrés agresivo a 200 VUs.
- * 
- * Evalúa umbrales estrictos de errores (<1%) y tiempos de respuesta (p(95) < 500ms).
+ * Evalúa la capacidad de procesamiento del backend en el entorno de Staging/CI bajo escenarios
+ * de carga normal (50 VUs) o estrés masivo (200 VUs). Integra autenticación OIDC con Keycloak 
+ * y verifica los umbrales de SLAs de calidad de servicio (errores < 1%, latencia p(95) < 500ms).
  */
 
 // ==========================================
@@ -19,57 +13,54 @@ import { check, sleep } from 'k6';
 const isStressTest = __ENV.TEST_TYPE === 'stress';
 
 export const options = {
-    // Configuración de los umbrales de rendimiento (Thresholds)
+    // Configuración de los umbrales de rendimiento (Thresholds y SLAs)
     thresholds: {
-        // Tasa de errores HTTP debe ser menor al 1% (rate < 0.01)
+        // Tasa de errores HTTP debe ser inferior al 1% (rate < 0.01)
         http_req_failed: ['rate<0.01'],
-        // El 95% de las peticiones deben completarse en menos de 500ms
-        // Si no se cumple, k6 retorna un código de salida > 0 (fallando el test)
+        // El 95% de las peticiones deben responder en menos de 500ms
         http_req_duration: ['p(95)<500']
     },
 
-    // Configuración dinámica de las fases (stages) según la modalidad del test
+    // Configuración dinámica de rampas de Usuarios Virtuales (stages)
     stages: isStressTest ? [
-        // Stress Test (Estrés agresivo)
-        { duration: '10s', target: 200 }, // Rampa de subida brusca a 200 VUs en 10 segundos
-        { duration: '30s', target: 200 }, // Mantenimiento de 200 VUs durante 30 segundos
-        { duration: '10s', target: 0 }    // Rampa de bajada a 0 VUs en 10 segundos
+        // Stress Test (Estrés agresivo para detectar el punto de ruptura del sistema)
+        { duration: '10s', target: 200 }, // Rampa de subida a 200 VUs en 10s
+        { duration: '30s', target: 200 }, // Mantenimiento sostenido de 200 VUs durante 30s
+        { duration: '10s', target: 0 }    // Rampa de bajada a 0 VUs en 10s
     ] : [
-        // Load Test (Carga normal) - Por defecto
-        { duration: '30s', target: 50 },  // Rampa de subida a 50 VUs en 30 segundos
-        { duration: '1m', target: 50 },   // Mantenimiento de 50 VUs durante 1 minuto
-        { duration: '30s', target: 0 }    // Rampa de bajada a 0 VUs en 30 segundos
+        // Load Test (Carga operacional estándar) - Modo Por Defecto
+        { duration: '30s', target: 50 },  // Rampa de subida a 50 VUs en 30s
+        { duration: '1m', target: 50 },   // Mantenimiento sostenido de 50 VUs durante 1 minuto
+        { duration: '30s', target: 0 }    // Rampa de bajada a 0 VUs en 30s
     ]
 };
 
 // ==========================================
-// VARIABLES DE ENTORNO Y CONSTANTES
+// VARIABLES DE ENTORNO Y CONSTANTES DE RED
 // ==========================================
 
-// Base URL de la API (ej. entorno de Staging)
+// Base URL de la API REST (inyectada desde Jenkins / .env)
 const API_BASE_URL = __ENV.API_BASE_URL;
 
-// ==========================================
-// CONFIGURACIÓN DE AUTENTICACIÓN (OIDC Keycloak)
-// ==========================================
-// IMPORTANTE: Por requerimientos de seguridad, ninguna credencial sensible
-// o variable de entorno está hardcodeada en este script. Estas deben ser inyectadas 
-// obligatoriamente mediante el archivo .env o CI/CD.
-const KEYCLOAK_URL = __ENV.KEYCLOAK_URL; // OBLIGATORIO en el entorno
-const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID; // OBLIGATORIO en el entorno
-const KEYCLOAK_USERNAME = __ENV.KEYCLOAK_USERNAME; // OBLIGATORIO en el entorno
-const KEYCLOAK_PASSWORD = __ENV.KEYCLOAK_PASSWORD; // OBLIGATORIO en el entorno
-const KEYCLOAK_CLIENT_SECRET = __ENV.KEYCLOAK_CLIENT_SECRET; // OBLIGATORIO en el entorno
+// Credenciales OIDC de Keycloak (sin valores sensibles expuestos)
+const KEYCLOAK_URL = __ENV.KEYCLOAK_URL;
+const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID;
+const KEYCLOAK_USERNAME = __ENV.KEYCLOAK_USERNAME;
+const KEYCLOAK_PASSWORD = __ENV.KEYCLOAK_PASSWORD;
+const KEYCLOAK_CLIENT_SECRET = __ENV.KEYCLOAK_CLIENT_SECRET;
 
 // ==========================================
-// CICLO DE VIDA: SETUP
+// CICLO DE VIDA: SETUP DE AUTENTICACIÓN
 // ==========================================
 
 /**
- * Función setup() que se ejecuta una única vez antes de iniciar las VUs (Virtual Users).
- * Realiza una petición al endpoint de tokens OIDC de Keycloak para obtener un access_token.
+ * Hook Setup: Autenticación inicial con Keycloak OIDC.
+ * <p>
+ * Se ejecuta una única vez antes de iniciar las VUs. Emite una solicitud POST de otorgamiento
+ * de credenciales de propietario de recurso (Resource Owner Password Credentials) e inyecta 
+ * el encabezado 'Host: localhost:9080' para garantizar coincidencia con el claim 'iss' del JWT.
  * 
- * @returns {Object} Un objeto que contiene el token JWT para que las VUs lo utilicen.
+ * @returns {Object} Contiene el token JWT emitido por Keycloak para ser compartido entre las VUs.
  */
 export function setup() {
     const payload = {
@@ -92,7 +83,7 @@ export function setup() {
 
     if (res.status !== 200) {
         console.error(`Fallo al obtener el token OIDC de Keycloak. HTTP ${res.status}: ${res.body}`);
-        return { token: null }; // Retorna nulo para indicar fallo, aunque las VUs se ejecutarán (y fallarán).
+        return { token: null };
     }
 
     const token = res.json('access_token');
@@ -100,19 +91,20 @@ export function setup() {
 }
 
 // ==========================================
-// FLUJO PRINCIPAL (VUs)
+// FLUJO PRINCIPAL DE EJECUCIÓN (VUs)
 // ==========================================
 
 /**
- * Función por defecto que ejecuta el flujo de trabajo de cada Usuario Virtual (VU).
- * Realiza peticiones autenticadas para listar y crear productos, evitando conflictos 409.
+ * Función Principal de Iteración para Usuarios Virtuales (VUs).
+ * <p>
+ * Ejecuta transacciones HTTP concurrentes contra la API REST, simulando la navegación real 
+ * de lectura (GET /products) y escritura (POST /products) garantizando unicidad de SKU.
  * 
- * @param {Object} data Objeto retornado por la función setup(), contiene el access token.
+ * @param {Object} data Objeto retornado por setup() con el token de acceso JWT.
  */
 export default function (data) {
     if (!data || !data.token) {
-        // Fallo temprano si el setup() no pudo obtener el token
-        console.warn("No se encontró token JWT. Abortando iteración.");
+        console.warn("No se encontró token JWT válido. Abortando iteración.");
         sleep(1);
         return;
     }
@@ -122,14 +114,14 @@ export default function (data) {
         'Content-Type': 'application/json'
     };
 
-    // 1. Petición GET al endpoint de listar productos
+    // 1. Petición GET al endpoint de consulta de productos
     let getRes = http.get(`${API_BASE_URL}/products`, { headers });
 
     check(getRes, {
         'Listar productos responde con status 200 OK': (r) => r.status === 200,
     });
 
-    // 2. Petición POST para crear un producto
+    // 2. Petición POST para creación de nuevos productos (con SKU único)
     const randomSalt = Math.floor(Math.random() * 10000000);
     const uniqueCode = `PRD-${__VU}-${__ITER}-${randomSalt}`;
 
@@ -150,7 +142,7 @@ export default function (data) {
         'Crear producto responde con status 200 o 201': (r) => r.status === 201 || r.status === 200,
     });
 
-
-    // Pausa breve para simular tiempo de reflexión/navegación del usuario real
+    // Pausa breve para simular tiempo de reflexión/interacción del usuario (Think Time)
     sleep(1);
 }
+

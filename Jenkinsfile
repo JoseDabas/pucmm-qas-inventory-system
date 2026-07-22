@@ -1,28 +1,35 @@
 pipeline {
-    agent any // Usa cualquier agente disponible para ejecutar el pipeline
+    agent any // Ejecución en agente principal configurado en el nodo de Jenkins
 
-    // ========================================================
-    // VARIABLES DE ENTORNO GLOBALES
-    // ========================================================
-    // NOTA DE SEGURIDAD: Ningún secreto (contraseñas, client secrets) debe estar hardcodeado aquí.
-    // La configuración no sensible se extraerá del .env, pero los secretos
-    // serán inyectados dinámicamente mediante el gestor de credenciales de Jenkins.
+    // =========================================================================
+    // CONFIGURACIÓN GLOBAL Y GESTIÓN DE VARIABLES DE ENTORNO (DevSecOps)
+    // =========================================================================
+    // Principio de Seguridad: Ningún secreto ni credencial sensible se almacena en el código.
+    // Las variables no sensibles se extraen dinámicamente de 'infrastructure/.env', mientras
+    // que los secretos son inyectados mediante el almacén de credenciales de Jenkins.
 
-    // Define las etapas del pipeline
     stages {
 
-        // Etapa para obtener el código fuente del repositorio
+        // =========================================================================
+        // FASE 1: INTEGRACIÓN CONTINUA (CI) - CONSTRUCCIÓN Y PRUEBAS ESTÁTICAS
+        // =========================================================================
+
+        /**
+         * Stage 1: Obtención del código fuente desde el repositorio remoto Git.
+         */
         stage('Checkout') {
             steps {
-                echo 'Obteniendo el codigo fuente del repositorio'
+                echo 'Obteniendo el código fuente del repositorio Git...'
                 checkout scm
             }
         }
 
-        // Etapa para compilar el backend usando Gradle
+        /**
+         * Stage 2: Compilación agnóstica del backend (Spring Boot Java 21) utilizando Gradle wrapper.
+         */
         stage('Build Backend') {
             steps {
-                echo 'Compilando el backend con Gradle'
+                echo 'Compilando el backend con Gradle...'
                 dir('backend') {
                     sh 'chmod +x gradlew'
                     sh './gradlew build -x test'
@@ -30,10 +37,12 @@ pipeline {
             }
         }
 
-        // Etapa para validar y compilar el frontend usando Vite
+        /**
+         * Stage 3: Validación y compilación agnóstica del frontend (React / Vite / TypeScript).
+         */
         stage('Build Frontend') {
             steps {
-                echo 'Compilando el frontend con npm'
+                echo 'Compilando el frontend con npm...'
                 dir('frontend') {
                     sh 'npm ci'
                     sh 'npm run build'
@@ -41,34 +50,40 @@ pipeline {
             }
         }
 
-        // Etapa para ejecutar pruebas unitarias y de API
+        /**
+         * Stage 4: Pruebas unitarias de controladores, servicios y lógica de dominio.
+         */
         stage('Unit Tests') {
             steps {
-                echo 'Ejecutando pruebas unitarias y de API'
+                echo 'Ejecutando pruebas unitarias de servicios y APIs REST...'
                 dir('backend') {
                     sh './gradlew test --tests "*ProductTest" --tests "*CategoryTest" --tests "*ProductServiceTest" --tests "*ProductControllerApiTest"'
                 }
             }
         }
 
-        // Etapa para ejecutar pruebas de integración usando Testcontainers
+        /**
+         * Stage 5: Pruebas de integración aisladas mediante contenedores efímeros (Testcontainers / Postgres).
+         */
         stage('Integration Tests') {
             steps {
-                echo 'Ejecutando pruebas de integracion con Testcontainers'
+                echo 'Ejecutando pruebas de integración con Testcontainers...'
                 dir('backend') {
                     sh 'TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal ./gradlew test --tests "*IntegrationTest"'
                 }
             }
         }
 
-        // Quality gates
+        /**
+         * Stage 6: Análisis estático de código y barrera de calidad (SonarQube Quality Gate).
+         */
         stage('Quality Gates') {
             environment {
                 SONAR_TOKEN = credentials('sonar-token')
             }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    echo 'Ejecutando analisis de codigo estatico y validando barreras de calidad (Quality Gate)'
+                    echo 'Ejecutando análisis de código estático y validando Quality Gate...'
                     dir('backend') {
                         sh './gradlew sonar -Dsonar.token="${SONAR_TOKEN}" || true'
                     }
@@ -76,14 +91,16 @@ pipeline {
             }
         }
 
-        // Security scan
+        /**
+         * Stage 7: Escaneo de seguridad de dependencias de código abierto (Snyk Vulnerability Scan).
+         */
         stage('Security Scan') {
             environment {
                 SNYK_TOKEN = credentials('snyk-token')
             }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    echo 'Ejecutando escaneo de seguridad para detectar vulnerabilidades en dependencias'
+                    echo 'Ejecutando escaneo de seguridad en dependencias (Snyk)...'
                     dir('backend') {
                         sh 'snyk test || true'
                     }
@@ -94,10 +111,12 @@ pipeline {
             }
         }
 
-        // Docker build
+        /**
+         * Stage 8: Empaquetamiento e higienización de imágenes Docker locales.
+         */
         stage('Docker Build') {
             steps {
-                echo 'Construyendo imagenes de Docker para empaquetar los artefactos'
+                echo 'Construyendo imágenes de Docker para empaquetar artefactos...'
                 dir('backend') {
                     sh 'docker build -t inventory-backend:latest .'
                 }
@@ -107,14 +126,16 @@ pipeline {
             }
         }
 
-        // ========================================================
-        // CD: CONTINUOUS DELIVERY STAGES
-        // ========================================================
+        // =========================================================================
+        // FASE 2: ENTREGA CONTINUA (CD) - STAGING, QA AUTOMATIZADO Y PRODUCCIÓN
+        // =========================================================================
 
-        // Despliegue hacia el ambiente de Staging
+        /**
+         * Stage 9: Despliegue automatizado del entorno de pre-producción (Staging) vía Docker Compose.
+         */
         stage('Deploy to Staging') {
             steps {
-                echo 'Desplegando la aplicacion en el entorno de Staging...'
+                echo 'Desplegando la aplicación en el entorno de Staging...'
                 dir('infrastructure') {
                     sh 'docker compose -f docker-compose.yml pull || true'
                     sh 'docker compose -f docker-compose.yml up -d'
@@ -122,10 +143,12 @@ pipeline {
             }
         }
 
-        // Healthcheck: Garantizar que la infraestructura está lista antes de probar
+        /**
+         * Stage 10: Verificación activa de disponibilidad de servicios (Healthcheck HTTP 200 OK).
+         */
         stage('Healthcheck Staging') {
             steps {
-                echo 'Verificando que los servicios de Staging esten listos (HTTP 200)'
+                echo 'Verificando salud de la infraestructura de Staging...'
                 timeout(time: 3, unit: 'MINUTES') {
                     retry(10) {
                         sleep 10
@@ -136,14 +159,16 @@ pipeline {
             }
         }
 
-        // Ejecutar pruebas de carga/estrés con k6
+        /**
+         * Stage 11: Pruebas de rendimiento, carga y SLAs bajo concurrencia masiva (k6).
+         */
         stage('Performance Tests (k6)') {
             environment {
                 KEYCLOAK_PASSWORD = credentials('keycloak-test-user-password')
                 KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
             }
             steps {
-                echo 'Ejecutando pruebas de rendimiento (Load Test) contra la API en Staging'
+                echo 'Ejecutando pruebas de carga y latencia con k6 en Staging...'
                 sh '''
                     if [ ! -f infrastructure/.env ]; then
                         cp infrastructure/.env.example infrastructure/.env
@@ -158,7 +183,9 @@ pipeline {
             }
         }
 
-        // Ejecutar pruebas E2E con Playwright simulando usuarios reales en el navegador
+        /**
+         * Stage 12: Pruebas End-to-End (E2E) simulando navegadores web reales (Playwright Chromium/Safari).
+         */
         stage('E2E Tests (Playwright)') {
             environment {
                 VITE_KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
@@ -167,13 +194,13 @@ pipeline {
             }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    echo 'Ejecutando suite de pruebas End-to-End con Playwright'
+                    echo 'Ejecutando suite completa de pruebas End-to-End con Playwright...'
                     dir('frontend') {
                         sh 'npm install'
                         sh 'npx playwright install --with-deps'
                         
                         sh '''
-                            # Limpiar BD de los datos sucios generados por k6
+                            # Limpieza de datos volátiles de rendimiento en la base de datos de test
                             docker exec inventory_postgres psql -U inventory_user -d inventory_db -c "TRUNCATE TABLE products CASCADE;" || true
                             
                             if [ ! -f ../infrastructure/.env ]; then
@@ -199,13 +226,15 @@ pipeline {
             }
         }
 
-        // Gatekeeper manual antes de tocar Producción
+        /**
+         * Stage 13: Aprobación manual explícita (Gatekeeper) previa a promoción en Producción.
+         */
         stage('Promote to Production (Gatekeeper)') {
             steps {
-                echo 'Los tests de QA (Performance y E2E) han pasado exitosamente en Staging.'
-                input message: '¿Aprobar el pase a Produccion?', ok: 'Aprobar y Desplegar'
+                echo 'Todas las pruebas de QA (Rendimiento y E2E) han finalizado exitosamente en Staging.'
+                input message: '¿Aprobar el pase del release a Producción?', ok: 'Aprobar y Desplegar'
                 
-                echo 'Procediendo con el despliegue en Produccion...'
+                echo 'Procediendo con el despliegue en el entorno de Producción...'
                 dir('infrastructure') {
                     sh 'docker compose -f docker-compose.yml pull || true'
                     sh 'docker compose -f docker-compose.yml up -d'
@@ -215,23 +244,25 @@ pipeline {
 
     }
 
-    // Define acciones a realizar después de la ejecución del pipeline
+    /**
+     * Post-Acciones de Limpieza y Generación de Reportes.
+     */
     post {
         always {
-            echo 'Pipeline finalizado. Limpiando imagenes huérfanas y caché de compilación para liberar disco...'
+            echo 'Limpiando imágenes efímeras y caché de Docker para optimización de almacenamiento...'
             sh 'docker image prune -f || true'
             sh 'docker builder prune -f || true'
             
-            echo 'Archivando artefactos...' 
+            echo 'Archivando reportes de Playwright y capturas de prueba...' 
             dir('frontend') {
                 archiveArtifacts artifacts: 'playwright-report/**, test-results/**', allowEmptyArchive: true
             }
         }
         success {
-            echo 'Pipeline de CI/CD ejecutado con exito'
+            echo 'Pipeline de CI/CD ejecutado exitosamente.'
         }
         failure {
-            echo 'El pipeline fallo en algun stage de CI o QA'
+            echo 'El pipeline detectó un fallo crítico en alguna etapa de validación de CI o QA.'
         }
     }
-}
+}

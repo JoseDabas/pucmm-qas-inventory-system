@@ -103,9 +103,17 @@ public class SecurityConfig {
     private String jwkSetUri;
 
     /**
-     * Decodificador JWT flexible para entornos multi-red (CI/QA/Docker).
-     * Valida la firma criptográfica mediante las llaves públicas de Keycloak (JWK Set URI)
-     * y el sello de tiempo (exp), permitiendo interoperabilidad entre localhost y host.docker.internal.
+     * Decodificador de Tokens JWT personalizado para Entornos Heterogéneos (DevSecOps).
+     * <p>
+     * Obtiene dinámicamente las claves públicas de firmas RSA emitidas por el servidor de Keycloak 
+     * a través de su endpoint JWK Set URI (JWKS). Realiza una validación criptográfica estricta 
+     * de la firma del token y verifica las ventanas de vigencia temporal (claims 'exp' y 'nbf').
+     * <p>
+     * Esta implementación desacopla la validación estricta de la cadena literal de emisor (issuer), 
+     * garantizando interoperabilidad entre peticiones internas de contenedores (Docker bridge) y 
+     * peticiones externas del cliente (localhost / host.docker.internal).
+     *
+     * @return El bean {@link org.springframework.security.oauth2.jwt.JwtDecoder} configurado.
      */
     @Bean
     public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
@@ -118,10 +126,14 @@ public class SecurityConfig {
     }
 
     /**
-     * Configuración global de CORS.
-     * Permite las peticiones desde el frontend de Vite (localhost:5173).
+     * Configuración Global de Intercambio de Recursos entre Orígenes (CORS).
+     * <p>
+     * Define las reglas de acceso cruzado para permitir que la aplicación SPA (Single Page Application)
+     * en Vite, así como los agentes de automatización E2E (Playwright) y pruebas de carga (k6) ejecutándose 
+     * en contenedores Docker de CI/CD, puedan consumir la API de manera segura.
+     *
+     * @return El bean {@link CorsConfigurationSource} con la política de orígenes permitidos.
      */
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
