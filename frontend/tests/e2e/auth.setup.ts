@@ -25,12 +25,15 @@ setup.beforeAll(() => {
 });
 
 /**
- * Script de Configuración de Estado de Autenticación: Rol Administrador.
+ * Script de configuración de estado: Autenticación como Administrador.
  * 
- * Navega a la aplicación SPA, intercepta dinámicamente el enrutamiento de red en entornos CI/Docker
- * para garantizar la resolución de orígenes entre localhost y host.docker.internal, inyecta las credenciales
- * del usuario Administrador en el formulario OIDC de Direct Access Grants, y captura tanto el token en 
- * sessionStorage como las cookies de sesión en 'tests/e2e/.auth/admin.json'.
+ * Navega a la aplicación, interactúa con el botón de SSO para ser redirigido
+ * al servidor de Keycloak, inyecta las credenciales del usuario Administrador,
+ * y luego de un inicio de sesión exitoso, captura y guarda el estado (cookies,
+ * localStorage) en un archivo JSON.
+ * 
+ * Este archivo JSON será posteriormente inyectado en las pruebas que requieran
+ * el rol de Administrador.
  */
 setup('authenticate as admin', async ({ page }) => {
   // En entornos CI/Docker, redirigir peticiones de localhost:9080 hacia host.docker.internal:9080
@@ -50,8 +53,8 @@ setup('authenticate as admin', async ({ page }) => {
 
   await page.goto('/');
 
-  const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME || 'admin-user';
-  const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD || process.env.KEYCLOAK_TEST_USER_PASSWORD || 'ejemplo12345';
+  const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME;
+  const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD;
 
   await page.fill('#username', adminUser);
   await page.fill('#password', adminPass);
@@ -59,6 +62,8 @@ setup('authenticate as admin', async ({ page }) => {
 
   await expect(page.getByRole('link', { name: 'Inventario', exact: true })).toBeVisible({ timeout: 15000 });
 
+  // Espera explícita estática (2 segundos) para garantizar que oidc-client-ts termine 
+  // de persistir el token en el SessionStorage, independientemente del nombre de la llave.
   await page.waitForTimeout(2000);
 
   // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
@@ -70,11 +75,7 @@ setup('authenticate as admin', async ({ page }) => {
 });
 
 /**
- * Script de Configuración de Estado de Autenticación: Rol Consulta (Viewer).
- * 
- * Inyecta las credenciales del usuario de sólo lectura (Viewer), valida la resolución OIDC
- * en Keycloak, y exporta el estado de autenticación a 'tests/e2e/.auth/viewer.json' para ser 
- * reutilizado en las suites de validación RBAC restringidas.
+ * Script de configuración de estado: Autenticación como Viewer.
  */
 setup('authenticate as viewer', async ({ page }) => {
   await page.route('**/*', async (route) => {
@@ -90,16 +91,18 @@ setup('authenticate as viewer', async ({ page }) => {
     }
   });
 
+
   await page.goto('/');
 
-  const viewerUser = process.env.KEYCLOAK_VIEWER_USERNAME || 'viewer-user';
-  const viewerPass = process.env.KEYCLOAK_VIEWER_PASSWORD || process.env.KEYCLOAK_TEST_USER_PASSWORD || 'ejemplo12345';
+  const viewerUser = process.env.KEYCLOAK_VIEWER_USERNAME;
+  const viewerPass = process.env.KEYCLOAK_VIEWER_PASSWORD;
 
   await page.fill('#username', viewerUser);
   await page.fill('#password', viewerPass);
   await page.click('button[type="submit"]');
 
   await expect(page.getByRole('link', { name: 'Inventario', exact: true })).toBeVisible({ timeout: 15000 });
+
 
   await page.waitForTimeout(2000);
 
@@ -110,6 +113,3 @@ setup('authenticate as viewer', async ({ page }) => {
   // Consolida y exporta el contexto de seguridad capturado (Cookies)
   await page.context().storageState({ path: authFileViewer });
 });
-
-
-

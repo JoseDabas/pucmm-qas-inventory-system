@@ -25,7 +25,6 @@
         "http://host.docker.internal:8080",
         "*"
       ],
-
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "publicClient": false,
@@ -36,13 +35,34 @@
   ],
   "roles": {
     "realm": [
-      { "name": "product:view", "description": "Ver catálogo de productos." },
-      { "name": "product:manage", "description": "Crear, editar y eliminar productos." },
-      { "name": "stock:view", "description": "Ver niveles de inventario e historial." },
-      { "name": "stock:manage", "description": "Registrar entradas, salidas y ajustes de stock." },
-      { "name": "report:view", "description": "Acceder y exportar reportes y dashboard." },
-      { "name": "user:manage", "description": "Gestionar usuarios, roles y permisos." },
-      { "name": "audit:view", "description": "Consultar registros de auditoría." }
+      {
+        "name": "product:view",
+        "description": "Ver catálogo de productos."
+      },
+      {
+        "name": "product:manage",
+        "description": "Crear, editar y eliminar productos."
+      },
+      {
+        "name": "stock:view",
+        "description": "Ver niveles de inventario e historial."
+      },
+      {
+        "name": "stock:manage",
+        "description": "Registrar entradas, salidas y ajustes de stock."
+      },
+      {
+        "name": "report:view",
+        "description": "Acceder y exportar reportes y dashboard."
+      },
+      {
+        "name": "user:manage",
+        "description": "Gestionar usuarios, roles y permisos."
+      },
+      {
+        "name": "audit:view",
+        "description": "Consultar registros de auditoría."
+      }
     ]
   },
   "users": [

@@ -1,3 +1,6 @@
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
 /**
  * Script de Pruebas de Rendimiento y Carga (k6) para la API REST del Sistema de Inventario.
  * 
@@ -42,7 +45,7 @@ export const options = {
 // Base URL de la API REST (inyectada desde Jenkins / .env)
 const API_BASE_URL = __ENV.API_BASE_URL;
 
-// Credenciales OIDC de Keycloak (sin valores sensibles expuestos)
+// Credenciales OIDC de Keycloak
 const KEYCLOAK_URL = __ENV.KEYCLOAK_URL;
 const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID;
 const KEYCLOAK_USERNAME = __ENV.KEYCLOAK_USERNAME;

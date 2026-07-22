@@ -265,4 +265,4 @@ pipeline {
             echo 'El pipeline detectó un fallo crítico en alguna etapa de validación de CI o QA.'
         }
     }
-}
+}
