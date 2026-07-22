@@ -99,14 +99,33 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://keycloak:8080/realms/Inventario/protocol/openid-connect/certs}")
+    private String jwkSetUri;
+
+    /**
+     * Decodificador JWT flexible para entornos multi-red (CI/QA/Docker).
+     * Valida la firma criptográfica mediante las llaves públicas de Keycloak (JWK Set URI)
+     * y el sello de tiempo (exp), permitiendo interoperabilidad entre localhost y host.docker.internal.
+     */
+    @Bean
+    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
+        org.springframework.security.oauth2.jwt.NimbusJwtDecoder jwtDecoder = 
+                org.springframework.security.oauth2.jwt.NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        jwtDecoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                new org.springframework.security.oauth2.jwt.JwtTimestampValidator()
+        ));
+        return jwtDecoder;
+    }
+
     /**
      * Configuración global de CORS.
      * Permite las peticiones desde el frontend de Vite (localhost:5173).
      */
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "http://host.docker.internal:*", "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(
                 Arrays.asList("Authorization", "Content-Type", "Accept", "traceparent", "X-Correlation-ID"));
@@ -115,6 +134,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     /**
      * Configuración del Firewall HTTP estricto de Spring Security.
