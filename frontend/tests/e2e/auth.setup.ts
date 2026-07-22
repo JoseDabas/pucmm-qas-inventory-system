@@ -53,8 +53,8 @@ setup('authenticate as admin', async ({ page }) => {
 
   await page.goto('/');
 
-  const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME;
-  const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD;
+  const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME || '';
+  const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD || '';
 
   await page.fill('#username', adminUser);
   await page.fill('#password', adminPass);
@@ -94,8 +94,8 @@ setup('authenticate as viewer', async ({ page }) => {
 
   await page.goto('/');
 
-  const viewerUser = process.env.KEYCLOAK_VIEWER_USERNAME;
-  const viewerPass = process.env.KEYCLOAK_VIEWER_PASSWORD;
+  const viewerUser = process.env.KEYCLOAK_VIEWER_USERNAME || '';
+  const viewerPass = process.env.KEYCLOAK_VIEWER_PASSWORD || '';
 
   await page.fill('#username', viewerUser);
   await page.fill('#password', viewerPass);
