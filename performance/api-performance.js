@@ -83,7 +83,12 @@ export function setup() {
         payload.client_secret = KEYCLOAK_CLIENT_SECRET;
     }
 
-    const res = http.post(KEYCLOAK_URL, payload);
+    const headers = {
+        'Host': 'localhost:9080',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    const res = http.post(KEYCLOAK_URL, payload, { headers });
 
     if (res.status !== 200) {
         console.error(`Fallo al obtener el token OIDC de Keycloak. HTTP ${res.status}: ${res.body}`);
@@ -125,8 +130,6 @@ export default function (data) {
     });
 
     // 2. Petición POST para crear un producto
-    // Se utiliza aleatoriedad extrema (Math.random) combinada con ID de VU e Iteración (__VU, __ITER)
-    // para garantizar que los códigos y nombres de producto sean únicos y no violen constraints en BD.
     const randomSalt = Math.floor(Math.random() * 10000000);
     const uniqueCode = `PRD-${__VU}-${__ITER}-${randomSalt}`;
 
@@ -137,7 +140,8 @@ export default function (data) {
         price: 150.75,
         category: "Performance",
         initialQuantity: 100,
-        minimumStock: 10
+        minimumStock: 10,
+        isActive: true
     };
 
     let postRes = http.post(`${API_BASE_URL}/products`, JSON.stringify(newProduct), { headers });
@@ -145,6 +149,7 @@ export default function (data) {
     check(postRes, {
         'Crear producto responde con status 200 o 201': (r) => r.status === 201 || r.status === 200,
     });
+
 
     // Pausa breve para simular tiempo de reflexión/navegación del usuario real
     sleep(1);
