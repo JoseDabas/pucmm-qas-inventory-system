@@ -62,7 +62,13 @@ const MainContent = () => {
   return (
     <LoginPage
       onLogin={(username, password) =>
-        auth.signinResourceOwnerCredentials({ username, password })
+        auth.signinResourceOwnerCredentials({ username, password }).then((user) => {
+          
+          if (user) {
+            window.history.replaceState({}, document.title, '/dashboard');
+          }
+          return user;
+        })
       }
     />
   );
