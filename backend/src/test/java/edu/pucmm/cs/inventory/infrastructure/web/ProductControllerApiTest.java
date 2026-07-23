@@ -217,20 +217,20 @@ class ProductControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET historial de auditoria con report:view -> 200
+    // GET historial de auditoria con audit:view -> 200
     @Test
-    @DisplayName("GET auditoria de producto con report:view devuelve 200")
-    void getAuditoriaConReportViewDevuelve200() throws Exception {
+    @DisplayName("GET auditoria de producto con audit:view devuelve 200")
+    void getAuditoriaConAuditViewDevuelve200() throws Exception {
         when(productAuditService.getProductAuditHistory(any())).thenReturn(List.of());
-        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("report:view")))
+        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("audit:view")))
                 .andExpect(status().isOk());
     }
 
     // GET historial de auditoria con permiso incorrecto -> 403
     @Test
-    @DisplayName("GET auditoria de producto con product:view devuelve 403")
+    @DisplayName("GET auditoria de producto con report:view devuelve 403")
     void getAuditoriaConPermisoIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("product:view")))
+        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("report:view")))
                 .andExpect(status().isForbidden());
     }
 

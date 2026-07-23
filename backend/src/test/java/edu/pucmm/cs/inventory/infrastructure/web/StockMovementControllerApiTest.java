@@ -77,12 +77,12 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET con report:view -> 200
+    // GET con stock:view -> 200
     @Test
-    @DisplayName("GET movimientos con report:view devuelve 200")
+    @DisplayName("GET movimientos con stock:view devuelve 200")
     void getConPermisoDevuelve200() throws Exception {
         when(stockMovementService.getMovements(any(), any())).thenReturn(new PageImpl<>(List.of(sampleResponse)));
-        mockMvc.perform(get("/api/v1/stock-movements").with(jwtWith("report:view")))
+        mockMvc.perform(get("/api/v1/stock-movements").with(jwtWith("stock:view")))
                 .andExpect(status().isOk());
     }
 
@@ -94,24 +94,24 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST con product:manage -> 201
+    // POST con stock:manage -> 201
     @Test
-    @DisplayName("POST registrar movimiento con product:manage devuelve 201")
+    @DisplayName("POST registrar movimiento con stock:manage devuelve 201")
     void postConPermisoDevuelve201() throws Exception {
         when(stockMovementService.registerMovement(any())).thenReturn(sampleResponse);
         mockMvc.perform(post("/api/v1/stock-movements")
-                .with(jwtWith("product:manage"))
+                .with(jwtWith("stock:manage"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated());
     }
 
-    // POST con report:view (sin manage) -> 403
+    // POST con stock:view (sin manage) -> 403
     @Test
-    @DisplayName("POST registrar movimiento con report:view devuelve 403")
+    @DisplayName("POST registrar movimiento con stock:view devuelve 403")
     void postConPermisoInsuficienteDevuelve403() throws Exception {
         mockMvc.perform(post("/api/v1/stock-movements")
-                .with(jwtWith("report:view"))
+                .with(jwtWith("stock:view"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isForbidden());
@@ -133,7 +133,7 @@ class StockMovementControllerApiTest {
     void postConCantidadInvalidaDevuelve400() throws Exception {
         validRequest.setQuantity(0);
         mockMvc.perform(post("/api/v1/stock-movements")
-                .with(jwtWith("product:manage"))
+                .with(jwtWith("stock:manage"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest());
@@ -147,7 +147,7 @@ class StockMovementControllerApiTest {
                 .thenThrow(new IllegalArgumentException("La salida solicitada supera el stock disponible."));
         validRequest.setMovementType(MovementType.OUT);
         mockMvc.perform(post("/api/v1/stock-movements")
-                .with(jwtWith("product:manage"))
+                .with(jwtWith("stock:manage"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest());

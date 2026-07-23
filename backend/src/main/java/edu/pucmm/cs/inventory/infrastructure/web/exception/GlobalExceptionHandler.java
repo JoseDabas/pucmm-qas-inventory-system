@@ -81,6 +81,13 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex) {
+        log.warn("Cuenta duplicada: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     public org.springframework.http.ResponseEntity<ProblemDetail> handleHttpRequestMethodNotSupportedException(
             org.springframework.web.HttpRequestMethodNotSupportedException ex) {

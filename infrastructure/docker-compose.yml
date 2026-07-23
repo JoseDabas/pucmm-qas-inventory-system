@@ -85,6 +85,13 @@ services:
       - SPRING_DATASOURCE_PASSWORD=inventory_password
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/Inventario/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:9080/realms/Inventario
+      # Cliente de administración de Keycloak (KeycloakAdminService): el backend
+      # llega a Keycloak por la red interna de Docker y usa la service account de
+      # 'inventory-client' con el mismo secreto que importa el realm.
+      - KEYCLOAK_ADMIN_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_ADMIN_REALM=Inventario
+      - KEYCLOAK_ADMIN_CLIENT_ID=inventory-client
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
       # Configuraciones de OpenTelemetry para enrutar telemetría hacia Grafana Alloy
       - OTEL_SERVICE_NAME=inventory-backend
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317

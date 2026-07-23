@@ -21,6 +21,7 @@
       ],
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
       "publicClient": false,
       "frontchannelLogout": true,
       "protocol": "openid-connect",
@@ -39,6 +40,18 @@
     ]
   },
   "users": [
+    {
+      "username": "service-account-inventory-client",
+      "enabled": true,
+      "serviceAccountClientId": "inventory-client",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "view-realm"
+        ]
+      }
+    },
     {
       "username": "admin-user",
       "enabled": true,

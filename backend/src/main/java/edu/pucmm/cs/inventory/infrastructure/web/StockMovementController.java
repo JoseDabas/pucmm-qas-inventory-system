@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pucmm.cs.inventory.application.StockMovementService;
+import edu.pucmm.cs.inventory.infrastructure.security.Permissions;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,10 +43,10 @@ public class StockMovementController {
     /**
      * Endpoint GET para listar y paginar el historial de movimientos.
      *
-     * Requiere el rol granular 'report:view' (consulta de solo lectura / auditoría).
+     * Requiere el permiso granular 'stock:view' (consulta de niveles e historial de inventario).
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('report:view')")
+    @PreAuthorize("hasAuthority('" + Permissions.STOCK_VIEW + "')")
     @Operation(summary = "Consultar Historial de Movimientos", description = "Recupera una lista paginada de todas las entradas y salidas de stock, ordenadas por fecha descendente. Admite un término de búsqueda opcional (?search=) que filtra por nombre de producto o usuario.")
     public ResponseEntity<Page<StockMovementResponseDTO>> getMovements(
             @Parameter(description = "Término de búsqueda opcional que filtra por nombre de producto o usuario (case-insensitive).") @RequestParam(required = false) String search,
@@ -58,10 +59,10 @@ public class StockMovementController {
     /**
      * Endpoint POST para registrar una entrada o salida de stock.
      *
-     * Requiere el rol granular 'product:manage' (misma autoridad que modifica inventario).
+     * Requiere el permiso granular 'stock:manage' (registrar entradas/salidas de stock).
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.STOCK_MANAGE + "')")
     @Operation(summary = "Registrar Movimiento de Stock", description = "Registra una entrada (IN) o salida (OUT) de stock para un producto, calculando la cantidad anterior y nueva. Rechaza salidas que dejarían el inventario en negativo.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Movimiento registrado con éxito")
     public ResponseEntity<StockMovementResponseDTO> registerMovement(
