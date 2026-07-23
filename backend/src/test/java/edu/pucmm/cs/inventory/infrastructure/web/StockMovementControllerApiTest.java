@@ -106,6 +106,19 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isCreated());
     }
 
+    // POST con observations explícitamente null -> 400 (Nulls.FAIL respeta el contrato)
+    @Test
+    @DisplayName("POST movimiento con observations null explícito devuelve 400")
+    void postConObservationsNullDevuelve400() throws Exception {
+        String body = "{\"productId\":\"" + UUID.randomUUID()
+                + "\",\"movementType\":\"IN\",\"quantity\":10,\"observations\":null}";
+        mockMvc.perform(post("/api/v1/stock-movements")
+                .with(jwtWith("stock:manage"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
     // POST con stock:view (sin manage) -> 403
     @Test
     @DisplayName("POST registrar movimiento con stock:view devuelve 403")

@@ -127,6 +127,29 @@ class CategoryControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // POST con description explícitamente null -> 400 (Nulls.FAIL respeta el contrato)
+    @Test
+    @DisplayName("POST crear categoría con description null explícito devuelve 400")
+    void postConDescriptionNullDevuelve400() throws Exception {
+        mockMvc.perform(post("/api/v1/categories")
+                .with(jwtWith("product:manage"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Electrónica\",\"description\":null}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // POST sin description (campo opcional omitido) -> 201
+    @Test
+    @DisplayName("POST crear categoría sin description devuelve 201")
+    void postSinDescriptionDevuelve201() throws Exception {
+        when(categoryService.createCategory(any())).thenReturn(sampleResponse);
+        mockMvc.perform(post("/api/v1/categories")
+                .with(jwtWith("product:manage"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Electrónica\"}"))
+                .andExpect(status().isCreated());
+    }
+
     // DELETE con product:manage -> 204
     @Test
     @DisplayName("DELETE categoría con product:manage devuelve 204")

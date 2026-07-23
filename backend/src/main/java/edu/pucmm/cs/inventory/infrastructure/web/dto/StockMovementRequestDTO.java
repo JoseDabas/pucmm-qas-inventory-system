@@ -1,5 +1,8 @@
 package edu.pucmm.cs.inventory.infrastructure.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import edu.pucmm.cs.inventory.domain.MovementType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -31,7 +34,10 @@ public class StockMovementRequestDTO {
     @Max(value = 1000000, message = "La cantidad excede el límite permitido")
     private Integer quantity;
 
+    // Campo opcional: puede omitirse, pero si se envía explícitamente como null se
+    // rechaza (Nulls.FAIL) para respetar el contrato OpenAPI (type: string).
     @Schema(description = "Observaciones o justificación del movimiento", example = "Reposición de inventario")
+    @JsonSetter(nulls = Nulls.FAIL)
     private String observations;
 
     // Getters

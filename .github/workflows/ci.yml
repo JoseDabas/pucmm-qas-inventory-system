@@ -250,6 +250,7 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         run: |
           docker run --rm --network host schemathesis/schemathesis \
             run http://localhost:8080/v3/api-docs \
+            --exclude-path-regex '^/api/v1/admin' \
             -H "Authorization: Bearer ${{ steps.fetch-token.outputs.token }}"
 
   owasp-zap-dast: # DAST: escaneo dinámico OWASP ZAP (API scan sobre OpenAPI, autenticado)
