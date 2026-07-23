@@ -31,7 +31,7 @@ public class StockMovementRequestDTO {
     @Max(value = 1000000, message = "La cantidad excede el límite permitido")
     private Integer quantity;
 
-    @Schema(description = "Observaciones o justificación del movimiento", example = "Reposición de inventario")
+    @Schema(description = "Observaciones o justificación del movimiento", example = "Reposición de inventario", nullable = true)
     private String observations;
 
     // Getters

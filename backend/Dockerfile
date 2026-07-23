@@ -13,7 +13,7 @@ WORKDIR /app
 # Download OpenTelemetry Agent
 ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
 # Copy the built jar from the builder stage
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*-SNAPSHOT.jar app.jar
 # Expose port
 EXPOSE 8080
 # Entrypoint to run the jar with OpenTelemetry

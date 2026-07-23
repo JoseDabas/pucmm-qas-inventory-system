@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 # Copy package files
 COPY package*.json ./
@@ -9,9 +9,11 @@ RUN npm ci
 COPY . .
 # Pass build-time variables (they will be injected by docker-compose)
 ARG VITE_KEYCLOAK_URL
+ARG VITE_API_BASE_URL
 ARG VITE_KEYCLOAK_CLIENT_ID
 ARG VITE_KEYCLOAK_CLIENT_SECRET
 ENV VITE_KEYCLOAK_URL=$VITE_KEYCLOAK_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID
 ENV VITE_KEYCLOAK_CLIENT_SECRET=$VITE_KEYCLOAK_CLIENT_SECRET
 # Build the application
