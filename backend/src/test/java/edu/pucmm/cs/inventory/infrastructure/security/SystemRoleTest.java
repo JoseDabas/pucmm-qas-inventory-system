@@ -63,6 +63,16 @@ class SystemRoleTest {
     }
 
     @Test
+    @DisplayName("getDisplayName devuelve un nombre legible para cada rol")
+    void getDisplayNameDevuelveNombreLegible() {
+        assertThat(SystemRole.ADMIN.getDisplayName()).isEqualTo("Administrador");
+        assertThat(SystemRole.AUDITOR.getDisplayName()).isEqualTo("Auditor");
+        for (SystemRole role : SystemRole.values()) {
+            assertThat(role.getDisplayName()).isNotBlank();
+        }
+    }
+
+    @Test
     @DisplayName("fromPermissions resuelve el rol cuando el conjunto de permisos coincide exactamente")
     void resuelveRolDesdePermisosExactos() {
         assertThat(SystemRole.fromPermissions(SystemRole.VIEWER.getPermissions()))

@@ -7,6 +7,7 @@ import edu.pucmm.cs.inventory.infrastructure.security.SecurityConfig;
 import edu.pucmm.cs.inventory.infrastructure.security.SystemRole;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.CreateUserRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.UserResponseDTO;
+import edu.pucmm.cs.inventory.infrastructure.web.exception.UsernameAlreadyExistsException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -125,6 +126,18 @@ class AdminControllerApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("POST crear cuenta con nombre de usuario duplicado devuelve 409")
+    void postCrearCuentaDuplicadaDevuelve409() throws Exception {
+        when(keycloakAdminService.createUser(any()))
+                .thenThrow(new UsernameAlreadyExistsException("Ya existe una cuenta con ese nombre de usuario o correo."));
+        mockMvc.perform(post("/api/v1/admin/users")
+                .with(jwtWith("user:manage"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isConflict());
     }
 
     @Test
