@@ -1,12 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { navItems } from '../config/navigation';
+import { usePermissions } from '../auth/usePermissions';
 
 /**
  * Barra lateral de navegación. Responsabilidad única: mostrar los enlaces
  * a las secciones y resaltar la sección activa. Los ítems vienen de la
- * config central (navItems).
+ * config central (navItems) y se filtran por el permiso requerido de cada uno.
  */
 export const Sidebar: React.FC = () => {
+  const { hasPermission } = usePermissions();
+  const visibleItems = navItems.filter(
+    (item) => !item.requiredPermission || hasPermission(item.requiredPermission)
+  );
+
   return (
     <aside className="w-64 shrink-0 bg-surface border-r border-border flex flex-col">
       <div className="h-16 flex items-center gap-2 px-6 border-b border-border">
@@ -14,7 +20,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {visibleItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

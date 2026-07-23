@@ -1,5 +1,8 @@
 package edu.pucmm.cs.inventory.infrastructure.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -19,7 +22,10 @@ public class CategoryRequestDTO {
     @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
     private String name;
 
-    @Schema(description = "Descripción opcional de la categoría", example = "Dispositivos y componentes electrónicos", nullable = true)
+    // Campo opcional: puede omitirse, pero si se envía explícitamente como null se
+    // rechaza (Nulls.FAIL) para respetar el contrato OpenAPI (type: string).
+    @Schema(description = "Descripción opcional de la categoría", example = "Dispositivos y componentes electrónicos")
+    @JsonSetter(nulls = Nulls.FAIL)
     private String description;
 
     // Getters

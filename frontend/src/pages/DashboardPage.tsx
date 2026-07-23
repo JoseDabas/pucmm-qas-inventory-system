@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, Package, Tags, ArrowLeftRight, AlertTriangle, Boxes, DollarSign, Percent } from 'lucide-react';
 import api from '../api/axios';
-import type { Product } from '../types/Product';
 import { MetricCard } from '../components/dashboard/MetricCard';
-
-// Cantidad de productos que se traen para calcular los totales agregados
-// (unidades y valor del inventario). Suficiente para la escala del proyecto.
-const AGGREGATE_PAGE_SIZE = 1000;
 
 const number = new Intl.NumberFormat('es-DO');
 const money = new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /**
  * Tablero de control: visión general del estado del inventario mediante métricas
- * del sistema e indicadores operacionales. Cada consulta se resuelve por separado
- * para que un fallo aislado (por ejemplo un 403 por falta de 'report:view') no
- * impida mostrar el resto de los indicadores.
+ * del sistema e indicadores operacionales. Los valores se obtienen de un único
+ * endpoint agregado (/api/v1/dashboard/metrics) accesible para cualquier rol
+ * autenticado, de modo que todos ven los indicadores sin necesitar los permisos
+ * de las secciones operativas.
  */
 export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -31,46 +27,19 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-
-      // Se lanzan todas las peticiones en paralelo y luego se resuelve cada una por
-      // separado, de modo que un fallo aislado no tumbe el resto del tablero.
-      const productsP = api.get('/api/v1/products', { params: { page: 0, size: AGGREGATE_PAGE_SIZE } });
-      const categoriesP = api.get('/api/v1/categories');
-      const criticalP = api.get('/api/v1/products/alerts/critical-stock');
-      const movementsP = api.get('/api/v1/stock-movements', { params: { page: 0, size: 1 } });
-
       try {
-        const { data } = await productsP;
-        const list: Product[] = data.content || [];
-        setTotalProducts(data.totalElements ?? list.length);
-        setTotalUnits(list.reduce((sum, p) => sum + (p.stockActual || 0), 0));
-        setTotalValue(list.reduce((sum, p) => sum + (p.price || 0) * (p.stockActual || 0), 0));
+        const { data } = await api.get('/api/v1/dashboard/metrics');
+        setTotalProducts(data.totalProducts ?? null);
+        setTotalUnits(data.totalUnits ?? null);
+        setTotalValue(data.totalValue ?? null);
+        setTotalCategories(data.totalCategories ?? null);
+        setTotalMovements(data.totalMovements ?? null);
+        setCriticalCount(data.criticalStockCount ?? null);
       } catch {
-        // Se dejan las métricas en null → la UI muestra "—".
+        // Ante un error se dejan las métricas en null → la UI muestra "—".
+      } finally {
+        setLoading(false);
       }
-
-      try {
-        const { data } = await categoriesP;
-        setTotalCategories(Array.isArray(data) ? data.length : 0);
-      } catch {
-        // Categoría no disponible → "—".
-      }
-
-      try {
-        const { data } = await criticalP;
-        setCriticalCount(Array.isArray(data) ? data.length : 0);
-      } catch {
-        // Sin permiso (report:view) o error → "—".
-      }
-
-      try {
-        const { data } = await movementsP;
-        setTotalMovements(data.totalElements ?? 0);
-      } catch {
-        // Sin permiso (report:view) o error → "—".
-      }
-
-      setLoading(false);
     };
 
     load();

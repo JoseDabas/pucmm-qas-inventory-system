@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from 'react-oidc-context';
 import type { StockMovement } from '../types/StockMovement';
 import api from '../api/axios';
+import { usePermissions } from '../auth/usePermissions';
 import { StockMovementForm } from './StockMovementForm';
 import { History, Plus, Search} from 'lucide-react';
 
 export const StockMovementList: React.FC = () => {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const auth = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Búsqueda y paginación (page en base 0, igual que Spring Data)
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,30 +18,8 @@ export const StockMovementList: React.FC = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Solo quien puede gestionar productos puede registrar movimientos.
-  const canManage = (() => {
-    if (!auth.user?.access_token) return false;
-    try {
-      const base64Url = auth.user.access_token.split('.')[1];
-      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      while (base64.length % 4) {
-        base64 += '=';
-      }
-      const jsonPayload = decodeURIComponent(
-        window
-          .atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      const payload = JSON.parse(jsonPayload);
-      const roles = payload.realm_access?.roles || [];
-      return roles.includes('product:manage');
-    } catch (e) {
-      console.error('Error al decodificar el access_token:', e);
-      return false;
-    }
-  })();
+  // Solo quien puede gestionar el stock puede registrar movimientos.
+  const canManage = hasPermission('stock:manage');
 
   const fetchMovements = useCallback(async () => {
     try {

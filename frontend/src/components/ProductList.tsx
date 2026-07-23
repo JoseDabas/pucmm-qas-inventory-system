@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from 'react-oidc-context';
 import type { Product } from '../types/Product';
 import api from '../api/axios';
+import { usePermissions } from '../auth/usePermissions';
 import { ProductForm } from './ProductForm';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Plus, Edit2, Trash2, Package, Search, ArrowUp, ArrowDown} from 'lucide-react';
@@ -9,7 +9,7 @@ import { Plus, Edit2, Trash2, Package, Search, ArrowUp, ArrowDown} from 'lucide-
 export const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const auth = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Búsqueda y paginación (page en base 0, igual que Spring Data)
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,30 +38,7 @@ export const ProductList: React.FC = () => {
     return sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
   };
 
-  const canManageProducts = () => {
-    if (!auth.user?.access_token) return false;
-    try {
-      const base64Url = auth.user.access_token.split('.')[1];
-      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      while (base64.length % 4) {
-        base64 += '=';
-      }
-      const jsonPayload = decodeURIComponent(
-        window.atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      const payload = JSON.parse(jsonPayload);
-      const roles = payload.realm_access?.roles || [];
-      return roles.includes('product:manage');
-    } catch (e) {
-      console.error("Error al decodificar el access_token:", e);
-      return false;
-    }
-  };
-
-  const canManage = canManageProducts();
+  const canManage = hasPermission('product:manage');
 
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);

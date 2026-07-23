@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.application.ProductService;
+import edu.pucmm.cs.inventory.infrastructure.security.Permissions;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
@@ -58,7 +59,7 @@ public class ProductController {
      * Requiere el rol granular 'product:view' en el token de Keycloak.
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('product:view')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_VIEW + "')")
     @Operation(summary = "Consultar Catálogo", description = "Recupera una lista paginada de todos los productos registrados. Admite un término de búsqueda opcional (?search=) que filtra por nombre o código SKU, además de filtros y ordenamiento mediante el objeto Pageable.")
     public ResponseEntity<Page<ProductResponseDTO>> getProducts(
             @Parameter(description = "Término de búsqueda opcional que filtra por nombre o código SKU (case-insensitive).") @RequestParam(required = false) String search,
@@ -74,7 +75,7 @@ public class ProductController {
      * Requiere el rol granular 'report:view' (compatible con conversor Keycloak).
      */
     @GetMapping("/alerts/critical-stock")
-    @PreAuthorize("hasAuthority('report:view')")
+    @PreAuthorize("hasAuthority('" + Permissions.REPORT_VIEW + "')")
     @Operation(summary = "Alertas de stock crítico", description = "Calcula el stock al vuelo sumando el historial inmutable de movimientos para devolver productos cuyo stock actual es menor o igual a su stock mínimo, evitando condiciones de carrera.")
     public ResponseEntity<List<ProductResponseDTO>> getCriticalStockAlerts() {
         List<ProductResponseDTO> alerts = productService.getCriticalStockAlerts();
@@ -84,10 +85,10 @@ public class ProductController {
     /**
      * Endpoint GET para consultar el historial de auditoría (Hibernate Envers) de un producto.
      *
-     * Requiere el rol granular 'report:view' (consulta de solo lectura / auditoría).
+     * Requiere el permiso granular 'audit:view' (consulta de registros de auditoría).
      */
     @GetMapping("/{id}/audit")
-    @PreAuthorize("hasAuthority('report:view')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     @Operation(summary = "Historial de auditoría del producto", description = "Devuelve las revisiones registradas por Hibernate Envers para un producto (alta, modificaciones y baja), ordenadas de la más reciente a la más antigua, con la foto de sus datos en cada cambio. Nota: Envers registra qué cambió y cuándo, no el usuario.")
     public ResponseEntity<List<ProductAuditResponseDTO>> getProductAuditHistory(
             @Parameter(description = "Identificador único UUID del producto", required = true) @PathVariable @NonNull UUID id) {
@@ -102,7 +103,7 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
     @Operation(summary = "Crear un Nuevo Producto", description = "Registra un producto e inicializa su cantidad de stock generando una entrada automática en el historial (StockMovement).")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Producto creado con éxito")
     public ResponseEntity<ProductResponseDTO> createProduct(
@@ -119,7 +120,7 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
     @Operation(summary = "Actualizar Información de Producto", description = "Reescribe los metadatos y configuración descriptiva de un producto pre-existente.")
     public ResponseEntity<ProductResponseDTO> updateProduct(
             @Parameter(description = "Identificador único UUID del producto", required = true) @PathVariable @NonNull UUID id,
@@ -135,7 +136,7 @@ public class ProductController {
      * Requiere el rol granular 'product:manage'.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
     @Operation(summary = "Eliminar Producto Definitivamente", description = "Borra físicamente (Hard Delete) el registro de un producto. Si cuenta con movimientos de stock, fallará por integridad referencial.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Producto eliminado exitosamente")
     public ResponseEntity<Void> deleteProduct(

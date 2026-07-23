@@ -6,8 +6,10 @@ import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { MovementHistoryPage } from './pages/MovementHistoryPage';
 import { CategoriesPage } from './pages/CategoriesPage';
+import { UsersPage } from './pages/UsersPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { LoginPage } from './pages/LoginPage';
+import { RequirePermission } from './auth/RequirePermission';
 
 const MainContent = () => {
   const auth = useAuth();
@@ -38,12 +40,30 @@ const MainContent = () => {
       <BrowserRouter>
         <Routes>
           <Route element={<DashboardLayout />}>
+            {/* Dashboard: libre para cualquier usuario autenticado (página de aterrizaje). */}
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/inventario" element={<InventoryPage />} />
-            <Route path="/historial" element={<MovementHistoryPage />} />
-            <Route path="/categorias" element={<CategoriesPage />} />
-            <Route path="/reportes" element={<PlaceholderPage title="Reportes" />} />
-            <Route path="/configuracion" element={<PlaceholderPage title="Configuración" />} />
+            {/* Rutas protegidas: si el rol no tiene el permiso, RequirePermission
+                redirige al Dashboard, ocultando la sección también por URL directa. */}
+            <Route
+              path="/inventario"
+              element={<RequirePermission path="/inventario"><InventoryPage /></RequirePermission>}
+            />
+            <Route
+              path="/historial"
+              element={<RequirePermission path="/historial"><MovementHistoryPage /></RequirePermission>}
+            />
+            <Route
+              path="/categorias"
+              element={<RequirePermission path="/categorias"><CategoriesPage /></RequirePermission>}
+            />
+            <Route
+              path="/usuarios"
+              element={<RequirePermission path="/usuarios"><UsersPage /></RequirePermission>}
+            />
+            <Route
+              path="/reportes"
+              element={<RequirePermission path="/reportes"><PlaceholderPage title="Reportes" /></RequirePermission>}
+            />
             {/* Cualquier ruta desconocida cae al dashboard (p. ej. /productos/nuevo) */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
@@ -60,7 +80,13 @@ const MainContent = () => {
   return (
     <LoginPage
       onLogin={(username, password) =>
-        auth.signinResourceOwnerCredentials({ username, password })
+        auth.signinResourceOwnerCredentials({ username, password }).then((user) => {
+          
+          if (user) {
+            window.history.replaceState({}, document.title, '/dashboard');
+          }
+          return user;
+        })
       }
     />
   );

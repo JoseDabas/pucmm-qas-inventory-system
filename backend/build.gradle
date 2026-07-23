@@ -57,6 +57,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	// Cliente de administración de Keycloak: permite crear cuentas y asignar los
+	// permisos (realm roles) desde el backend usando una service account.
+	implementation 'org.keycloak:keycloak-admin-client:26.0.4'
 	implementation 'org.flywaydb:flyway-core:11.8.1'
 	implementation 'org.flywaydb:flyway-database-postgresql:11.8.1'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'

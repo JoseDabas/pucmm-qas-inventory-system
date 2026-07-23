@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pucmm.cs.inventory.application.CategoryService;
+import edu.pucmm.cs.inventory.infrastructure.security.Permissions;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.CategoryRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.CategoryResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +47,7 @@ public class CategoryController {
      * Requiere el rol granular 'product:view'.
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('product:view')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_VIEW + "')")
     @Operation(summary = "Listar Categorías", description = "Recupera todas las categorías registradas, ordenadas por nombre, incluyendo la cantidad de productos asociados a cada una.")
     public ResponseEntity<List<CategoryResponseDTO>> getCategories() {
         List<CategoryResponseDTO> categories = categoryService.getCategories();
@@ -59,7 +60,7 @@ public class CategoryController {
      * Requiere el rol granular 'product:manage'.
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
     @Operation(summary = "Crear una Nueva Categoría", description = "Registra una nueva categoría de productos. El nombre debe ser único.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Categoría creada con éxito")
     public ResponseEntity<CategoryResponseDTO> createCategory(
@@ -76,7 +77,7 @@ public class CategoryController {
      * productos asociados.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('product:manage')")
+    @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
     @Operation(summary = "Eliminar Categoría", description = "Elimina una categoría siempre que no tenga productos asociados; de lo contrario responde 409 Conflict.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente")
     public ResponseEntity<Void> deleteCategory(

@@ -100,3 +100,19 @@ management:
   metrics:
     tags:
       application: inventory-system
+
+# ===================================================================
+# Configuración del cliente de administración de Keycloak
+# ===================================================================
+# Usado por KeycloakAdminService para crear cuentas y asignar permisos (realm
+# roles) mediante la service account del cliente 'inventory-client'. Se conecta
+# con el grant client_credentials; los valores por defecto sirven para desarrollo
+# local y se sobreescriben por variables de entorno en Docker/CI.
+keycloak:
+  admin:
+    # URL base del servidor Keycloak (sin el path del realm). En Docker el backend
+    # llega a Keycloak por el nombre de servicio: http://keycloak:8080
+    server-url: ${KEYCLOAK_ADMIN_SERVER_URL:http://localhost:9080}
+    realm: ${KEYCLOAK_ADMIN_REALM:Inventario}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:inventory-client}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:dummy-client-secret}
