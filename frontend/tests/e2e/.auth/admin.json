@@ -1,35 +1,4 @@
 {
-  "cookies": [
-    {
-      "name": "AUTH_SESSION_ID",
-      "value": "70cb827a-e80d-4aa0-8c9e-ad7fe0ebb554",
-      "domain": "localhost",
-      "path": "/realms/Inventario/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "KEYCLOAK_IDENTITY",
-      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4NTg2Mjg5OC04MDA5LTQ2ZGItOGE4YS01NzVmMmQzOThjZDYifQ.eyJleHAiOjE3ODM5MTg2MDgsImlhdCI6MTc4Mzg4MjYwOCwianRpIjoiZGIyZDU0ZTYtNDA2Zi00OTJlLWFlNzAtNTgwZjBlY2JjMjIwIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDgwL3JlYWxtcy9JbnZlbnRhcmlvIiwic3ViIjoiOTZiOTIyMmUtZmQ4NC00Mzg2LWIwZDItNjBhMzY3MmYyZTFkIiwidHlwIjoiU2VyaWFsaXplZC1JRCIsInNpZCI6IjcwY2I4MjdhLWU4MGQtNGFhMC04YzllLWFkN2ZlMGViYjU1NCIsInN0YXRlX2NoZWNrZXIiOiJpSHJqYm9ubVBpOWh0OHpVd21iR3BXZjhqOFRFWmtpXzVCM25WX1BYLUtZIn0.rrqmVzpMiKVHGAhgSMJ8qG3dxC02CjlT4hHHm_kMZ8uUssUvYKMl3JcFv5mXuv97x7mA9yhuR44D0sQK5f_i5A",
-      "domain": "localhost",
-      "path": "/realms/Inventario/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "KEYCLOAK_SESSION",
-      "value": "\"Inventario/96b9222e-fd84-4386-b0d2-60a3672f2e1d/70cb827a-e80d-4aa0-8c9e-ad7fe0ebb554\"",
-      "domain": "localhost",
-      "path": "/realms/Inventario/",
-      "expires": 1783918608.993479,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    }
-  ],
+  "cookies": [],
   "origins": []
 }
