@@ -67,7 +67,7 @@ export const UsersPage: React.FC = () => {
             Usuarios
           </h1>
           <p className="text-gray-500 mt-1">
-            Gestiona las cuentas y sus roles (combinaciones de permisos)
+            Gestiona las cuentas y sus roles
           </p>
         </div>
         <button
