@@ -19,7 +19,7 @@ public class CategoryRequestDTO {
     @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
     private String name;
 
-    @Schema(description = "Descripción opcional de la categoría", example = "Dispositivos y componentes electrónicos")
+    @Schema(description = "Descripción opcional de la categoría", example = "Dispositivos y componentes electrónicos", nullable = true)
     private String description;
 
     // Getters
