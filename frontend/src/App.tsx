@@ -64,7 +64,6 @@ const MainContent = () => {
               path="/reportes"
               element={<RequirePermission path="/reportes"><PlaceholderPage title="Reportes" /></RequirePermission>}
             />
-            <Route path="/configuracion" element={<PlaceholderPage title="Configuración" />} />
             {/* Cualquier ruta desconocida cae al dashboard (p. ej. /productos/nuevo) */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
