@@ -54,6 +54,7 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
       KC_DB_USERNAME: inventory_user
       KC_DB_PASSWORD: inventory_password
+      KC_HOSTNAME_URL: http://localhost:9080
       # Variables consumidas por realm-export.json vía sustitución ${...}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
       KEYCLOAK_TEST_USER_PASSWORD: ${KEYCLOAK_TEST_USER_PASSWORD}
@@ -112,6 +113,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_KEYCLOAK_URL: http://localhost:9080/realms/Inventario
+        VITE_API_BASE_URL: http://localhost:8080
         VITE_KEYCLOAK_CLIENT_ID: inventory-client
         VITE_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
     container_name: inventory_frontend

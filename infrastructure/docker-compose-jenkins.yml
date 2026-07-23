@@ -1,13 +1,22 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk21
+    build: 
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: inventory_jenkins
     user: root  # Para acceder al socket de Docker del host
     ports:
       - "8082:8080"   # UI de Jenkins 
       - "50000:50000" # Puerto de agentes Jenkins
+    env_file:
+      - .env
+    environment:
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yaml
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_TEST_USER_PASSWORD} # As mapping from the same user for test
     volumes:
       - jenkins_home:/var/jenkins_home
+      # Mount JCasC configurations
+      - ./casc.yaml:/var/jenkins_home/casc.yaml:ro
       # Monta el socket de Docker del host para que Jenkins pueda lanzar contenedores
       - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts:

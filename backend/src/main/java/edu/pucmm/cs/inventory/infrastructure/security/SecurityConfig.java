@@ -99,14 +99,45 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://keycloak:8080/realms/Inventario/protocol/openid-connect/certs}")
+    private String jwkSetUri;
+
     /**
-     * Configuración global de CORS.
-     * Permite las peticiones desde el frontend de Vite (localhost:5173).
+     * Decodificador de Tokens JWT personalizado para Entornos Heterogéneos (DevSecOps).
+     * <p>
+     * Obtiene dinámicamente las claves públicas de firmas RSA emitidas por el servidor de Keycloak 
+     * a través de su endpoint JWK Set URI (JWKS). Realiza una validación criptográfica estricta 
+     * de la firma del token y verifica las ventanas de vigencia temporal (claims 'exp' y 'nbf').
+     * <p>
+     * Esta implementación desacopla la validación estricta de la cadena literal de emisor (issuer), 
+     * garantizando interoperabilidad entre peticiones internas de contenedores (Docker bridge) y 
+     * peticiones externas del cliente (localhost / host.docker.internal).
+     *
+     * @return El bean {@link org.springframework.security.oauth2.jwt.JwtDecoder} configurado.
+     */
+    @Bean
+    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
+        org.springframework.security.oauth2.jwt.NimbusJwtDecoder jwtDecoder = 
+                org.springframework.security.oauth2.jwt.NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        jwtDecoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                new org.springframework.security.oauth2.jwt.JwtTimestampValidator()
+        ));
+        return jwtDecoder;
+    }
+
+    /**
+     * Configuración Global de Intercambio de Recursos entre Orígenes (CORS).
+     * <p>
+     * Define las reglas de acceso cruzado para permitir que la aplicación SPA (Single Page Application)
+     * en Vite, así como los agentes de automatización E2E (Playwright) y pruebas de carga (k6) ejecutándose 
+     * en contenedores Docker de CI/CD, puedan consumir la API de manera segura.
+     *
+     * @return El bean {@link CorsConfigurationSource} con la política de orígenes permitidos.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "http://host.docker.internal:*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(
                 Arrays.asList("Authorization", "Content-Type", "Accept", "traceparent", "X-Correlation-ID"));
@@ -115,6 +146,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     /**
      * Configuración del Firewall HTTP estricto de Spring Security.
