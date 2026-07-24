@@ -52,6 +52,7 @@ class StockMovementControllerApiTest {
     private StockMovementResponseDTO sampleResponse;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         validRequest = new StockMovementRequestDTO();
         validRequest.setProductId(UUID.randomUUID());
