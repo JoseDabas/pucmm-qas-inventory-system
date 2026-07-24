@@ -29,8 +29,11 @@ public class StockMovement {
     // Tipo de movimiento (Entrada - IN o Salida - OUT)
     private MovementType movementType;
 
-    // Cantidad de ítems movidos en esta transacción
-    private Integer quantity;
+    // Foto del stock del producto ANTES de aplicar este movimiento
+    private Integer previousQuantity;
+
+    // Foto del stock del producto DESPUÉS de aplicar este movimiento
+    private Integer newQuantity;
 
     // Fecha y hora exacta en la que se registra el movimiento
     private LocalDateTime date;
@@ -44,18 +47,21 @@ public class StockMovement {
     /**
      * Constructor completo que valida las invariantes del negocio antes de
      * instanciar el objeto.
-     * 
-     * @param id           Identificador del movimiento (no puede ser nulo).
-     * @param productId    Identificador del producto (no puede ser nulo).
-     * @param movementType Tipo de movimiento, IN o OUT (no puede ser nulo).
-     * @param quantity     Cantidad a mover (debe ser estrictamente mayor que cero).
-     * @param date         Fecha de la transacción (no puede ser nula).
-     * @param username     Usuario responsable de la acción (no puede ser nulo ni
-     *                     estar vacío).
-     * @param observations Notas adicionales (opcional, puede ser nulo o vacío).
+     *
+     * @param id               Identificador del movimiento (no puede ser nulo).
+     * @param productId        Identificador del producto (no puede ser nulo).
+     * @param movementType     Tipo de movimiento, IN o OUT (no puede ser nulo).
+     * @param previousQuantity Stock antes del movimiento (no puede ser negativo).
+     * @param newQuantity      Stock después del movimiento (no puede ser negativo).
+     * @param date             Fecha de la transacción (no puede ser nula).
+     * @param username         Usuario responsable de la acción (no puede ser nulo ni
+     *                         estar vacío).
+     * @param observations     Notas adicionales (opcional, puede ser nulo o vacío).
      * @throws IllegalArgumentException si alguna de las validaciones falla.
      */
-    public StockMovement(UUID id, UUID productId, MovementType movementType, Integer quantity,
+    @SuppressWarnings("java:S107")
+    public StockMovement(UUID id, UUID productId, MovementType movementType,
+            Integer previousQuantity, Integer newQuantity,
             LocalDateTime date, String username, String observations) {
 
         // Validación de campos obligatorios básicos
@@ -69,10 +75,12 @@ public class StockMovement {
             throw new IllegalArgumentException("El tipo de movimiento (IN/OUT) no puede ser nulo.");
         }
 
-        // Regla de negocio: La cantidad movida siempre debe ser un valor positivo
-        // representativo
-        if (quantity == null || quantity <= 0) {
-            throw new IllegalArgumentException("La cantidad movida debe ser estrictamente mayor que cero.");
+        // Regla de negocio: los snapshots de stock no pueden ser negativos
+        if (previousQuantity == null || previousQuantity < 0) {
+            throw new IllegalArgumentException("La cantidad anterior no puede ser nula ni negativa.");
+        }
+        if (newQuantity == null || newQuantity < 0) {
+            throw new IllegalArgumentException("La cantidad nueva no puede ser nula ni negativa.");
         }
 
         // Validación de fecha y auditoría manual
@@ -87,7 +95,8 @@ public class StockMovement {
         this.id = id;
         this.productId = productId;
         this.movementType = movementType;
-        this.quantity = quantity;
+        this.previousQuantity = previousQuantity;
+        this.newQuantity = newQuantity;
         this.date = date;
         this.username = username;
         this.observations = observations;
@@ -112,9 +121,14 @@ public class StockMovement {
         return movementType;
     }
 
-    /** @return La cantidad de unidades afectadas. */
-    public Integer getQuantity() {
-        return quantity;
+    /** @return El stock del producto antes del movimiento. */
+    public Integer getPreviousQuantity() {
+        return previousQuantity;
+    }
+
+    /** @return El stock del producto después del movimiento. */
+    public Integer getNewQuantity() {
+        return newQuantity;
     }
 
     /** @return La fecha y hora de la transacción. */

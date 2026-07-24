@@ -28,8 +28,7 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
      * forma parte de este ledger, por lo que NO se debe sumar 'initial_quantity'
      * aparte (se evita el doble conteo). Devuelve 0 si el producto no tiene movimientos.
      */
-    @Query("SELECT COALESCE(SUM(CASE WHEN m.movementType = 'IN' THEN m.quantity " +
-           "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END), 0) " +
+    @Query("SELECT COALESCE(SUM(m.newQuantity - m.previousQuantity), 0) " +
            "FROM StockMovementEntity m WHERE m.productId = :productId")
     Integer sumSignedQuantityByProductId(@Param("productId") UUID productId);
 
@@ -39,8 +38,7 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
      * productos sin movimientos no aparecen en el resultado y se interpretan como stock 0.
      */
     @Query("SELECT m.productId AS productId, " +
-           "SUM(CASE WHEN m.movementType = 'IN' THEN m.quantity " +
-           "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END) AS total " +
+           "SUM(m.newQuantity - m.previousQuantity) AS total " +
            "FROM StockMovementEntity m WHERE m.productId IN :productIds GROUP BY m.productId")
     List<ProductStockView> sumSignedQuantitiesByProductIds(@Param("productIds") List<UUID> productIds);
 

@@ -199,7 +199,6 @@ public class ProductService {
         movement.setId(UUID.randomUUID());
         movement.setProductId(productId);
         movement.setMovementType(type.name());
-        movement.setQuantity(quantity);
         // Movimiento inicial del producto: el stock pasa de 0 a la cantidad registrada.
         movement.setPreviousQuantity(0);
         movement.setNewQuantity(quantity);
