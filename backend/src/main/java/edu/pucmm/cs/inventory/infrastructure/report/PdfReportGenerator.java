@@ -46,7 +46,7 @@ public class PdfReportGenerator {
             // Metadatos / Filtros
             Font metaFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
             Paragraph metadata = new Paragraph();
-            metadata.add(new Phrase("Generado el: " + LocalDateTime.now().format(DATE_FORMATTER) + "\n", metaFont));
+            metadata.add(new Phrase("Generado el: " + LocalDateTime.now(java.time.ZoneId.systemDefault()).format(DATE_FORMATTER) + "\n", metaFont));
             metadata.add(new Phrase("Periodo: " + startDate.format(DATE_FORMATTER) + " a " + endDate.format(DATE_FORMATTER) + "\n", metaFont));
             metadata.add(new Phrase("Categoría filtrada: " + (categoryName != null ? categoryName : "Todas") + "\n", metaFont));
             metadata.setSpacingAfter(20);
