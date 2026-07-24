@@ -40,6 +40,12 @@ setup('authenticate as admin', async ({ page }) => {
   // y forzar el encabezado Host: localhost:9080 para coincidir con la validación JWT de Spring Boot
   await page.route('**/*', async (route) => {
     const url = route.request().url();
+    // El rewrite a host.docker.internal solo aplica en CI (Playwright dentro de Docker).
+    // En ejecución local, localhost:9080 llega directo a Keycloak; el rewrite lo colgaría.
+    if (!process.env.CI) {
+      await route.continue();
+      return;
+    }
     if (url.includes('localhost:9080') || url.includes('host.docker.internal:9080')) {
       const redirectedUrl = url.replace('localhost:9080', 'host.docker.internal:9080');
       const headers = { ...route.request().headers(), 'Host': 'localhost:9080' };
@@ -62,9 +68,14 @@ setup('authenticate as admin', async ({ page }) => {
 
   await expect(page.getByRole('link', { name: 'Inventario', exact: true })).toBeVisible({ timeout: 15000 });
 
-  // Espera explícita estática (2 segundos) para garantizar que oidc-client-ts termine 
-  // de persistir el token en el SessionStorage, independientemente del nombre de la llave.
-  await page.waitForTimeout(2000);
+  // Espera a que oidc-client-ts termine de persistir el token en el SessionStorage.
+  // waitForFunction reintenta a través de navegaciones, evitando el race
+  // "Execution context was destroyed" al leer sessionStorage justo tras el login.
+  await page.waitForFunction(
+    () => Object.keys(window.sessionStorage).some((k) => k.startsWith('oidc.user')),
+    null,
+    { timeout: 15000 }
+  );
 
   // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
   const sessionStorageAdmin = await page.evaluate(() => JSON.stringify(window.sessionStorage));
@@ -80,6 +91,12 @@ setup('authenticate as admin', async ({ page }) => {
 setup('authenticate as viewer', async ({ page }) => {
   await page.route('**/*', async (route) => {
     const url = route.request().url();
+    // El rewrite a host.docker.internal solo aplica en CI (Playwright dentro de Docker).
+    // En ejecución local, localhost:9080 llega directo a Keycloak; el rewrite lo colgaría.
+    if (!process.env.CI) {
+      await route.continue();
+      return;
+    }
     if (url.includes('localhost:9080') || url.includes('host.docker.internal:9080')) {
       const redirectedUrl = url.replace('localhost:9080', 'host.docker.internal:9080');
       const headers = { ...route.request().headers(), 'Host': 'localhost:9080' };
@@ -104,7 +121,12 @@ setup('authenticate as viewer', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Inventario', exact: true })).toBeVisible({ timeout: 15000 });
 
 
-  await page.waitForTimeout(2000);
+  // Igual que en admin: esperamos a que el token quede persistido antes de leerlo.
+  await page.waitForFunction(
+    () => Object.keys(window.sessionStorage).some((k) => k.startsWith('oidc.user')),
+    null,
+    { timeout: 15000 }
+  );
 
   // Extraemos el SessionStorage y lo guardamos manualmente en un archivo
   const sessionStorageViewer = await page.evaluate(() => JSON.stringify(window.sessionStorage));
