@@ -10,30 +10,30 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StockMovementTest {
 
+    private final UUID validId = UUID.randomUUID();
+    private final UUID validProductId = UUID.randomUUID();
+    private final LocalDateTime validDate = LocalDateTime.now();
+
     @Test
     @DisplayName("Debe crear un movimiento de stock válido y retornar sus valores correctamente")
     void shouldCreateValidStockMovement() {
-        UUID id = UUID.randomUUID();
-        UUID productId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
-
         StockMovement movement = new StockMovement(
-                id,
-                productId,
+                validId,
+                validProductId,
                 MovementType.IN,
                 10,
                 20,
-                now,
+                validDate,
                 "admin",
                 "Ingreso por compra"
         );
 
-        assertEquals(id, movement.getId());
-        assertEquals(productId, movement.getProductId());
+        assertEquals(validId, movement.getId());
+        assertEquals(validProductId, movement.getProductId());
         assertEquals(MovementType.IN, movement.getMovementType());
         assertEquals(10, movement.getPreviousQuantity());
         assertEquals(20, movement.getNewQuantity());
-        assertEquals(now, movement.getDate());
+        assertEquals(validDate, movement.getDate());
         assertEquals("admin", movement.getUsername());
         assertEquals("Ingreso por compra", movement.getObservations());
     }
@@ -43,7 +43,7 @@ class StockMovementTest {
     void shouldThrowExceptionWhenIdIsNull() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(null, UUID.randomUUID(), MovementType.IN, 0, 10, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(null, validProductId, MovementType.IN, 0, 10, validDate, "admin", "Obs")
         );
         assertTrue(ex.getMessage().contains("ID del movimiento"));
     }
@@ -53,7 +53,7 @@ class StockMovementTest {
     void shouldThrowExceptionWhenProductIdIsNull() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), null, MovementType.IN, 0, 10, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, null, MovementType.IN, 0, 10, validDate, "admin", "Obs")
         );
         assertTrue(ex.getMessage().contains("ID del producto"));
     }
@@ -63,7 +63,7 @@ class StockMovementTest {
     void shouldThrowExceptionWhenMovementTypeIsNull() {
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), null, 0, 10, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, null, 0, 10, validDate, "admin", "Obs")
         );
         assertTrue(ex.getMessage().contains("tipo de movimiento"));
     }
@@ -73,12 +73,12 @@ class StockMovementTest {
     void shouldThrowExceptionWhenPreviousQuantityIsInvalid() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, null, 10, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, null, 10, validDate, "admin", "Obs")
         );
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, -1, 10, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, -1, 10, validDate, "admin", "Obs")
         );
     }
 
@@ -87,12 +87,12 @@ class StockMovementTest {
     void shouldThrowExceptionWhenNewQuantityIsInvalid() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, 10, null, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, 10, null, validDate, "admin", "Obs")
         );
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, 10, -5, LocalDateTime.now(), "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, 10, -5, validDate, "admin", "Obs")
         );
     }
 
@@ -101,7 +101,7 @@ class StockMovementTest {
     void shouldThrowExceptionWhenDateIsNull() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, 0, 10, null, "admin", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, 0, 10, null, "admin", "Obs")
         );
     }
 
@@ -110,12 +110,12 @@ class StockMovementTest {
     void shouldThrowExceptionWhenUsernameIsInvalid() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, 0, 10, LocalDateTime.now(), null, "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, 0, 10, validDate, null, "Obs")
         );
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new StockMovement(UUID.randomUUID(), UUID.randomUUID(), MovementType.IN, 0, 10, LocalDateTime.now(), "   ", "Obs")
+                () -> new StockMovement(validId, validProductId, MovementType.IN, 0, 10, validDate, "   ", "Obs")
         );
     }
 }
