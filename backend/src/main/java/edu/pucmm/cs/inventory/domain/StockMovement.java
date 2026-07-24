@@ -59,6 +59,7 @@ public class StockMovement {
      * @param observations     Notas adicionales (opcional, puede ser nulo o vacío).
      * @throws IllegalArgumentException si alguna de las validaciones falla.
      */
+    @SuppressWarnings("java:S107")
     public StockMovement(UUID id, UUID productId, MovementType movementType,
             Integer previousQuantity, Integer newQuantity,
             LocalDateTime date, String username, String observations) {
