@@ -47,7 +47,7 @@ jobs:
                 remote {
                   url('https://github.com/Nier561/pucmm-qas-inventory-system.git')
                 }
-                branches('*/feature/jenkins-performance-qa')
+                branches('*/main')
 
               }
             }

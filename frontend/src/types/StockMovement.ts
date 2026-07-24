@@ -5,7 +5,6 @@ export interface StockMovement {
   productId: string;
   productName: string;
   movementType: MovementType;
-  quantity: number;
   previousQuantity: number;
   newQuantity: number;
   date: string; // ISO datetime

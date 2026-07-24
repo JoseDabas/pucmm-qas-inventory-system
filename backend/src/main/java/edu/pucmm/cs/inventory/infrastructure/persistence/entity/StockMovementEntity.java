@@ -32,9 +32,6 @@ public class StockMovementEntity {
     @Column(name = "movement_type", nullable = false, length = 50)
     private String movementType; // "IN" o "OUT"
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
-
     @Column(name = "previous_quantity", nullable = false)
     private Integer previousQuantity; // Stock del producto ANTES de este movimiento
 
@@ -70,9 +67,6 @@ public class StockMovementEntity {
 
     public String getMovementType() { return movementType; }
     public void setMovementType(String movementType) { this.movementType = movementType; }
-
-    public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
     public Integer getPreviousQuantity() { return previousQuantity; }
     public void setPreviousQuantity(Integer previousQuantity) { this.previousQuantity = previousQuantity; }

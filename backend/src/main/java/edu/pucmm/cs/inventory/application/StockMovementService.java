@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +103,6 @@ public class StockMovementService {
         movement.setId(UUID.randomUUID());
         movement.setProductId(product.getId());
         movement.setMovementType(request.getMovementType().name());
-        movement.setQuantity(request.getQuantity());
         movement.setPreviousQuantity(previousQuantity);
         movement.setNewQuantity(newQuantity);
         movement.setDate(LocalDateTime.now());
@@ -150,7 +148,6 @@ public class StockMovementService {
         dto.setProductId(entity.getProductId());
         dto.setProductName(productName);
         dto.setMovementType(entity.getMovementType());
-        dto.setQuantity(entity.getQuantity());
         dto.setPreviousQuantity(entity.getPreviousQuantity());
         dto.setNewQuantity(entity.getNewQuantity());
         // El movimiento se guarda como LocalDateTime (hora del servidor); se expone con
