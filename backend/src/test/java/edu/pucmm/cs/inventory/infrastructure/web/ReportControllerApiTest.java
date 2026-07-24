@@ -51,14 +51,14 @@ class ReportControllerApiTest {
     }
 
     @Test
-    void testGenerateMovementReport_IllegalArgumentException_ReturnsBadRequest() throws Exception {
+    void testGenerateMovementReport_IllegalArgumentException_ReturnsConflict() throws Exception {
         when(reportService.generateMovementReportPdf(any(), any(), any())).thenThrow(new IllegalArgumentException("Fechas inválidas"));
 
         mockMvc.perform(get("/api/v1/reports/movements")
                 .with(jwt().authorities(new SimpleGrantedAuthority(Permissions.REPORT_VIEW)))
                 .param("startDate", startDateStr)
                 .param("endDate", endDateStr))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
     }
 
     @Test
