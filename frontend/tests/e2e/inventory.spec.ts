@@ -16,6 +16,12 @@ test.describe('Flujo Feliz y Validaciones - Admin', () => {
     // Intercepción y resolución de hostnames entre contenedores Docker de CI/CD y el navegador
     await page.route('**/*', async (route) => {
       const url = route.request().url();
+      // El rewrite a host.docker.internal solo aplica en CI (Playwright dentro de Docker).
+      // En ejecución local, localhost:9080 llega directo a Keycloak; el rewrite lo colgaría.
+      if (!process.env.CI) {
+        await route.continue();
+        return;
+      }
       let newUrl = url;
       if (newUrl.includes('localhost:9080')) {
         newUrl = newUrl.replace('localhost:9080', 'host.docker.internal:9080');
@@ -179,6 +185,12 @@ test.describe('Flujo de Seguridad - Viewer', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/*', async (route) => {
       const url = route.request().url();
+      // El rewrite a host.docker.internal solo aplica en CI (Playwright dentro de Docker).
+      // En ejecución local, localhost:9080 llega directo a Keycloak; el rewrite lo colgaría.
+      if (!process.env.CI) {
+        await route.continue();
+        return;
+      }
       let newUrl = url;
       if (newUrl.includes('localhost:9080')) {
         newUrl = newUrl.replace('localhost:9080', 'host.docker.internal:9080');

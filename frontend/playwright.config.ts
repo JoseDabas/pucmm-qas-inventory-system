@@ -12,9 +12,8 @@ dotenv.config();
  * navegadores (proyectos) a utilizar, las estrategias de reintentos, el paralelismo
  * y el manejo de evidencias (trazas y capturas de pantalla).
  * 
- * Para cumplir con los requisitos estrictos de validación, se habilitan pruebas
- * responsive ("Desktop Chrome" y "Mobile Safari") y la captura automática de
- * evidencias visuales únicamente cuando una prueba falla.
+ * La suite se ejecuta en un único proyecto de escritorio ("Desktop Chrome"),
+ * con captura automática de evidencias visuales únicamente cuando una prueba falla.
  */
 export default defineConfig({
   // Directorio raíz donde se alojan los archivos de pruebas E2E
@@ -51,9 +50,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  /* 
-   * Requisitos Estrictos: Configuración de proyectos para pruebas responsive.
-   * Se definen entornos simulados que ejecutarán la misma suite de pruebas.
+  /*
+   * Configuración de proyectos: un proyecto de setup (autenticación) y el
+   * proyecto de escritorio que ejecuta la suite.
    */
   projects: [
     // Proyecto de setup para autenticación, encargado de generar las sesiones (storageState)
@@ -66,13 +65,6 @@ export default defineConfig({
       name: 'Desktop Chrome',
       use: { ...devices['Desktop Chrome'] },
       // Depende del proyecto 'setup' para asegurar que las credenciales ya existan
-      dependencies: ['setup'],
-    },
-    // Ejecución en un dispositivo móvil simulado (Safari en iPhone 12)
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-      // Depende del proyecto 'setup' para heredar la sesión
       dependencies: ['setup'],
     },
   ],

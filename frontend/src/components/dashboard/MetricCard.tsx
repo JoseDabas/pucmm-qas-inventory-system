@@ -19,7 +19,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({ label, value, hint }) =>
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{label}</span>
       </div>
-      <div className="text-2xl font-semibold text-gray-800 mt-2">{value}</div>
+      <div data-testid="metric-value" className="text-2xl font-semibold text-gray-800 mt-2">{value}</div>
       {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
     </div>
   );
