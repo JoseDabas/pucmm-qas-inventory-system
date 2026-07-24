@@ -28,8 +28,7 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
      * forma parte de este ledger, por lo que NO se debe sumar 'initial_quantity'
      * aparte (se evita el doble conteo). Devuelve 0 si el producto no tiene movimientos.
      */
-    @Query("SELECT COALESCE(SUM(CASE WHEN m.movementType = 'IN' THEN m.quantity " +
-           "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END), 0) " +
+    @Query("SELECT COALESCE(SUM(m.newQuantity - m.previousQuantity), 0) " +
            "FROM StockMovementEntity m WHERE m.productId = :productId")
     Integer sumSignedQuantityByProductId(@Param("productId") UUID productId);
 
@@ -39,8 +38,7 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
      * productos sin movimientos no aparecen en el resultado y se interpretan como stock 0.
      */
     @Query("SELECT m.productId AS productId, " +
-           "SUM(CASE WHEN m.movementType = 'IN' THEN m.quantity " +
-           "WHEN m.movementType = 'OUT' THEN -m.quantity ELSE 0 END) AS total " +
+           "SUM(m.newQuantity - m.previousQuantity) AS total " +
            "FROM StockMovementEntity m WHERE m.productId IN :productIds GROUP BY m.productId")
     List<ProductStockView> sumSignedQuantitiesByProductIds(@Param("productIds") List<UUID> productIds);
 
@@ -58,4 +56,21 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
                         "LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
                         "LOWER(m.username) LIKE LOWER(CONCAT('%', :term, '%')))")
     Page<StockMovementEntity> searchByProductNameOrUsername(@Param("term") String term, Pageable pageable);
+
+    /**
+     * Extrae los datos planos cruzados entre Movimiento, Producto y Categoría para
+     * el reporte PDF, filtrado por fecha y categoría opcional.
+     */
+    @Query("SELECT p.name AS productName, p.category.name AS categoryName, " +
+           "m.movementType AS movementType, m.previousQuantity AS previousQuantity, " +
+           "m.newQuantity AS newQuantity, m.date AS date, m.username AS username " +
+           "FROM StockMovementEntity m " +
+           "JOIN ProductEntity p ON m.productId = p.id " +
+           "WHERE m.date >= :startDate AND m.date <= :endDate " +
+           "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
+           "ORDER BY m.date DESC")
+    List<MovementReportView> findMovementReportData(
+            @Param("startDate") java.time.LocalDateTime startDate,
+            @Param("endDate") java.time.LocalDateTime endDate,
+            @Param("categoryId") UUID categoryId);
 }

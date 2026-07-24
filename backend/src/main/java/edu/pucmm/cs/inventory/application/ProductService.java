@@ -76,7 +76,7 @@ public class ProductService {
         entity.setInitialQuantity(request.getInitialQuantity());
         entity.setMinimumStock(request.getMinimumStock());
         // Activo por defecto si no se especifica; permite crear inactivo si el cliente lo indica
-        entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : Boolean.TRUE);
 
         // Guardamos el producto en la base de datos
         ProductEntity savedProduct = productRepository.save(entity);
@@ -91,7 +91,7 @@ public class ProductService {
 
         // 3. Devolvemos la representación segura. Recién creado, el stock actual equivale
         // a la cantidad inicial (único movimiento existente en el ledger).
-        int initialStock = savedProduct.getInitialQuantity() != null ? savedProduct.getInitialQuantity() : 0;
+        int initialStock = savedProduct.getInitialQuantity() != null ? savedProduct.getInitialQuantity().intValue() : 0;
         return mapToResponseDTO(savedProduct, initialStock);
     }
 
@@ -199,7 +199,6 @@ public class ProductService {
         movement.setId(UUID.randomUUID());
         movement.setProductId(productId);
         movement.setMovementType(type.name());
-        movement.setQuantity(quantity);
         // Movimiento inicial del producto: el stock pasa de 0 a la cantidad registrada.
         movement.setPreviousQuantity(0);
         movement.setNewQuantity(quantity);

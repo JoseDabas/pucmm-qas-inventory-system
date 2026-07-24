@@ -26,9 +26,6 @@ public class StockMovementResponseDTO {
     @Schema(description = "Tipo de movimiento: IN (entrada) u OUT (salida)", example = "IN")
     private String movementType;
 
-    @Schema(description = "Cantidad de unidades movidas", example = "10")
-    private Integer quantity;
-
     @Schema(description = "Stock del producto antes del movimiento", example = "40")
     private Integer previousQuantity;
 
@@ -49,7 +46,6 @@ public class StockMovementResponseDTO {
     public UUID getProductId() { return productId; }
     public String getProductName() { return productName; }
     public String getMovementType() { return movementType; }
-    public Integer getQuantity() { return quantity; }
     public Integer getPreviousQuantity() { return previousQuantity; }
     public Integer getNewQuantity() { return newQuantity; }
     public OffsetDateTime getDate() { return date; }
@@ -61,7 +57,6 @@ public class StockMovementResponseDTO {
     public void setProductId(UUID productId) { this.productId = productId; }
     public void setProductName(String productName) { this.productName = productName; }
     public void setMovementType(String movementType) { this.movementType = movementType; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setPreviousQuantity(Integer previousQuantity) { this.previousQuantity = previousQuantity; }
     public void setNewQuantity(Integer newQuantity) { this.newQuantity = newQuantity; }
     public void setDate(OffsetDateTime date) { this.date = date; }

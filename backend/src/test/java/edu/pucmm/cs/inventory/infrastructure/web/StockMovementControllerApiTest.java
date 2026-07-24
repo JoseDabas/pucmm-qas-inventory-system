@@ -52,6 +52,7 @@ class StockMovementControllerApiTest {
     private StockMovementResponseDTO sampleResponse;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         validRequest = new StockMovementRequestDTO();
         validRequest.setProductId(UUID.randomUUID());
@@ -62,7 +63,6 @@ class StockMovementControllerApiTest {
         sampleResponse = new StockMovementResponseDTO();
         sampleResponse.setId(UUID.randomUUID());
         sampleResponse.setMovementType("IN");
-        sampleResponse.setQuantity(10);
     }
 
     private RequestPostProcessor jwtWith(String authority) {

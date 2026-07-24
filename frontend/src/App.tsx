@@ -7,7 +7,7 @@ import { InventoryPage } from './pages/InventoryPage';
 import { MovementHistoryPage } from './pages/MovementHistoryPage';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { UsersPage } from './pages/UsersPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+import { ReportsPage } from './pages/ReportsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RequirePermission } from './auth/RequirePermission';
 
@@ -62,7 +62,7 @@ const MainContent = () => {
             />
             <Route
               path="/reportes"
-              element={<RequirePermission path="/reportes"><PlaceholderPage title="Reportes" /></RequirePermission>}
+              element={<RequirePermission path="/reportes"><ReportsPage /></RequirePermission>}
             />
             {/* Cualquier ruta desconocida cae al dashboard (p. ej. /productos/nuevo) */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
