@@ -115,13 +115,13 @@ pipeline {
          * Stage 8: Empaquetamiento e higienización de imágenes Docker locales.
          */
         stage('Docker Build') {
+            environment {
+                KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
+            }
             steps {
                 echo 'Construyendo imágenes de Docker para empaquetar artefactos...'
-                dir('backend') {
-                    sh 'docker build -t inventory-backend:latest .'
-                }
-                dir('frontend') {
-                    sh 'docker build -t inventory-frontend:latest .'
+                dir('infrastructure') {
+                    sh 'docker compose -f docker-compose.yml build backend frontend'
                 }
             }
         }
@@ -134,6 +134,10 @@ pipeline {
          * Stage 9: Despliegue automatizado del entorno de pre-producción (Staging) vía Docker Compose.
          */
         stage('Deploy to Staging') {
+            environment {
+                KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
+                KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
+            }
             steps {
                 echo 'Desplegando la aplicación en el entorno de Staging...'
                 dir('infrastructure') {
@@ -230,6 +234,10 @@ pipeline {
          * Stage 13: Aprobación manual explícita (Gatekeeper) previa a promoción en Producción.
          */
         stage('Promote to Production (Gatekeeper)') {
+            environment {
+                KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
+                KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
+            }
             steps {
                 echo 'Todas las pruebas de QA (Rendimiento y E2E) han finalizado exitosamente en Staging.'
                 input message: '¿Aprobar el pase del release a Producción?', ok: 'Aprobar y Desplegar'
