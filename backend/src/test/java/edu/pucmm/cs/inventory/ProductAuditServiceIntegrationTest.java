@@ -48,21 +48,20 @@ class ProductAuditServiceIntegrationTest extends AbstractIntegrationTest {
         created.setIsActive(false);
         productRepository.save(created); // revisión MOD
 
-        List<ProductAuditResponseDTO> history = productAuditService.getProductAuditHistory(created.getId());
+        List<ProductAuditResponseDTO> history = productAuditService.getAllProductAuditHistory();
 
-        assertEquals(2, history.size());
+        // Filtramos para asegurar que encontramos las revisiones de nuestro producto (ya que es global)
+        List<ProductAuditResponseDTO> productHistory = history.stream()
+                .filter(r -> r.getEntityId().equals(created.getId()))
+                .toList();
+
+        assertEquals(2, productHistory.size());
         // Orden descendente: la revisión más reciente (modificación) primero.
-        assertEquals("UPDATED", history.get(0).getRevisionType());
-        assertEquals(5, history.get(0).getMinimumStock());
-        assertFalse(history.get(0).getIsActive());
-        assertEquals("CREATED", history.get(1).getRevisionType());
-        assertEquals(2, history.get(1).getMinimumStock());
-        assertNotNull(history.get(0).getRevisionDate());
-    }
-
-    @Test
-    void productoSinHistorialLanzaExcepcion() {
-        assertThrows(EntityNotFoundException.class,
-                () -> productAuditService.getProductAuditHistory(UUID.randomUUID()));
+        assertEquals("UPDATED", productHistory.get(0).getRevisionType());
+        assertEquals(5, productHistory.get(0).getMinimumStock());
+        assertFalse(productHistory.get(0).getIsActive());
+        assertEquals("CREATED", productHistory.get(1).getRevisionType());
+        assertEquals(2, productHistory.get(1).getMinimumStock());
+        assertNotNull(productHistory.get(0).getRevisionDate());
     }
 }

@@ -1,5 +1,19 @@
 package edu.pucmm.cs.inventory.application;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import edu.pucmm.cs.inventory.domain.Category;
 import edu.pucmm.cs.inventory.domain.MovementType;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
@@ -10,28 +24,13 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductStock
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductRequestDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.lang.NonNull;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Servicio de Aplicación (Caso de Uso) para la gestión de Productos.
- * 
+ *
  * Implementa la lógica de orquestación requerida para manipular el catálogo de
- * productos.
- * Actúa como intermediario entre los controladores REST (Capa de Presentación)
- * y
- * los repositorios Spring Data JPA (Capa de Infraestructura).
+ * productos. Actúa como intermediario entre los controladores REST (Capa de
+ * Presentación) y los repositorios Spring Data JPA (Capa de Infraestructura).
  */
 @Service
 public class ProductService {
@@ -43,10 +42,10 @@ public class ProductService {
     /**
      * Inyección de dependencias recomendada vía constructor.
      *
-     * @param productRepository       Repositorio para la entidad ProductEntity
+     * @param productRepository Repositorio para la entidad ProductEntity
      * @param stockMovementRepository Repositorio para la entidad
-     *                                StockMovementEntity
-     * @param categoryRepository      Repositorio para la entidad Category
+     * StockMovementEntity
+     * @param categoryRepository Repositorio para la entidad Category
      */
     public ProductService(ProductJpaRepository productRepository,
             StockMovementJpaRepository stockMovementRepository,
@@ -58,12 +57,12 @@ public class ProductService {
 
     /**
      * Crea un nuevo producto y registra su stock inicial de forma atómica.
-     * 
+     *
      * @param request Datos de entrada capturados vía API REST.
      * @return El DTO de salida con los datos persistidos y el UUID generado.
      */
     @Transactional // Inicia una transacción de base de datos para asegurar consistencia e
-                   // integridad (ACID)
+    // integridad (ACID)
     public ProductResponseDTO createProduct(ProductRequestDTO request) {
         // 1. Mapeo explícito de DTO a Entidad JPA
         ProductEntity entity = new ProductEntity();
@@ -91,6 +90,7 @@ public class ProductService {
 
         // 3. Devolvemos la representación segura. Recién creado, el stock actual equivale
         // a la cantidad inicial (único movimiento existente en el ledger).
+        @SuppressWarnings("UnnecessaryUnboxing")
         int initialStock = savedProduct.getInitialQuantity() != null ? savedProduct.getInitialQuantity().intValue() : 0;
         return mapToResponseDTO(savedProduct, initialStock);
     }
@@ -98,8 +98,8 @@ public class ProductService {
     /**
      * Actualiza la información descriptiva y de configuración de un producto
      * existente.
-     * 
-     * @param id      Identificador único del producto.
+     *
+     * @param id Identificador único del producto.
      * @param request Datos a modificar.
      * @return El producto modificado.
      */
@@ -107,7 +107,7 @@ public class ProductService {
     public ProductResponseDTO updateProduct(@NonNull UUID id, ProductRequestDTO request) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
-                        "El producto no fue encontrado con el ID proporcionado: " + id));
+                "El producto no fue encontrado con el ID proporcionado: " + id));
 
         entity.setName(request.getName());
         entity.setSkuCode(request.getSkuCode());
@@ -126,9 +126,9 @@ public class ProductService {
     }
 
     /**
-     * Consulta de productos con stock crítico
-     * Delega el cálculo de stock al motor de base de datos para evitar condiciones de carrera.
-     * 
+     * Consulta de productos con stock crítico Delega el cálculo de stock al
+     * motor de base de datos para evitar condiciones de carrera.
+     *
      * @return Lista de productos en estado crítico.
      */
     @Transactional(readOnly = true)
@@ -144,12 +144,12 @@ public class ProductService {
      * Ejecuta una consulta paginada de productos, opcionalmente filtrada por un
      * término de búsqueda que se compara contra el nombre o el código SKU.
      *
-     * @param search   Término de búsqueda opcional (null/vacío devuelve todo).
+     * @param search Término de búsqueda opcional (null/vacío devuelve todo).
      * @param pageable Configuración de paginación provista por Spring Web.
      * @return Página de resultados estructurada en DTOs.
      */
     @Transactional(readOnly = true) // Optimiza la transacción marcándola como de solo lectura (evita flush
-                                    // innecesario)
+    // innecesario)
     public Page<ProductResponseDTO> getProducts(String search, @NonNull Pageable pageable) {
         Page<ProductEntity> productEntities;
         if (search == null || search.isBlank()) {
@@ -169,7 +169,7 @@ public class ProductService {
 
     /**
      * Elimina permanentemente un producto de la base de datos.
-     * 
+     *
      * @param id Identificador único del producto.
      */
     @Transactional
@@ -179,7 +179,7 @@ public class ProductService {
         }
         // Eliminar primero los movimientos de stock para evitar violaciones de clave foránea
         stockMovementRepository.deleteByProductId(id);
-        
+
         productRepository.deleteById(id);
     }
 
@@ -212,12 +212,13 @@ public class ProductService {
     }
 
     /**
-     * Resuelve la categoría a partir de su nombre. Si la categoría no existe aún,
-     * la crea de forma transparente (patrón "find-or-create"), garantizando la
-     * integridad referencial con la tabla 'categories'.
+     * Resuelve la categoría a partir de su nombre. Si la categoría no existe
+     * aún, la crea de forma transparente (patrón "find-or-create"),
+     * garantizando la integridad referencial con la tabla 'categories'.
      *
      * @param categoryName nombre de la categoría; puede ser nulo o vacío.
-     * @return la entidad Category persistida, o null si no se proporcionó nombre.
+     * @return la entidad Category persistida, o null si no se proporcionó
+     * nombre.
      */
     private Category resolveCategory(String categoryName) {
         if (categoryName == null || categoryName.trim().isEmpty()) {
@@ -229,10 +230,9 @@ public class ProductService {
     }
 
     /**
-     * Transforma manualmente una Entidad (Capa de Infraestructura) a DTO (Capa de
-     * Presentación).
-     * Aisla los cambios de modelo de base de datos respecto a los consumidores de
-     * la API.
+     * Transforma manualmente una Entidad (Capa de Infraestructura) a DTO (Capa
+     * de Presentación). Aisla los cambios de modelo de base de datos respecto a
+     * los consumidores de la API.
      */
     private ProductResponseDTO mapToResponseDTO(ProductEntity entity, int stockActual) {
         ProductResponseDTO dto = new ProductResponseDTO();
@@ -250,8 +250,8 @@ public class ProductService {
     }
 
     /**
-     * Calcula el stock actual de un único producto desde el ledger de movimientos,
-     * devolviendo 0 si aún no tiene movimientos registrados.
+     * Calcula el stock actual de un único producto desde el ledger de
+     * movimientos, devolviendo 0 si aún no tiene movimientos registrados.
      */
     private int currentStock(UUID productId) {
         Integer sum = stockMovementRepository.sumSignedQuantityByProductId(productId);
@@ -259,9 +259,10 @@ public class ProductService {
     }
 
     /**
-     * Calcula el stock actual de un conjunto de productos en una sola consulta y lo
-     * devuelve como un mapa productId -> stock. Los productos sin movimientos quedan
-     * fuera del mapa (se resuelven como 0 al consultar con getOrDefault).
+     * Calcula el stock actual de un conjunto de productos en una sola consulta
+     * y lo devuelve como un mapa productId -> stock. Los productos sin
+     * movimientos quedan fuera del mapa (se resuelven como 0 al consultar con
+     * getOrDefault).
      */
     private Map<UUID, Integer> stockMap(List<ProductEntity> products) {
         List<UUID> productIds = products.stream()

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 /**
  * DTO de salida que representa una revisión de auditoría de un producto generada por
@@ -19,6 +20,9 @@ public class ProductAuditResponseDTO {
 
     @Schema(description = "Número de revisión asignado por Envers", example = "12")
     private Integer revision;
+
+    @Schema(description = "ID original del producto", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID entityId;
 
     @Schema(description = "Tipo de cambio: CREATED (alta), UPDATED (modificación) o DELETED (baja)", example = "UPDATED")
     private String revisionType;
@@ -52,6 +56,7 @@ public class ProductAuditResponseDTO {
 
     // Getters
     public Integer getRevision() { return revision; }
+    public UUID getEntityId() { return entityId; }
     public String getRevisionType() { return revisionType; }
     public OffsetDateTime getRevisionDate() { return revisionDate; }
     public String getName() { return name; }
@@ -65,6 +70,7 @@ public class ProductAuditResponseDTO {
 
     // Setters
     public void setRevision(Integer revision) { this.revision = revision; }
+    public void setEntityId(UUID entityId) { this.entityId = entityId; }
     public void setRevisionType(String revisionType) { this.revisionType = revisionType; }
     public void setRevisionDate(OffsetDateTime revisionDate) { this.revisionDate = revisionDate; }
     public void setName(String name) { this.name = name; }
