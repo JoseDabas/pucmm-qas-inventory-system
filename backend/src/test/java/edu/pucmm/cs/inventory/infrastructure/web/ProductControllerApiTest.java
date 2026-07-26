@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.application.ProductService;
 import edu.pucmm.cs.inventory.infrastructure.security.SecurityConfig;
 import org.springframework.context.annotation.Import;
@@ -48,11 +47,6 @@ class ProductControllerApiTest {
     // implementación real.
     @MockitoBean
     private ProductService productService;
-
-    // El ProductController también depende de ProductAuditService (endpoint de auditoría);
-    // se mockea para que el slice @WebMvcTest pueda instanciar el controlador.
-    @MockitoBean
-    private ProductAuditService productAuditService;
 
     private ProductRequestDTO validRequest;
     private ProductResponseDTO sampleResponse;
@@ -217,29 +211,5 @@ class ProductControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET historial de auditoria con audit:view -> 200
-    @Test
-    @DisplayName("GET auditoria de producto con audit:view devuelve 200")
-    void getAuditoriaConAuditViewDevuelve200() throws Exception {
-        when(productAuditService.getProductAuditHistory(any())).thenReturn(List.of());
-        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("audit:view")))
-                .andExpect(status().isOk());
-    }
-
-    // GET historial de auditoria con permiso incorrecto -> 403
-    @Test
-    @DisplayName("GET auditoria de producto con report:view devuelve 403")
-    void getAuditoriaConPermisoIncorrectoDevuelve403() throws Exception {
-        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit").with(jwtWith("report:view")))
-                .andExpect(status().isForbidden());
-    }
-
-    // GET historial de auditoria sin token -> 401
-    @Test
-    @DisplayName("GET auditoria de producto sin token devuelve 401")
-    void getAuditoriaSinTokenDevuelve401() throws Exception {
-        mockMvc.perform(get("/api/v1/products/" + UUID.randomUUID() + "/audit"))
-                .andExpect(status().isUnauthorized());
-    }
 
 }
