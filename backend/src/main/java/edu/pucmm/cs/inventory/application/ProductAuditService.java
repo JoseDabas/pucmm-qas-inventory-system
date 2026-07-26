@@ -43,35 +43,20 @@ public class ProductAuditService {
     }
 
     /**
-     * Devuelve el historial de revisiones de un producto, de la más reciente a la
-     * más antigua.
+     * Devuelve el historial global de revisiones de todos los productos,
+     * de la más reciente a la más antigua.
      *
-     * @param productId identificador del producto.
      * @return lista de revisiones de auditoría mapeadas a DTO.
-     * @throws EntityNotFoundException si el producto no tiene historial de
-     *                                 auditoría.
      */
     @Transactional(readOnly = true)
-    public List<ProductAuditResponseDTO> getProductAuditHistory(UUID productId) {
-        // Si el producto ya no existe (nunca existió o fue eliminado), devolvemos 404:
-        // no se debe consultar el historial de un recurso que ya no está disponible.
-        if (!productRepository.existsById(productId)) {
-            throw new EntityNotFoundException(
-                    "El producto no fue encontrado con el ID proporcionado: " + productId);
-        }
-
+    public List<ProductAuditResponseDTO> getAllProductAuditHistory() {
         AuditReader auditReader = AuditReaderFactory.get(entityManager);
 
-        // forRevisionsOfEntity(clase, selectEntitiesOnly=false,
-        // selectDeletedEntities=true):
-        // cada fila es un Object[]{ entidad, revisión, tipoDeRevisión }, incluyendo las
-        // bajas.
+        // forRevisionsOfEntity(clase, selectEntitiesOnly=false, selectDeletedEntities=true):
+        // cada fila es un Object[]{ entidad, revisión, tipoDeRevisión }, incluyendo las bajas.
         @SuppressWarnings("unchecked")
-        // Consulta las revisiones de la entidad ProductEntity filtrando por el ID del
-        // producto
         List<Object[]> revisions = auditReader.createQuery()
                 .forRevisionsOfEntity(ProductEntity.class, false, true)
-                .add(AuditEntity.id().eq(productId))
                 .addOrder(AuditEntity.revisionNumber().desc())
                 .getResultList();
 
@@ -97,6 +82,7 @@ public class ProductAuditService {
 
         // En una baja (DEL) Envers solo rellena el id; el resto de campos quedan nulos.
         if (entity != null) {
+            dto.setEntityId(entity.getId());
             dto.setName(entity.getName());
             dto.setSkuCode(entity.getSkuCode());
             dto.setDescription(entity.getDescription());
