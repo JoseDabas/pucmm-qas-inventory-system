@@ -1,3 +1,5 @@
+name: inventory-jenkins # Nombre de proyecto propio para aislar este stack de los demás compose
+
 services:
   jenkins:
     build: 
@@ -25,3 +27,4 @@ services:
 
 volumes:
   jenkins_home:
+    name: infrastructure_jenkins_home # Nombre fijo: conserva los datos existentes tras renombrar el proyecto

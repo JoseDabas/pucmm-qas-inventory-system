@@ -1,6 +1,8 @@
 # Archivo de orquestación de Docker Compose para la infraestructura local.
 # Define los servicios necesarios para ejecutar la aplicación en un entorno de desarrollo.
 
+name: inventory-app # Nombre de proyecto propio para aislar este stack de los demás compose
+
 services:
   # Servicio de base de datos PostgreSQL
   postgres:
@@ -129,3 +131,4 @@ services:
 volumes:
   # Volumen persistente para almacenar los datos de PostgreSQL y evitar pérdida al reiniciar
   postgres_data:
+    name: infrastructure_postgres_data # Nombre fijo: conserva los datos existentes tras renombrar el proyecto

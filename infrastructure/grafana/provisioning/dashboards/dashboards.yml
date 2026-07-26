@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers: # Carga automática de dashboards desde archivos JSON
+  - name: default
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
