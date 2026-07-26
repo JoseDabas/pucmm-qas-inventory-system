@@ -9,6 +9,7 @@ import { CategoriesPage } from './pages/CategoriesPage';
 import { UsersPage } from './pages/UsersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { AuditPage } from './pages/AuditPage';
+import { AlertsPage } from './pages/AlertsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RequirePermission } from './auth/RequirePermission';
 
@@ -64,6 +65,10 @@ const MainContent = () => {
             <Route
               path="/reportes"
               element={<RequirePermission path="/reportes"><ReportsPage /></RequirePermission>}
+            />
+            <Route
+              path="/alertas"
+              element={<RequirePermission path="/alertas"><AlertsPage /></RequirePermission>}
             />
             <Route
               path="/auditoria"
