@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources: # Configuración de las fuentes de datos para Grafana
   - name: Prometheus
+    uid: prometheus # uid fijo: requerido para que las reglas de alerta provisionadas lo referencien
     type: prometheus
     access: proxy
     url: http://prometheus:9090
