@@ -32,11 +32,18 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.BAD_REQUEST, "Formato de petición inválido o tipo de dato incorrecto.");
     }
     
-    @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
+    @ExceptionHandler({org.springframework.beans.TypeMismatchException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class, org.springframework.web.method.annotation.MethodArgumentConversionNotSupportedException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ProblemDetail handleTypeMismatchException(org.springframework.beans.TypeMismatchException ex) {
+    public ProblemDetail handleTypeMismatchException(Exception ex) {
         log.warn("Tipo de dato incorrecto en parámetro de URL: {}", ex.getMessage());
         return createProblemDetail(HttpStatus.BAD_REQUEST, "Formato de parámetro de URL inválido.");
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.ServletRequestBindingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleServletRequestBindingException(org.springframework.web.bind.ServletRequestBindingException ex) {
+        log.warn("Error en los parámetros de la petición: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.BAD_REQUEST, "Falta un parámetro requerido o hay un error en los parámetros enviados.");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
