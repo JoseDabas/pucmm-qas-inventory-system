@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -162,13 +163,15 @@ public class ProductServiceTest {
     @DisplayName("getProducts sin busqueda consulta findAll paginado")
     void getProductsSinBusquedaUsaFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
-        when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+        // Sin orden explícito, el servicio ordena por createdAt DESC (más reciente primero).
+        Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        when(productRepository.findAll(expected)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
         when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
         Page<ProductResponseDTO> result = productService.getProducts(null, pageable);
 
         assertEquals(1, result.getTotalElements());
-        verify(productRepository, times(1)).findAll(pageable);
+        verify(productRepository, times(1)).findAll(expected);
         verify(productRepository, never())
                 .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(any(), any(), any());
     }
@@ -177,7 +180,9 @@ public class ProductServiceTest {
     @DisplayName("getProducts con termino usa busqueda por nombre o SKU")
     void getProductsConBusquedaUsaFiltro() {
         Pageable pageable = PageRequest.of(0, 10);
-        when(productRepository.findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable))
+        // Sin orden explícito, el servicio ordena por createdAt DESC (más reciente primero).
+        Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        when(productRepository.findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", expected))
                 .thenReturn(new PageImpl<>(List.of(new ProductEntity())));
         when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
@@ -185,7 +190,7 @@ public class ProductServiceTest {
 
         assertEquals(1, result.getTotalElements());
         verify(productRepository, times(1))
-                .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", pageable);
+                .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", expected);
         verify(productRepository, never()).findAll(any(Pageable.class));
     }
 
@@ -197,7 +202,9 @@ public class ProductServiceTest {
         product.setId(productId);
         product.setName("Laptop");
         Pageable pageable = PageRequest.of(0, 10);
-        when(productRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(product)));
+        // Sin orden explícito, el servicio ordena por createdAt DESC (más reciente primero).
+        Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        when(productRepository.findAll(expected)).thenReturn(new PageImpl<>(List.of(product)));
 
         ProductStockView view = mock(ProductStockView.class);
         when(view.getProductId()).thenReturn(productId);

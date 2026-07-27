@@ -37,12 +37,13 @@ public class CategoryService {
     }
 
     /**
-     * Lista todas las categorías ordenadas por nombre, incluyendo la cantidad de
-     * productos asociados a cada una (calculada en una sola consulta para evitar N+1).
+     * Lista todas las categorías ordenadas por fecha de creación descendente (lo
+     * más reciente primero), incluyendo la cantidad de productos asociados a cada
+     * una (calculada en una sola consulta para evitar N+1).
      */
     @Transactional(readOnly = true)
     public List<CategoryResponseDTO> getCategories() {
-        List<Category> categories = categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        List<Category> categories = categoryRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         Map<UUID, Integer> counts = productCountByCategory(categories);
         return categories.stream()
                 .map(category -> mapToResponseDTO(category, counts.getOrDefault(category.getId(), 0)))

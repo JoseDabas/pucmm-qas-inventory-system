@@ -7,10 +7,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -61,6 +64,15 @@ public class ProductEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    // Fecha de creación del producto. La puebla Hibernate al insertar
+    // (@CreationTimestamp) y se usa para ordenar el listado (más reciente
+    // primero). No se audita con Envers: no aporta valor histórico y así
+    // evitamos replicar la columna en la tabla 'products_aud'.
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    @NotAudited
+    private LocalDateTime createdAt;
 
     /**
      * Constructor público sin argumentos.
@@ -146,5 +158,13 @@ public class ProductEntity {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

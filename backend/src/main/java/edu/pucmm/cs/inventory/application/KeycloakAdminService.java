@@ -1,5 +1,6 @@
 package edu.pucmm.cs.inventory.application;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,6 +87,11 @@ public class KeycloakAdminService {
     public List<UserResponseDTO> listUsers() {
         UsersResource usersResource = realmResource().users();
         return usersResource.list().stream()
+                // Las cuentas más recientes primero (mayor createdTimestamp); las
+                // que no exponen la fecha quedan al final.
+                .sorted(Comparator.comparing(
+                        UserRepresentation::getCreatedTimestamp,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(user -> toResponseDTO(user, assignedPermissions(usersResource.get(user.getId()))))
                 .collect(Collectors.toList());
     }
