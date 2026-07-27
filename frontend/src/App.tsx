@@ -26,14 +26,6 @@ const MainContent = () => {
   }
 
   // Lógica OIDC:
-  // Si ocurrió un error en la redirección o validación del token, lo mostramos a pantalla completa.
-  // Excepción: los errores de credenciales del formulario (grant password) NO se muestran aquí;
-  // el propio LoginPage los presenta en línea, debajo de los campos, sin perder el formulario.
-  if (auth.error && auth.error.source !== 'signinResourceOwnerCredentials') {
-    return <div className="text-red-600 text-center p-8">Error de autenticación: {auth.error.message}</div>;
-  }
-
-  // Lógica OIDC:
   // Si auth.isAuthenticated es true, el usuario se logueó correctamente en Keycloak.
   // El JWT ya está en SessionStorage y el interceptor de axios lo inyecta en las peticiones.
   // Montamos el router con el layout base del dashboard.
@@ -87,8 +79,19 @@ const MainContent = () => {
   // directamente contra Keycloak mediante el grant "password" (Direct Access Grants), sin
   // redirigir a la pantalla de Keycloak. En caso de éxito, react-oidc-context guarda el JWT
   // en sessionStorage y actualiza isAuthenticated, montando el dashboard automáticamente.
+  //
+  // Si hubo un error OIDC ajeno al formulario (p. ej. fallo al validar/renovar el token o en la
+  // redirección), lo pasamos como externalError para mostrarlo SOBRE el formulario sin perder la
+  // pantalla de login, de modo que el usuario pueda reintentar. Los errores de credenciales del
+  // propio formulario los sigue gestionando LoginPage en línea.
+  const oidcError =
+    auth.error && auth.error.source !== 'signinResourceOwnerCredentials'
+      ? `Error de autenticación: ${auth.error.message}`
+      : null;
+
   return (
     <LoginPage
+      externalError={oidcError}
       onLogin={(username, password) =>
         auth.signinResourceOwnerCredentials({ username, password }).then((user) => {
           
