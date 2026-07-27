@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, History, Tags, BarChart3, Users, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Package, History, Tags, BarChart3, Users, ShieldCheck, Bell } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
@@ -23,6 +23,7 @@ export const navItems: NavItem[] = [
   { to: '/inventario', label: 'Inventario', icon: Package, requiredPermission: 'product:view' },
   { to: '/historial', label: 'Historial', icon: History, requiredPermission: 'stock:view' },
   { to: '/categorias', label: 'Categorías', icon: Tags, requiredPermission: 'product:view' },
+  { to: '/alertas', label: 'Alertas', icon: Bell, requiredPermission: 'report:view' },
   { to: '/reportes', label: 'Reportes', icon: BarChart3, requiredPermission: 'report:view' },
   { to: '/usuarios', label: 'Usuarios', icon: Users, requiredPermission: 'user:manage' },
   { to: '/auditoria', label: 'Auditoría', icon: ShieldCheck, requiredPermission: 'audit:view' },
