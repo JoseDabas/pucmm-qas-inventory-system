@@ -1,3 +1,5 @@
+name: inventory-observability # Nombre de proyecto propio para aislar este stack de los demás compose
+
 services:
   prometheus: # Servicio de Prometheus para monitoreo y recolección de métricas
     image: prom/prometheus:latest
@@ -23,6 +25,17 @@ services:
       - prometheus
       - loki
       - tempo
+    restart: unless-stopped
+
+  node-exporter: # Exportador de métricas del host (CPU, memoria, disco, red) para los paneles de Grafana
+    image: prom/node-exporter:v1.9.0
+    container_name: inventory_node_exporter
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    pid: host
+    volumes:
+      - /:/host:ro
     restart: unless-stopped
 
   loki: # Servicio de recolección de logs centralizados
@@ -62,3 +75,4 @@ services:
 
 volumes:
   grafana_data:
+    name: infrastructure_grafana_data # Nombre fijo: conserva los datos existentes tras renombrar el proyecto

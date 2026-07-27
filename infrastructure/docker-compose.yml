@@ -1,6 +1,8 @@
 # Archivo de orquestación de Docker Compose para la infraestructura local.
 # Define los servicios necesarios para ejecutar la aplicación en un entorno de desarrollo.
 
+name: inventory-app # Nombre de proyecto propio para aislar este stack de los demás compose
+
 services:
   # Servicio de base de datos PostgreSQL
   postgres:
@@ -101,6 +103,9 @@ services:
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_METRICS_EXPORTER=otlp
+      # Exporta las claves MDC (correlationId, user, endpoint que pone TelemetryContextFilter)
+      # como atributos de log OTLP, para que lleguen a Loki y sean consultables.
+      - OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES=correlationId,user,endpoint
     depends_on:
       postgres:
         condition: service_healthy
@@ -129,3 +134,4 @@ services:
 volumes:
   # Volumen persistente para almacenar los datos de PostgreSQL y evitar pérdida al reiniciar
   postgres_data:
+    name: infrastructure_postgres_data # Nombre fijo: conserva los datos existentes tras renombrar el proyecto

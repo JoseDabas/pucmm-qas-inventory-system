@@ -6,3 +6,7 @@ scrape_configs: # Configuración de los trabajos de scraping para recolectar mé
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["host.docker.internal:8080"]
+
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
