@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -23,6 +25,12 @@ public class Category {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    // Fecha de creación de la categoría. La puebla Hibernate al insertar
+    // (@CreationTimestamp) y se usa para ordenar el listado (más reciente primero).
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     /** Constructor sin argumentos requerido por JPA. */
     protected Category() {
@@ -51,6 +59,10 @@ public class Category {
 
     public String getDescription() {
         return description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public void setName(String name) {

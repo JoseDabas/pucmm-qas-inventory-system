@@ -27,7 +27,8 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
     @Query("SELECT p FROM ProductEntity p LEFT JOIN StockMovementEntity sm ON p.id = sm.productId " +
            "WHERE p.isActive = true " +
            "GROUP BY p " +
-           "HAVING COALESCE(SUM(sm.newQuantity - sm.previousQuantity), 0) <= p.minimumStock")
+           "HAVING COALESCE(SUM(sm.newQuantity - sm.previousQuantity), 0) <= p.minimumStock " +
+           "ORDER BY p.createdAt DESC")
     List<ProductEntity> findProductsWithCriticalStock();
 
     /**

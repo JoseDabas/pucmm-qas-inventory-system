@@ -16,14 +16,17 @@ import java.math.BigDecimal;
 @Schema(description = "Objeto de transferencia de datos para la creación o actualización de un Producto.")
 public class ProductRequestDTO {
 
-    @Schema(description = "Nombre descriptivo del producto", example = "Laptop Dell XPS 15", minLength = 1)
+    // Longitud contada por puntos de código en el propio patrón (Java regex cuenta
+    // el '.' por code point), consistente con maxLength de OpenAPI y VARCHAR(255)
+    // de PostgreSQL; evita el desajuste UTF-16 de @Size con emojis/símbolos.
+    @Schema(description = "Nombre descriptivo del producto", example = "Laptop Dell XPS 15", minLength = 1, maxLength = 255)
     @NotBlank(message = "El nombre es obligatorio")
-    @jakarta.validation.constraints.Pattern(regexp = "(?s).*[a-zA-Z0-9].*", message = "Debe contener al menos un carácter alfanumérico")
+    @jakarta.validation.constraints.Pattern(regexp = "(?s)(?=.*[a-zA-Z0-9]).{1,255}", message = "El nombre debe tener entre 1 y 255 caracteres e incluir al menos uno alfanumérico")
     private String name;
 
-    @Schema(description = "Código SKU (Stock Keeping Unit) único", example = "LAP-DELL-XPS15", minLength = 1)
+    @Schema(description = "Código SKU (Stock Keeping Unit) único", example = "LAP-DELL-XPS15", minLength = 1, maxLength = 100)
     @NotBlank(message = "El código SKU es obligatorio")
-    @jakarta.validation.constraints.Pattern(regexp = "(?s).*[a-zA-Z0-9].*", message = "Debe contener al menos un carácter alfanumérico")
+    @jakarta.validation.constraints.Pattern(regexp = "(?s)(?=.*[a-zA-Z0-9]).{1,100}", message = "El código SKU debe tener entre 1 y 100 caracteres e incluir al menos uno alfanumérico")
     private String skuCode;
 
     @Schema(description = "Descripción detallada de las características", example = "Laptop de 15 pulgadas, 16GB RAM")

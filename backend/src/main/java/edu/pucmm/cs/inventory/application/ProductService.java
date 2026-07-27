@@ -8,7 +8,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -151,15 +153,22 @@ public class ProductService {
     @Transactional(readOnly = true) // Optimiza la transacción marcándola como de solo lectura (evita flush
     // innecesario)
     public Page<ProductResponseDTO> getProducts(String search, @NonNull Pageable pageable) {
+        // Si el cliente no pide un orden explícito, listamos por fecha de creación
+        // descendente (lo más reciente primero).
+        Pageable effective = pageable.getSort().isSorted()
+                ? pageable
+                : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt"));
+
         Page<ProductEntity> productEntities;
         if (search == null || search.isBlank()) {
-            productEntities = productRepository.findAll(pageable);
+            productEntities = productRepository.findAll(effective);
         } else {
             // Búsqueda en toda la base de datos por nombre o SKU (case-insensitive),
             // respetando la paginación provista por Spring Web.
             String term = search.trim();
             productEntities = productRepository
-                    .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(term, term, pageable);
+                    .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(term, term, effective);
         }
         // Calcula el stock actual de todos los productos de la página en una sola consulta
         // (evita N+1) y mapea cada entidad a DTO con su stock correspondiente.

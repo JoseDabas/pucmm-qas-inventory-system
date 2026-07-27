@@ -61,4 +61,12 @@ public class CategoryTest {
         assertEquals("Nueva desc", c.getDescription());
     }
 
+    @Test
+    @DisplayName("createdAt es nulo hasta que Hibernate lo asigna al persistir")
+    void createdAtNuloAntesDePersistir() {
+        Category c = new Category(UUID.randomUUID(), "Electronica", null);
+        // La marca de tiempo la fija @CreationTimestamp en el INSERT, no el constructor.
+        assertNull(c.getCreatedAt());
+    }
+
 }

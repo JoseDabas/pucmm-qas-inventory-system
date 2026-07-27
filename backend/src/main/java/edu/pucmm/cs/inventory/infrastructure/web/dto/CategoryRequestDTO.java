@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.Nulls;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 /**
  * DTO de entrada para crear una categoría de productos.
@@ -18,8 +17,7 @@ public class CategoryRequestDTO {
 
     @Schema(description = "Nombre único de la categoría", example = "Electrónica", minLength = 1, maxLength = 150, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El nombre de la categoría es obligatorio")
-    @Pattern(regexp = "(?s).*[a-zA-Z0-9].*", message = "Debe contener al menos un carácter alfanumérico")
-    @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
+    @Pattern(regexp = "(?s)(?=.*[a-zA-Z0-9]).{1,150}", message = "El nombre debe tener entre 1 y 150 caracteres e incluir al menos uno alfanumérico")
     private String name;
 
     // Campo opcional: puede omitirse, pero si se envía explícitamente como null se
@@ -29,10 +27,20 @@ public class CategoryRequestDTO {
     private String description;
 
     // Getters
-    public String getName() { return name; }
-    public String getDescription() { return description; }
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     // Setters
-    public void setName(String name) { this.name = name; }
-    public void setDescription(String description) { this.description = description; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

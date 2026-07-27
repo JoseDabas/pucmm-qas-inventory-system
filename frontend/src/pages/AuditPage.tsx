@@ -32,13 +32,13 @@ export const AuditPage: React.FC = () => {
   const renderRevisionBadge = (type: string) => {
     switch (type) {
       case 'CREATED':
-        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CREADO</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">CREADO</span>;
       case 'UPDATED':
-        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">MODIFICADO</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">MODIFICADO</span>;
       case 'DELETED':
-        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ELIMINADO</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">ELIMINADO</span>;
       default:
-        return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{type}</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{type}</span>;
     }
   };
 
@@ -47,26 +47,26 @@ export const AuditPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6 text-indigo-600" />
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3">
+          <ShieldCheck className="text-primary-600" size={28} />
           Auditoría del Sistema
         </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Registro inmutable de cambios en el sistema generados por Hibernate Envers.
+        <p className="text-gray-500 mt-1">
+          Registro inmutable de cambios en el sistema generados por Hibernate Envers
         </p>
       </div>
 
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('products')}
             data-testid="audit-products-tab"
             className={`${
               activeTab === 'products'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
           >
             <Package className="h-4 w-4" />
@@ -77,8 +77,8 @@ export const AuditPage: React.FC = () => {
             data-testid="audit-movements-tab"
             className={`${
               activeTab === 'movements'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-border'
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
           >
             <ArrowRightLeft className="h-4 w-4" />
@@ -87,37 +87,37 @@ export const AuditPage: React.FC = () => {
         </nav>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Cargando registros...</div>
+          <div className="p-8 text-center text-gray-400">Cargando registros…</div>
         ) : activeTab === 'products' ? (
           <div className="overflow-x-auto" data-testid="audit-products-table">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha / Rev #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Entidad</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalles (Snapshot)</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
+                  <th className="p-4 font-semibold">Fecha / Rev #</th>
+                  <th className="p-4 font-semibold">Acción</th>
+                  <th className="p-4 font-semibold">ID Entidad</th>
+                  <th className="p-4 font-semibold">Detalles (Snapshot)</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {productsAudit.map((audit) => (
                   <tr key={`${audit.entityId}-${audit.revision}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="p-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-1 text-gray-500 mb-1">
                         <Clock className="h-3 w-3" />
                         {formatDate(audit.revisionDate)}
                       </div>
                       <div className="text-xs text-gray-400">Rev: #{audit.revision}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="p-4 whitespace-nowrap">
                       {renderRevisionBadge(audit.revisionType)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
+                    <td className="p-4 whitespace-nowrap text-xs text-gray-500 font-mono">
                       {audit.entityId.substring(0, 8)}...
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="p-4 text-sm text-gray-900">
                       {audit.revisionType !== 'DELETED' ? (
                         <div>
                           <span className="font-medium">{audit.name}</span> ({audit.skuCode})
@@ -133,7 +133,7 @@ export const AuditPage: React.FC = () => {
                 ))}
                 {productsAudit.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-400">
                       No hay registros de auditoría de productos.
                     </td>
                   </tr>
@@ -143,32 +143,32 @@ export const AuditPage: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto" data-testid="audit-movements-table">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha / Rev #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario / Movimiento</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cambio Cantidad</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
+                  <th className="p-4 font-semibold">Fecha / Rev #</th>
+                  <th className="p-4 font-semibold">Acción</th>
+                  <th className="p-4 font-semibold">Usuario / Movimiento</th>
+                  <th className="p-4 font-semibold">Cambio Cantidad</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {movementsAudit.map((audit) => (
                   <tr key={`${audit.entityId}-${audit.revision}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="p-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-1 text-gray-500 mb-1">
                         <Clock className="h-3 w-3" />
                         {formatDate(audit.revisionDate)}
                       </div>
                       <div className="text-xs text-gray-400">Rev: #{audit.revision}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="p-4 whitespace-nowrap">
                       {renderRevisionBadge(audit.revisionType)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="p-4 text-sm text-gray-900">
                       {audit.revisionType !== 'DELETED' ? (
                         <div>
-                          <div className="font-medium text-indigo-600">{audit.username}</div>
+                          <div className="font-medium text-primary-600">{audit.username}</div>
                           <div className="text-gray-500 text-xs mt-1">
                             Tipo: {audit.movementType} | Prod: {audit.productId?.substring(0,8)}...
                             {audit.observations && ` | Obs: ${audit.observations}`}
@@ -178,7 +178,7 @@ export const AuditPage: React.FC = () => {
                         <span className="text-gray-400 italic">Registro eliminado</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                    <td className="p-4 whitespace-nowrap text-sm text-gray-900 font-mono">
                       {audit.revisionType !== 'DELETED' ? (
                         `${audit.previousQuantity} → ${audit.newQuantity}`
                       ) : '-'}
@@ -187,7 +187,7 @@ export const AuditPage: React.FC = () => {
                 ))}
                 {movementsAudit.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-400">
                       No hay registros de auditoría de movimientos.
                     </td>
                   </tr>
