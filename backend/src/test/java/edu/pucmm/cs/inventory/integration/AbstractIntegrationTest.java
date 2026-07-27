@@ -1,4 +1,4 @@
-package edu.pucmm.cs.inventory;
+package edu.pucmm.cs.inventory.integration;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -33,7 +33,7 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        // Flyway aplica TUS migraciones reales (V1-V4) sobre el contenedor.
+        // Flyway aplica TUS migraciones reales (V1-V8) sobre el contenedor.
         registry.add("spring.flyway.enabled", () -> "true");
     }
 }

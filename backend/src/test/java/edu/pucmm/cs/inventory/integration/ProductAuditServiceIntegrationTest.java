@@ -1,10 +1,10 @@
-package edu.pucmm.cs.inventory;
+package edu.pucmm.cs.inventory.integration;
 
 import edu.pucmm.cs.inventory.application.ProductAuditService;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
-import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +41,7 @@ class ProductAuditServiceIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("Envers registra revisiones ADD y MOD al crear y modificar un producto")
     void auditHistoryRegistraAltaYModificacion() {
         ProductEntity created = productRepository.save(buildProduct("SKU-AUD-1")); // revisión ADD
 
