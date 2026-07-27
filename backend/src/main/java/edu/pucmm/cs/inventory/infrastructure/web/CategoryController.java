@@ -78,7 +78,7 @@ public class CategoryController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
-    @Operation(summary = "Eliminar Categoría", description = "Elimina una categoría siempre que no tenga productos asociados; de lo contrario responde 409 Conflict.")
+    @Operation(summary = "Eliminar Categoría", description = "Realiza un borrado lógico (Soft Delete) de la categoría siempre que no tenga productos asociados; de lo contrario responde 409 Conflict. La categoría se marca como eliminada y se conserva en la base de datos.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente")
     public ResponseEntity<Void> deleteCategory(
             @Parameter(description = "Identificador único UUID de la categoría", required = true) @PathVariable @NonNull UUID id) {

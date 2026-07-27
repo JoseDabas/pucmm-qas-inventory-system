@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -28,6 +29,8 @@ import java.util.UUID;
 @Table(name = "products") // Especifica el nombre exacto de la tabla en la base de datos a mapear
 @Audited // Hibernate Envers: Habilita el control de versiones y auditoría de cambios
          // para esta entidad en la tabla 'products_aud'
+@SoftDelete // Borrado lógico: el DELETE se reescribe como UPDATE deleted = true y
+            // todas las consultas filtran automáticamente WHERE deleted = false
 public class ProductEntity {
 
     @Id // Marca este campo como la clave primaria (Primary Key) de la tabla

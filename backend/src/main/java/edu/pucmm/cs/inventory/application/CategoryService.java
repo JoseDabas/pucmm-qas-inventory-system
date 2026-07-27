@@ -63,8 +63,11 @@ public class CategoryService {
     }
 
     /**
-     * Elimina una categoría. Rechaza el borrado si la categoría todavía tiene
-     * productos asociados, para no dejar productos huérfanos.
+     * Elimina una categoría mediante borrado lógico (soft delete): gracias a la
+     * anotación @SoftDelete, deleteById se ejecuta como UPDATE deleted = true y la
+     * categoría deja de aparecer en los listados, pero se conserva en la base de
+     * datos. Rechaza el borrado si la categoría todavía tiene productos asociados,
+     * para no dejar productos huérfanos.
      */
     @Transactional
     public void deleteCategory(@NonNull UUID id) {
