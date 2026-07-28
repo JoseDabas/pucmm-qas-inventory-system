@@ -37,5 +37,5 @@ RUN npm install -g playwright snyk && \
     npx playwright install --with-deps
 
 # Instalar plugins de Jenkins para JCasC y Job DSL
-RUN jenkins-plugin-cli --plugins configuration-as-code credentials plain-credentials job-dsl git workflow-aggregator
+RUN jenkins-plugin-cli --plugins configuration-as-code credentials plain-credentials job-dsl git workflow-aggregator ssh-agent ssh-credentials
 
