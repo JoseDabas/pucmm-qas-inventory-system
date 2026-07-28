@@ -83,6 +83,18 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         run: snyk test --all-subprojects
         continue-on-error: true
 
+      # Cachea la base de datos local de la NVD entre ejecuciones. Evita la descarga
+      # completa (~200k+ CVEs) en cada run, que es la causa habitual de los fallos
+      # transitorios de la NVD; solo hace actualización incremental. La key cambia por
+      # run para refrescar la caché, y restore-keys recupera la más reciente disponible.
+      - name: Cache NVD database
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: ${{ runner.os }}-nvd-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nvd-
+
       # OWASP Dependency-Check (SCA): analiza dependencias contra la base NVD de CVEs.
       # Requiere el secret NVD_API_KEY para evitar el rate-limit de descarga de la NVD.
       # QUALITY GATE: sin continue-on-error, este paso bloquea el pipeline.

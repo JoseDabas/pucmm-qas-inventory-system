@@ -33,6 +33,11 @@ dependencyCheck {
 	// Se pasa por la variable de entorno NVD_API_KEY desde el pipeline.
 	nvd {
 		apiKey = System.getenv('NVD_API_KEY')
+		// La API de la NVD es inestable y a veces devuelve respuestas vacías. Estos
+		// reintentos y la espera entre peticiones toleran esos fallos transitorios
+		// para que el gate solo falle por vulnerabilidades reales, no por la red.
+		delay = 6000        // ms de espera entre peticiones a la NVD (reduce rate-limit)
+		maxRetryCount = 20  // reintentos ante fallos transitorios de la API
 	}
 	// Falla el build si existe una dependencia con severidad High/Critical (CVSS >= 7.0).
 	failBuildOnCVSS = 7.0
