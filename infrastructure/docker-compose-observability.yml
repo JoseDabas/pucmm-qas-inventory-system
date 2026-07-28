@@ -4,10 +4,14 @@ services:
   prometheus: # Servicio de Prometheus para monitoreo y recolección de métricas
     image: prom/prometheus:latest
     container_name: inventory_prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
     restart: unless-stopped
 
   grafana: # Servicio de Grafana para visualización de métricas
@@ -71,6 +75,15 @@ services:
     depends_on:
       - loki
       - tempo
+    restart: unless-stopped
+
+  alertmanager: # Gestor centralizado de alertas (requisito)
+    image: prom/alertmanager:latest
+    container_name: inventory_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     restart: unless-stopped
 
 volumes:
