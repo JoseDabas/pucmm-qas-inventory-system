@@ -11,6 +11,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +34,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+/**
+ * Pruebas unitarias para ProductAuditService.
+ * Verifica la correcta recuperación del historial de auditoría global de productos
+ * utilizando las abstracciones de Hibernate Envers.
+ */
 @ExtendWith(MockitoExtension.class)
 public class ProductAuditServiceGlobalTest {
 
@@ -55,7 +61,13 @@ public class ProductAuditServiceGlobalTest {
         ReflectionTestUtils.setField(productAuditService, "entityManager", entityManager);
     }
 
+    /**
+     * Valida que el servicio consulte correctamente el motor de auditoría (Hibernate Envers)
+     * y mapee las revisiones de entidades a los DTOs de auditoría esperados, 
+     * incluyendo el tipo de revisión y el identificador de la entidad.
+     */
     @Test
+    @DisplayName("getAllProductAuditHistory devuelve la lista de revisiones mapeadas a DTO")
     void getAllProductAuditHistory_ReturnsRevisions() {
         try (MockedStatic<AuditReaderFactory> mockedFactory = mockStatic(AuditReaderFactory.class)) {
             mockedFactory.when(() -> AuditReaderFactory.get(entityManager)).thenReturn(auditReader);

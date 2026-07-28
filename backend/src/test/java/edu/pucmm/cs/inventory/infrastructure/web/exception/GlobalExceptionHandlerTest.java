@@ -4,6 +4,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -21,9 +22,19 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Pruebas unitarias para GlobalExceptionHandler.
+ * Garantiza que la capa de controladores intercepte todas las excepciones de negocio
+ * y del framework, y las traduzca de forma consistente al formato estándar RFC 7807 (ProblemDetail).
+ */
 class GlobalExceptionHandlerTest {
 
+    /**
+     * Simula la ocurrencia de cada excepción interceptada por el manejador global
+     * para asegurar que el código de estado HTTP y la estructura de la respuesta sean los esperados.
+     */
     @Test
+    @DisplayName("Traduce todas las excepciones esperadas a objetos ProblemDetail con estado HTTP correcto")
     void shouldCoverAllExceptionHandlers() {
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
 

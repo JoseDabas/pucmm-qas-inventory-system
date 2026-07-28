@@ -8,12 +8,21 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Pruebas unitarias para la entidad inmutable de dominio StockMovement.
+ * Garantiza la solidez del "ledger" o libro mayor del inventario, asegurando que 
+ * ninguna transacción matemática o registro de auditoría pueda inicializarse con valores anómalos.
+ */
 class StockMovementTest {
 
     private final UUID validId = UUID.randomUUID();
     private final UUID validProductId = UUID.randomUUID();
     private final LocalDateTime validDate = LocalDateTime.now();
 
+    /**
+     * Valida la construcción exitosa del movimiento cuando todos los atributos
+     * necesarios son correctos y guardan relación matemática.
+     */
     @Test
     @DisplayName("Debe crear un movimiento de stock válido y retornar sus valores correctamente")
     void shouldCreateValidStockMovement() {
@@ -38,6 +47,9 @@ class StockMovementTest {
         assertEquals("Ingreso por compra", movement.getObservations());
     }
 
+    /**
+     * Impide registrar movimientos anónimos o no indexados sin ID.
+     */
     @Test
     @DisplayName("Debe lanzar excepción si el id es nulo")
     void shouldThrowExceptionWhenIdIsNull() {
@@ -48,6 +60,10 @@ class StockMovementTest {
         assertTrue(ex.getMessage().contains("ID del movimiento"));
     }
 
+    /**
+     * Exige que el movimiento siempre esté atado a un producto físico
+     * para preservar la integridad relacional del sistema.
+     */
     @Test
     @DisplayName("Debe lanzar excepción si el productId es nulo")
     void shouldThrowExceptionWhenProductIdIsNull() {
@@ -58,6 +74,9 @@ class StockMovementTest {
         assertTrue(ex.getMessage().contains("ID del producto"));
     }
 
+    /**
+     * Exige la declaración explícita de entrada o salida (IN / OUT).
+     */
     @Test
     @DisplayName("Debe lanzar excepción si el movementType es nulo")
     void shouldThrowExceptionWhenMovementTypeIsNull() {
@@ -68,6 +87,10 @@ class StockMovementTest {
         assertTrue(ex.getMessage().contains("tipo de movimiento"));
     }
 
+    /**
+     * Verifica que el saldo anterior declarado sea un número válido y nunca
+     * negativo, asegurando la consistencia histórica del ledger.
+     */
     @Test
     @DisplayName("Debe lanzar excepción si previousQuantity es nulo o negativo")
     void shouldThrowExceptionWhenPreviousQuantityIsInvalid() {
@@ -82,6 +105,10 @@ class StockMovementTest {
         );
     }
 
+    /**
+     * Asegura que el resultado matemático del movimiento 
+     * no genere deudas virtuales de producto en el sistema (stock negativo).
+     */
     @Test
     @DisplayName("Debe lanzar excepción si newQuantity es nulo o negativo")
     void shouldThrowExceptionWhenNewQuantityIsInvalid() {
@@ -96,6 +123,10 @@ class StockMovementTest {
         );
     }
 
+    /**
+     * Obliga al registro de marcas de tiempo explícitas 
+     * para el análisis de flujos de inventario.
+     */
     @Test
     @DisplayName("Debe lanzar excepción si date es nula")
     void shouldThrowExceptionWhenDateIsNull() {
@@ -105,6 +136,10 @@ class StockMovementTest {
         );
     }
 
+    /**
+     * Requisito de auditoría: prohíbe las operaciones anónimas,
+     * obligando a rastrear qué usuario ejecutó la transacción física.
+     */
     @Test
     @DisplayName("Debe lanzar excepción si username es nulo o vacío")
     void shouldThrowExceptionWhenUsernameIsInvalid() {

@@ -34,11 +34,13 @@ public class ProductApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Esta prueba valida que el contrato de seguridad base (perimetral) funciona
+     * correctamente, impidiendo el acceso al catálogo de productos sin enviar el header Authorization.
+     */
     @Test
     @DisplayName("GET contrato de productos sin token devuelve 401 Unauthorized")
     public void testGetProductsWithoutAuthorizationReturns401() {
-        // Esta prueba valida que el contrato de seguridad base (perimetral) funciona
-        // correctamente, impidiendo el acceso a recursos protegidos sin enviar el header Authorization.
         RestAssured
             .given()
             .when()

@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Pruebas de API (slice @WebMvcTest) para {@link AuditController}.
+ * Pruebas de API (slice WebMvcTest) para AuditController.
  * Verifican el enrutamiento, la correcta serialización de las respuestas
  * y que todas las operaciones exijan el permiso 'audit:view'. 
  * Los servicios de auditoría (Envers) se sustituyen por mocks.
@@ -44,8 +44,10 @@ class AuditControllerApiTest {
     @MockitoBean
     private StockMovementAuditService stockMovementAuditService;
 
-    // ---- GET /audit/products ----
-
+    /**
+     * Valida que un usuario con privilegios de auditoría pueda extraer
+     * el historial completo de cambios estructurales sobre los productos.
+     */
     @Test
     @DisplayName("GET auditoría de productos con audit:view devuelve 200 y el historial")
     void testGetAllProductAuditHistory_Success() throws Exception {
@@ -63,6 +65,10 @@ class AuditControllerApiTest {
                 .andExpect(jsonPath("$[0].revisionType").value("ADD"));
     }
 
+    /**
+     * Asegura que el endpoint de productos audite la autorización,
+     * denegando el acceso (HTTP 403) a usuarios sin el permiso audit:view.
+     */
     @Test
     @DisplayName("GET auditoría de productos con permiso incorrecto devuelve 403")
     void testGetAllProductAuditHistory_WithoutPermission_ReturnsForbidden() throws Exception {
@@ -71,8 +77,10 @@ class AuditControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ---- GET /audit/stock-movements ----
-
+    /**
+     * Comprueba que los supervisores o auditores puedan consultar el ledger histórico
+     * de entradas y salidas de mercancía, verificando la estructura JSON de salida.
+     */
     @Test
     @DisplayName("GET auditoría de movimientos con audit:view devuelve 200 y el historial")
     void testGetAllStockMovementAuditHistory_Success() throws Exception {
@@ -90,6 +98,10 @@ class AuditControllerApiTest {
                 .andExpect(jsonPath("$[0].revisionType").value("MOD"));
     }
 
+    /**
+     * Protege el endpoint de historial de movimientos contra peticiones
+     * completamente anónimas, forzando un estado HTTP 401.
+     */
     @Test
     @DisplayName("GET auditoría de movimientos sin token devuelve 401")
     void testGetAllStockMovementAuditHistory_WithoutAuth_ReturnsUnauthorized() throws Exception {

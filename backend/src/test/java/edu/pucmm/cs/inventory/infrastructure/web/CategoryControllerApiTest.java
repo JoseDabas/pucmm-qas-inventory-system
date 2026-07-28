@@ -31,9 +31,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Pruebas de API (slice @WebMvcTest) para {@link CategoryController}.
+ * Pruebas de API (slice WebMvcTest) para CategoryController.
  * Verifica el enrutamiento HTTP, la validación de entrada y las reglas de
- * autorización (@PreAuthorize) sin cargar el contexto completo de la aplicación.
+ * autorización (PreAuthorize) sin cargar el contexto completo de la aplicación.
  */
 @WebMvcTest(CategoryController.class)
 @Import(SecurityConfig.class)
@@ -67,7 +67,10 @@ class CategoryControllerApiTest {
         return jwt().authorities(new SimpleGrantedAuthority(authority));
     }
 
-    // GET sin token -> 401
+    /**
+     * Asegura que el catálogo de categorías no sea público, forzando 
+     * a que el cliente provea un token JWT (HTTP 401).
+     */
     @Test
     @DisplayName("GET categorías sin token devuelve 401")
     void getSinTokenDevuelve401() throws Exception {
@@ -75,7 +78,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET con product:view -> 200
+    /**
+     * Comprueba que los usuarios con permiso de lectura de productos
+     * también puedan listar el diccionario de categorías.
+     */
     @Test
     @DisplayName("GET categorías con product:view devuelve 200")
     void getConPermisoDevuelve200() throws Exception {
@@ -84,7 +90,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // GET con permiso incorrecto -> 403
+    /**
+     * Valida que roles cruzados (ej. visualizador de stock) no puedan 
+     * inspeccionar la configuración estructural de las categorías (HTTP 403).
+     */
     @Test
     @DisplayName("GET categorías con permiso incorrecto devuelve 403")
     void getConPermisoIncorrectoDevuelve403() throws Exception {
@@ -92,7 +101,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST con product:manage -> 201
+    /**
+     * Verifica la correcta inserción de una categoría cuando el usuario 
+     * tiene autorización de administración de producto y envía un payload JSON válido.
+     */
     @Test
     @DisplayName("POST crear categoría con product:manage devuelve 201")
     void postConPermisoDevuelve201() throws Exception {
@@ -104,7 +116,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isCreated());
     }
 
-    // POST con product:view (sin manage) -> 403
+    /**
+     * Previene la escalada de privilegios, asegurando que un usuario de solo lectura
+     * no pueda inyectar nuevas categorías al sistema.
+     */
     @Test
     @DisplayName("POST crear categoría con product:view devuelve 403")
     void postConPermisoInsuficienteDevuelve403() throws Exception {
@@ -115,7 +130,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST con nombre vacío -> 400
+    /**
+     * Valida las restricciones del esquema: el controlador debe rebotar
+     * inmediatamente un payload cuyo nombre de categoría venga en blanco (HTTP 400).
+     */
     @Test
     @DisplayName("POST crear categoría con nombre vacío devuelve 400")
     void postConNombreVacioDevuelve400() throws Exception {
@@ -127,7 +145,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // POST con description explícitamente null -> 400 (Nulls.FAIL respeta el contrato)
+    /**
+     * Asegura la robustez del binding JSON, rechazando inserciones si el cliente
+     * envía la propiedad de descripción forzada a valor nulo, evitando NullPointerExceptions.
+     */
     @Test
     @DisplayName("POST crear categoría con description null explícito devuelve 400")
     void postConDescriptionNullDevuelve400() throws Exception {
@@ -138,7 +159,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // POST sin description (campo opcional omitido) -> 201
+    /**
+     * Permite flexibilizar el cliente: si la descripción simplemente no se envía,
+     * el sistema la asume vacía y crea la categoría correctamente.
+     */
     @Test
     @DisplayName("POST crear categoría sin description devuelve 201")
     void postSinDescriptionDevuelve201() throws Exception {
@@ -150,7 +174,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isCreated());
     }
 
-    // DELETE con product:manage -> 204
+    /**
+     * Prueba el flujo exitoso de eliminación de una categoría por su ID 
+     * cuando el cliente tiene los privilegios adecuados (product:manage).
+     */
     @Test
     @DisplayName("DELETE categoría con product:manage devuelve 204")
     void deleteConPermisoDevuelve204() throws Exception {
@@ -159,7 +186,10 @@ class CategoryControllerApiTest {
                 .andExpect(status().isNoContent());
     }
 
-    // DELETE con permiso incorrecto -> 403
+    /**
+     * Impide que usuarios sin autorización estructural puedan
+     * purgar categorías del inventario.
+     */
     @Test
     @DisplayName("DELETE categoría con product:view devuelve 403")
     void deleteConPermisoIncorrectoDevuelve403() throws Exception {
@@ -168,7 +198,11 @@ class CategoryControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // DELETE de categoría con productos asociados -> 409
+    /**
+     * Maneja un escenario de negocio excepcional: rechaza (HTTP 409 Conflict) 
+     * el intento de borrado de una categoría si esta aún tiene productos anidados, 
+     * evitando orfandad de datos.
+     */
     @Test
     @DisplayName("DELETE categoría en uso devuelve 409")
     void deleteCategoriaEnUsoDevuelve409() throws Exception {

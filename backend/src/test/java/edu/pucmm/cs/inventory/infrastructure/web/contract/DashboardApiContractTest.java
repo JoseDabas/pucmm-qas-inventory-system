@@ -34,6 +34,10 @@ public class DashboardApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Valida que las métricas del dashboard permanezcan ocultas al público
+     * requiriendo que la petición incluya un token JWT válido.
+     */
     @Test
     @DisplayName("GET contrato del dashboard sin token devuelve 401 Unauthorized")
     public void testGetDashboardMetricsWithoutAuthorizationReturns401() {

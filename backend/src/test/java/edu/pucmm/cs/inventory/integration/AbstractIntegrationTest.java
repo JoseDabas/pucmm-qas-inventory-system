@@ -8,13 +8,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 /**
  * Clase base para tests de integración con Testcontainers.
  * Levanta un PostgreSQL real efímero y aplica las migraciones Flyway sobre él.
- *
- * Usa el patrón de "contenedor singleton": el contenedor se arranca una sola vez
- * en un bloque estático y vive durante toda la ejecución de la JVM de tests (lo
- * limpia Ryuk al finalizar). NO se usa @Testcontainers/@Container porque esos
- * detienen el contenedor al terminar cada clase, y al haber varias clases de
- * integración que comparten el contexto de Spring cacheado, la siguiente clase
- * reutilizaría un datasource apuntando a un contenedor ya detenido (ConnectException).
+ * 
+ * Configura el contenedor como singleton estático para acelerar las ejecuciones 
+ * evitando reiniciar la base de datos entre diferentes clases de prueba.
  */
 @SpringBootTest
 public abstract class AbstractIntegrationTest {
@@ -33,7 +29,6 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        // Flyway aplica TUS migraciones reales (V1-V8) sobre el contenedor.
         registry.add("spring.flyway.enabled", () -> "true");
     }
 }

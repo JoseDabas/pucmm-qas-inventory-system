@@ -25,7 +25,7 @@ import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductResponseDTO;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementResponseDTO;
 
 /**
- * Pruebas unitarias de {@link DashboardService}: verifican que agrega
+ * Pruebas unitarias de DashboardService: verifican que agrega
  * correctamente las métricas del tablero a partir de los servicios de dominio,
  * incluyendo el manejo de precios/stock nulos.
  */
@@ -51,6 +51,11 @@ class DashboardServiceTest {
         return p;
     }
 
+    /**
+     * Verifica que el panel de control agrupe y consolide correctamente todas las métricas.
+     * Al consultar los diversos servicios (productos, categorías, movimientos), este test evalúa
+     * que la suma de unidades, valor monetario e identificadores se asigne al DTO correctamente.
+     */
     @Test
     @DisplayName("getMetrics agrega productos, unidades, valor, categorías, movimientos y críticos")
     void getMetricsAgregaLasMetricas() {
@@ -76,6 +81,11 @@ class DashboardServiceTest {
         assertThat(metrics.getCriticalStockCount()).isEqualTo(1);
     }
 
+    /**
+     * Comprueba el caso base donde no existen datos en el sistema.
+     * Asegura que el servicio del tablero de métricas no falle al procesar colecciones vacías
+     * y devuelva los indicadores estadísticos en ceros de forma segura.
+     */
     @Test
     @DisplayName("getMetrics sin productos devuelve ceros")
     void getMetricsSinProductos() {

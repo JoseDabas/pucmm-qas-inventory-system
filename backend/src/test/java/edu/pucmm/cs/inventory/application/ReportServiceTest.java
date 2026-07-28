@@ -6,6 +6,7 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.repository.MovementRepo
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.report.PdfReportGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +24,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Pruebas unitarias para ReportService.
+ * Asegura la correcta validación de parámetros de fecha y la integración con el 
+ * motor de generación de reportes en PDF, manejando correctamente los filtros por categoría.
+ */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceTest {
 
@@ -47,18 +53,34 @@ class ReportServiceTest {
         endDate = LocalDateTime.now();
     }
 
+    /**
+     * Asegura que el servicio rechace la generación del reporte si alguna de las fechas
+     * (inicio o fin) no es proporcionada, lanzando IllegalArgumentException.
+     */
     @Test
+    @DisplayName("generateMovementReportPdf con fechas nulas lanza IllegalArgumentException")
     void testGenerateMovementReportPdf_NullDates_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> reportService.generateMovementReportPdf(null, endDate, null));
         assertThrows(IllegalArgumentException.class, () -> reportService.generateMovementReportPdf(startDate, null, null));
     }
 
+    /**
+     * Verifica que el servicio prevenga consultas inválidas lanzando IllegalArgumentException
+     * cuando la fecha de inicio es posterior a la fecha de fin.
+     */
     @Test
+    @DisplayName("generateMovementReportPdf con fecha de inicio posterior a fin lanza IllegalArgumentException")
     void testGenerateMovementReportPdf_StartDateAfterEndDate_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> reportService.generateMovementReportPdf(endDate, startDate, null));
     }
 
+    /**
+     * Comprueba el escenario óptimo donde se solicitan todas las categorías.
+     * El servicio debe delegar la búsqueda al repositorio y luego generar el PDF
+     * exitosamente sin intentar buscar una categoría específica.
+     */
     @Test
+    @DisplayName("generateMovementReportPdf con fechas válidas y sin categoría genera el reporte")
     void testGenerateMovementReportPdf_WithValidDatesAndNoCategory_GeneratesPdf() {
         List<MovementReportView> mockData = new ArrayList<>();
         byte[] expectedPdfBytes = new byte[]{1, 2, 3};
@@ -72,7 +94,13 @@ class ReportServiceTest {
         verify(categoryRepository, never()).findById(any());
     }
 
+    /**
+     * Valida la generación de un reporte filtrado por una categoría existente.
+     * El servicio debe recuperar el nombre de la categoría para inyectarlo en el título
+     * o metadatos del PDF generado.
+     */
     @Test
+    @DisplayName("generateMovementReportPdf filtrado por categoría existente genera el reporte")
     void testGenerateMovementReportPdf_WithValidDatesAndCategory_GeneratesPdf() {
         UUID categoryId = UUID.randomUUID();
         List<MovementReportView> mockData = new ArrayList<>();
@@ -88,7 +116,13 @@ class ReportServiceTest {
         assertArrayEquals(expectedPdfBytes, result);
     }
     
+    /**
+     * Comprueba la robustez del servicio al recibir un filtro de categoría inválido o eliminado.
+     * En lugar de fallar, debe generar el reporte utilizando un nombre por defecto
+     * (Categoría Desconocida).
+     */
     @Test
+    @DisplayName("generateMovementReportPdf filtrado por categoría inexistente usa nombre por defecto")
     void testGenerateMovementReportPdf_WithValidDatesAndUnknownCategory_GeneratesPdf() {
         UUID categoryId = UUID.randomUUID();
         List<MovementReportView> mockData = new ArrayList<>();

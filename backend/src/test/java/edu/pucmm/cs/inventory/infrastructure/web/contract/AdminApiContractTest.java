@@ -34,6 +34,10 @@ public class AdminApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Asegura que el perímetro de seguridad bloquee inmediatamente las solicitudes 
+     * al endpoint de administración si no se provee un token de acceso válido.
+     */
     @Test
     @DisplayName("GET contrato de admin de usuarios sin token devuelve 401 Unauthorized")
     public void testGetAdminUsersWithoutAuthorizationReturns401() {

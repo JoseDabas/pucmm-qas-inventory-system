@@ -28,8 +28,11 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// Anotación para configurar un test de Spring MVC enfocado en el ProductController
-//WebMvcTest se utiliza para probar controladores específicos sin cargar todo el contexto de la aplicación, lo que hace que las pruebas sean más rápidas y aisladas. En este caso, se enfoca en ProductController.
+/**
+ * Pruebas de API (slice WebMvcTest) para ProductController.
+ * Verifica el enrutamiento HTTP, la validación de entrada (Bean Validation) y las reglas
+ * de autorización (PreAuthorize) sin cargar el contexto completo de la aplicación.
+ */
 @WebMvcTest(ProductController.class)
 @Import(SecurityConfig.class)
 class ProductControllerApiTest {
@@ -41,10 +44,6 @@ class ProductControllerApiTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // MockitoBean se utiliza para crear un mock de ProductService que será
-    // inyectado en el ProductController durante las pruebas.
-    // Esto permite simular el comportamiento del servicio sin depender de su
-    // implementación real.
     @MockitoBean
     private ProductService productService;
 
@@ -69,12 +68,14 @@ class ProductControllerApiTest {
         sampleResponse.setSkuCode("SKU-001");
     }
 
-    // Helper para simular un JWT con una autoridad especifica.
     private org.springframework.test.web.servlet.request.RequestPostProcessor jwtWith(String authority) {
         return jwt().authorities(new org.springframework.security.core.authority.SimpleGrantedAuthority(authority));
     }
 
-    // GET sin token -> 401
+    /**
+     * Asegura que el catálogo de productos requiera autenticación activa,
+     * denegando solicitudes anónimas.
+     */
     @Test
     @DisplayName("GET productos sin token devuelve 401")
     void getSinTokenDevuelve401() throws Exception {
@@ -82,7 +83,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET con permiso correcto -> 200
+    /**
+     * Verifica que un usuario con privilegios de lectura pueda
+     * acceder a la paginación del catálogo completo.
+     */
     @Test
     @DisplayName("GET productos con product:view devuelve 200")
     void getConPermisoDevuelve200() throws Exception {
@@ -91,7 +95,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // GET con parametro de busqueda -> 200
+    /**
+     * Comprueba la correcta transmisión de parámetros de búsqueda
+     * hacia la capa de servicio cuando el usuario tiene los permisos requeridos.
+     */
     @Test
     @DisplayName("GET productos con ?search filtra y devuelve 200")
     void getConBusquedaDevuelve200() throws Exception {
@@ -100,7 +107,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // GET con permiso incorrecto -> 403
+    /**
+     * Valida que roles sin acceso a productos (ej. auditores de stock)
+     * reciban un HTTP 403 Forbidden al intentar ver el catálogo.
+     */
     @Test
     @DisplayName("GET productos con permiso incorrecto devuelve 403")
     void getConPermisoIncorrectoDevuelve403() throws Exception {
@@ -108,7 +118,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST con product:manage -> 201
+    /**
+     * Verifica la creación exitosa de un producto nuevo cuando el rol
+     * tiene privilegios administrativos sobre el módulo de inventario.
+     */
     @Test
     @DisplayName("POST crear producto con product:manage devuelve 201")
     void postConPermisoDevuelve201() throws Exception {
@@ -120,7 +133,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isCreated());
     }
 
-    // POST con viewer (sin product:manage) -> 403
+    /**
+     * Protege contra escalada de privilegios, evitando que usuarios
+     * de solo lectura (Viewers) intenten inyectar entidades nuevas.
+     */
     @Test
     @DisplayName("POST crear producto con product:view devuelve 403")
     void postConPermisoInsuficienteDevuelve403() throws Exception {
@@ -131,7 +147,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST sin token -> 401
+    /**
+     * Valida el filtro de seguridad previniendo que peticiones no
+     * autenticadas alcancen la lógica de creación de productos.
+     */
     @Test
     @DisplayName("POST crear producto sin token devuelve 401")
     void postSinTokenDevuelve401() throws Exception {
@@ -141,7 +160,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // POST con body invalido (nombre vacio) -> 400
+    /**
+     * Asegura la validación de Bean (JSR 380) a nivel de controlador,
+     * regresando 400 Bad Request si el nombre del producto es omitido.
+     */
     @Test
     @DisplayName("POST con nombre vacio devuelve 400")
     void postConNombreVacioDevuelve400() throws Exception {
@@ -153,7 +175,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // POST con precio negativo -> 400
+    /**
+     * Verifica que el controlador rebote payloads financieros
+     * con montos inválidos (precios negativos) antes de tocar el dominio.
+     */
     @Test
     @DisplayName("POST con precio negativo devuelve 400")
     void postConPrecioNegativoDevuelve400() throws Exception {
@@ -165,7 +190,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // PUT actualizar con product:manage -> 200
+    /**
+     * Prueba el flujo de actualización integral (PUT) para garantizar
+     * que se delega correctamente al servicio si se tienen permisos de gestión.
+     */
     @Test
     @DisplayName("PUT actualizar producto con product:manage devuelve 200")
     void putConPermisoDevuelve200() throws Exception {
@@ -177,7 +205,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // DELETE con product:manage -> 204
+    /**
+     * Asegura que los privilegios administrativos permitan eliminar productos
+     * del catálogo o realizar borrados lógicos sin restricción.
+     */
     @Test
     @DisplayName("DELETE producto con product:manage devuelve 204")
     void deleteConPermisoDevuelve204() throws Exception {
@@ -186,7 +217,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isNoContent());
     }
 
-    // GET alertas de stock critico con report:view -> 200
+    /**
+     * Valida que el endpoint de alertas tempranas (stock crítico)
+     * responda exitosamente a los usuarios autorizados (report:view).
+     */
     @Test
     @DisplayName("GET alertas stock critico con report:view devuelve 200")
     void getAlertasConReportViewDevuelve200() throws Exception {
@@ -195,7 +229,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // GET alertas de stock critico con permiso incorrecto -> 403
+    /**
+     * Protege el endpoint de métricas operativas contra usuarios
+     * cuyos roles (ej. solo ver productos) no incluyen el reporte consolidado.
+     */
     @Test
     @DisplayName("GET alertas stock critico con product:view devuelve 403")
     void getAlertasConPermisoIncorrectoDevuelve403() throws Exception {
@@ -203,7 +240,10 @@ class ProductControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // GET alertas de stock critico sin token -> 401
+    /**
+     * Fuerza la presentación de credenciales antes de exponer 
+     * métricas sensibles del inventario.
+     */
     @Test
     @DisplayName("GET alertas stock critico sin token devuelve 401")
     void getAlertasSinTokenDevuelve401() throws Exception {

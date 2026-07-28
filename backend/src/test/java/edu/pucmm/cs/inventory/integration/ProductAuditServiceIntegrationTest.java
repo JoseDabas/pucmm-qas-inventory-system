@@ -40,24 +40,27 @@ class ProductAuditServiceIntegrationTest extends AbstractIntegrationTest {
         return p;
     }
 
+    /**
+     * Simula la creación y modificación de un producto en base de datos,
+     * verificando que Envers registre correctamente cada fase y que 
+     * el servicio de auditoría devuelva el historial ordenado por fecha de cambio.
+     */
     @Test
     @DisplayName("Envers registra revisiones ADD y MOD al crear y modificar un producto")
     void auditHistoryRegistraAltaYModificacion() {
-        ProductEntity created = productRepository.save(buildProduct("SKU-AUD-1")); // revisión ADD
+        ProductEntity created = productRepository.save(buildProduct("SKU-AUD-1"));
 
         created.setMinimumStock(5);
         created.setIsActive(false);
-        productRepository.save(created); // revisión MOD
+        productRepository.save(created);
 
         List<ProductAuditResponseDTO> history = productAuditService.getAllProductAuditHistory();
 
-        // Filtramos para asegurar que encontramos las revisiones de nuestro producto (ya que es global)
         List<ProductAuditResponseDTO> productHistory = history.stream()
                 .filter(r -> r.getEntityId().equals(created.getId()))
                 .toList();
 
         assertEquals(2, productHistory.size());
-        // Orden descendente: la revisión más reciente (modificación) primero.
         assertEquals("UPDATED", productHistory.get(0).getRevisionType());
         assertEquals(5, productHistory.get(0).getMinimumStock());
         assertFalse(productHistory.get(0).getIsActive());

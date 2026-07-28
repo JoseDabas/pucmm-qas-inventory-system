@@ -34,6 +34,10 @@ public class ReportApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Asegura que el acceso a la generación de reportes bloquee las 
+     * solicitudes no firmadas con estado HTTP 401.
+     */
     @Test
     @DisplayName("GET contrato de reportes sin token devuelve 401 Unauthorized")
     public void testGetReportsWithoutAuthorizationReturns401() {

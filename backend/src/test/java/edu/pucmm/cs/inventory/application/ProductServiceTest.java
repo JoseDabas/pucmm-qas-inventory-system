@@ -31,6 +31,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Pruebas unitarias para ProductService.
+ * Verifica la correcta ejecución de la lógica de negocio, incluyendo la creación de productos,
+ * actualizaciones, borrado lógico, manejo de alertas de stock crítico y validación de 
+ * excepciones como EntityNotFoundException.
+ */
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
@@ -58,6 +64,11 @@ public class ProductServiceTest {
         request.setMinimumStock(2);
     }
 
+    /**
+     * Verifica la correcta creación de un producto en su escenario base (happy path).
+     * Asegura que el servicio orqueste la delegación al repositorio y devuelva
+     * el DTO correspondiente con los datos guardados.
+     */
     @Test
     @DisplayName("createProduct guarda el producto y devuelve DTO")
     void createProductGuardaYDevuelve() {
@@ -74,6 +85,11 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).save(any(ProductEntity.class));
     }
 
+    /**
+     * Valida que al crear un producto con un stock inicial especificado (> 0),
+     * el sistema registre automáticamente un movimiento de entrada (IN) en el ledger de stock,
+     * garantizando la trazabilidad desde el momento cero.
+     */
     @Test
     @DisplayName("createProduct con cantidad inicial registra movimiento de stock")
     void createProductRegistraMovimiento() {
@@ -86,6 +102,11 @@ public class ProductServiceTest {
         verify(stockMovementRepository, times(1)).save(any());
     }
 
+    /**
+     * Comprueba el manejo de productos sin categoría.
+     * Si no se especifica una categoría en el request, el servicio no debe invocar
+     * al CategoryJpaRepository, evitando consultas innecesarias a la base de datos.
+     */
     @Test
     @DisplayName("createProduct sin categoria no consulta repositorio de categorias")
     void createProductSinCategoria() {
@@ -97,6 +118,10 @@ public class ProductServiceTest {
         verify(categoryRepository, never()).findByName(any());
     }
 
+    /**
+     * Asegura que el servicio respete la decisión del cliente respecto al estado activo/inactivo
+     * de un nuevo producto, y no fuerce un estado 'true' si el usuario indicó explícitamente 'false'.
+     */
     @Test
     @DisplayName("createProduct respeta isActive explicito cuando el cliente lo indica")
     void createProductRespetaIsActiveExplicito() {
@@ -110,6 +135,11 @@ public class ProductServiceTest {
         assertFalse(result.getIsActive());
     }
 
+    /**
+     * Valida que intentar actualizar un producto inexistente
+     * sea rechazado tempranamente lanzando jakarta.persistence.EntityNotFoundException,
+     * protegiendo al sistema de actualizaciones huérfanas.
+     */
     @Test
     @DisplayName("updateProduct con ID inexistente lanza excepcion")
     void updateProductInexistenteLanzaExcepcion() {
@@ -120,6 +150,10 @@ public class ProductServiceTest {
                 () -> productService.updateProduct(id, request));
     }
 
+    /**
+     * Verifica que al actualizar un producto existente, los nuevos datos
+     * sobrescriban a los anteriores y el producto persista correctamente.
+     */
     @Test
     @DisplayName("updateProduct existente actualiza y devuelve DTO")
     void updateProductExistenteActualiza() {
@@ -137,6 +171,10 @@ public class ProductServiceTest {
         assertEquals("Laptop", result.getName());
     }
 
+    /**
+     * Comprueba que la eliminación (lógica) delegue correctamente
+     * al repositorio siempre que el producto exista en la base de datos.
+     */
     @Test
     @DisplayName("deleteProduct existente elimina")
     void deleteProductExistente() {
@@ -148,6 +186,11 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).deleteById(id);
     }
 
+    /**
+     * Asegura que intentar eliminar un producto con un UUID no registrado
+     * lance una excepción de negocio en lugar de fallar silenciosamente,
+     * impidiendo llamadas en vano al repositorio.
+     */
     @Test
     @DisplayName("deleteProduct inexistente lanza excepcion")
     void deleteProductInexistenteLanzaExcepcion() {
@@ -159,6 +202,11 @@ public class ProductServiceTest {
         verify(productRepository, never()).deleteById(any());
     }
 
+    /**
+     * Verifica que si no se provee un término de búsqueda,
+     * el servicio consulte la totalidad de productos (paginados), 
+     * aplicando un orden descendente por fecha de creación por defecto.
+     */
     @Test
     @DisplayName("getProducts sin busqueda consulta findAll paginado")
     void getProductsSinBusquedaUsaFindAll() {
@@ -176,6 +224,11 @@ public class ProductServiceTest {
                 .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(any(), any(), any());
     }
 
+    /**
+     * Valida que si se provee una cadena de búsqueda,
+     * el servicio ejecute la consulta filtrada combinando Nombre y SKU,
+     * ignorando mayúsculas y minúsculas (case-insensitive).
+     */
     @Test
     @DisplayName("getProducts con termino usa busqueda por nombre o SKU")
     void getProductsConBusquedaUsaFiltro() {
@@ -194,6 +247,11 @@ public class ProductServiceTest {
         verify(productRepository, never()).findAll(any(Pageable.class));
     }
 
+    /**
+     * Comprueba que la consulta paginada asigne a cada producto su stock actual
+     * procesado de forma vectorizada desde la tabla de movimientos, 
+     * evitando el antipatrón N+1 y entregando cifras en tiempo real.
+     */
     @Test
     @DisplayName("getProducts calcula el stock actual desde el ledger de movimientos")
     void getProductsCalculaStockActualDesdeLedger() {
@@ -216,6 +274,11 @@ public class ProductServiceTest {
         assertEquals(35, result.getContent().get(0).getStockActual());
     }
 
+    /**
+     * Asegura el comportamiento del patrón "Find-or-Create" de categorías:
+     * si se asigna un producto a una categoría que ya existe, el servicio 
+     * debe reutilizar la existente y no intentar duplicarla.
+     */
     @Test
     @DisplayName("createProduct reutiliza categoria existente")
     void createProductReutilizaCategoria() {
@@ -228,6 +291,11 @@ public class ProductServiceTest {
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
+    /**
+     * Verifica que el endpoint de alertas críticas funcione correctamente,
+     * obteniendo aquellos productos cuyo stock actual es menor o igual a su stock mínimo,
+     * mapeándolos de manera consistente a DTOs.
+     */
     @Test
     @DisplayName("getCriticalStockAlerts devuelve los productos con stock critico mapeados a DTO")
     void getCriticalStockAlertsDevuelveProductos() {
@@ -244,6 +312,11 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).findProductsWithCriticalStock();
     }
 
+    /**
+     * Comprueba que al instanciar un producto nuevo y devolverlo inmediatamente
+     * al cliente, la propiedad "stockActual" del DTO se refleje igual a la 
+     * cantidad inicial ingresada, sin necesidad de consultar el ledger.
+     */
     @Test
     @DisplayName("createProduct expone stockActual igual a la cantidad inicial")
     void createProductStockActualIgualaCantidadInicial() {

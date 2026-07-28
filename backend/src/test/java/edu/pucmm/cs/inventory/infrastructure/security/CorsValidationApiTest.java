@@ -19,11 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Validación de CORS (Security Testing).
- * <p>
- * Ejercita la configuración {@code corsConfigurationSource()} de
- * {@link SecurityConfig} mediante peticiones preflight (OPTIONS): un origen
- * permitido recibe las cabeceras CORS correctas, mientras que un origen no
- * autorizado es rechazado con 403.
+ * 
+ * Ejercita la configuración corsConfigurationSource de SecurityConfig 
+ * mediante peticiones preflight (OPTIONS): un origen permitido recibe las 
+ * cabeceras CORS correctas, mientras que un origen no autorizado es rechazado con 403.
  */
 @WebMvcTest(ProductController.class)
 @Import(SecurityConfig.class)
@@ -42,7 +41,11 @@ class CorsValidationApiTest {
 
     private static final String ALLOWED_ORIGIN = "http://localhost:5173";
 
-    // Preflight desde el origen permitido -> refleja el origen y permite credenciales.
+    /**
+     * Verifica que si una aplicación frontend de confianza (ej. localhost:5173) 
+     * intenta negociar acceso CORS, el backend responda con las cabeceras 
+     * habilitando credenciales, el origen exacto y los métodos permitidos.
+     */
     @Test
     @DisplayName("Preflight CORS desde origen permitido devuelve cabeceras CORS")
     void preflightOrigenPermitido() throws Exception {
@@ -55,7 +58,11 @@ class CorsValidationApiTest {
                 .andExpect(header().string("Access-Control-Allow-Methods", containsString("POST")));
     }
 
-    // Preflight desde un origen no permitido -> rechazado con 403.
+    /**
+     * Protege el sistema contra Cross-Site Request Forgery (CSRF) y lecturas cruzadas,
+     * asegurando que un origen no enlistado (ej. evil.com) reciba un código 403 Forbidden
+     * inmediato al intentar negociar acceso preflight.
+     */
     @Test
     @DisplayName("Preflight CORS desde origen NO permitido devuelve 403")
     void preflightOrigenNoPermitido() throws Exception {
