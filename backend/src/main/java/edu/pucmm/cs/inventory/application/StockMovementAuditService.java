@@ -45,7 +45,7 @@ public class StockMovementAuditService {
 
         return revisions.stream()
                 .map(this::mapRevision)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private StockMovementAuditResponseDTO mapRevision(Object[] row) {

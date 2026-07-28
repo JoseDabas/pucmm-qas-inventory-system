@@ -32,13 +32,11 @@ public class ReportController {
     @GetMapping("/movements")
     @PreAuthorize("hasAuthority('" + Permissions.REPORT_VIEW + "')")
     @Operation(summary = "Generar Reporte de Movimientos", description = "Genera un reporte PDF con el historial de movimientos de inventario en el rango de fechas especificado.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reporte PDF generado correctamente"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Parámetros inválidos (ej. fechas mal formadas o rango incorrecto)"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autenticado", content = @io.swagger.v3.oas.annotations.media.Content),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Sin permisos para ver reportes", content = @io.swagger.v3.oas.annotations.media.Content),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Conflicto en las reglas de negocio (ej. fechas inconsistentes)")
-    })
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reporte PDF generado correctamente")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Parámetros inválidos (ej. fechas mal formadas o rango incorrecto)")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autenticado", content = @io.swagger.v3.oas.annotations.media.Content)
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Sin permisos para ver reportes", content = @io.swagger.v3.oas.annotations.media.Content)
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Conflicto en las reglas de negocio (ej. fechas inconsistentes)")
     public ResponseEntity<byte[]> generateMovementReport(
             @Parameter(description = "Fecha y hora de inicio (ISO-8601)", example = "2023-01-01T00:00:00Z", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
             @RequestParam("startDate") String startDateStr,

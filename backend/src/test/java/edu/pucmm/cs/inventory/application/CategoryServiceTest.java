@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
  * de una categoría si tiene productos asociados.
  */
 @ExtendWith(MockitoExtension.class)
-public class CategoryServiceTest {
+class CategoryServiceTest {
 
     @Mock
     private CategoryJpaRepository categoryRepository;

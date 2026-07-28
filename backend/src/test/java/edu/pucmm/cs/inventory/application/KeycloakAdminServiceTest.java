@@ -142,7 +142,8 @@ class KeycloakAdminServiceTest {
         when(usersResource.create(any(UserRepresentation.class)))
                 .thenReturn(Response.status(Response.Status.CONFLICT).build());
 
-        assertThatThrownBy(() -> service.createUser(createRequest(SystemRole.VIEWER)))
+        var request = createRequest(SystemRole.VIEWER);
+        assertThatThrownBy(() -> service.createUser(request))
                 .isInstanceOf(UsernameAlreadyExistsException.class);
     }
 
@@ -157,7 +158,8 @@ class KeycloakAdminServiceTest {
         when(usersResource.create(any(UserRepresentation.class)))
                 .thenReturn(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
 
-        assertThatThrownBy(() -> service.createUser(createRequest(SystemRole.VIEWER)))
+        var request = createRequest(SystemRole.VIEWER);
+        assertThatThrownBy(() -> service.createUser(request))
                 .isInstanceOf(IllegalStateException.class);
     }
 

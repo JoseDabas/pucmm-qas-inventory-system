@@ -226,8 +226,8 @@ public class SecurityConfig {
             // "ROLE_"
             // Esto es una convención estándar en Spring Security para el manejo de roles.
             return roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+                    .<GrantedAuthority>map(SimpleGrantedAuthority::new)
+                    .toList();
         }
     }
 }

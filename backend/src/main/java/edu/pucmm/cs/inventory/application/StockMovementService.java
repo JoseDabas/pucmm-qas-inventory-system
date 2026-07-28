@@ -50,7 +50,7 @@ public class StockMovementService {
      * primero). Admite un término de búsqueda opcional por nombre de producto o
      * usuario.
      *
-     * @param search   término de búsqueda opcional (null/vacío devuelve todo)
+     * @param search   término de búsqueda opcional (null/vacío devuelve todos los registros)
      * @param pageable configuración de paginación provista por Spring Web
      * @return página de movimientos mapeada a DTOs de respuesta
      */
@@ -105,7 +105,7 @@ public class StockMovementService {
         movement.setMovementType(request.getMovementType().name());
         movement.setPreviousQuantity(previousQuantity);
         movement.setNewQuantity(newQuantity);
-        movement.setDate(LocalDateTime.now());
+        movement.setDate(LocalDateTime.now(ZoneId.of("UTC")));
         movement.setUsername(currentUsername());
         movement.setObservations(request.getObservations());
 
@@ -133,7 +133,7 @@ public class StockMovementService {
         List<UUID> productIds = movements.stream()
                 .map(StockMovementEntity::getProductId)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
         return productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(ProductEntity::getId, ProductEntity::getName));
     }

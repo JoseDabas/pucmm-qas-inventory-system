@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class TelemetryContextFilterTest {
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         SecurityContextHolder.clearContext();
     }
 

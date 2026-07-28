@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
  */
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class CategoryApiContractTest {
+class CategoryApiContractTest {
 
     @Container
     @ServiceConnection
@@ -30,7 +30,7 @@ public class CategoryApiContractTest {
     private int port;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         RestAssured.port = port;
     }
 
@@ -40,7 +40,7 @@ public class CategoryApiContractTest {
      */
     @Test
     @DisplayName("GET contrato de categorías sin token devuelve 401 Unauthorized")
-    public void testGetCategoriesWithoutAuthorizationReturns401() {
+    void testGetCategoriesWithoutAuthorizationReturns401() {
         RestAssured
             .given()
             .when()

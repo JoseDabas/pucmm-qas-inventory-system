@@ -93,7 +93,7 @@ public class KeycloakAdminService {
                         UserRepresentation::getCreatedTimestamp,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(user -> toResponseDTO(user, assignedPermissions(usersResource.get(user.getId()))))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -143,12 +143,12 @@ public class KeycloakAdminService {
         List<RoleRepresentation> toRemove = current.stream()
                 .filter(permission -> !desiredPermissions.contains(permission))
                 .map(this::realmRole)
-                .collect(Collectors.toList());
+                .toList();
 
         List<RoleRepresentation> toAdd = desiredPermissions.stream()
                 .filter(permission -> !current.contains(permission))
                 .map(this::realmRole)
-                .collect(Collectors.toList());
+                .toList();
 
         if (!toRemove.isEmpty()) {
             userResource.roles().realmLevel().remove(toRemove);

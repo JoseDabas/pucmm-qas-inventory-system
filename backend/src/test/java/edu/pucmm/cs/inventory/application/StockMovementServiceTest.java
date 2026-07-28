@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
  * asegurando la integridad del stock y el manejo de condiciones límite como sobregiros.
  */
 @ExtendWith(MockitoExtension.class)
-public class StockMovementServiceTest {
+class StockMovementServiceTest {
 
     @Mock
     private StockMovementJpaRepository stockMovementRepository;

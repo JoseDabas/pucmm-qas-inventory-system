@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  * excepciones como EntityNotFoundException.
  */
 @ExtendWith(MockitoExtension.class)
-public class ProductServiceTest {
+class ProductServiceTest {
 
     @Mock
     private ProductJpaRepository productRepository;
