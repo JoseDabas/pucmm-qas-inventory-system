@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * como los límites de stock y valores financieros correctos, se apliquen 
  * directamente en la memoria antes de llegar a la base de datos.
  */
-public class ProductTest {
+class ProductTest {
 
     // Helper para construir un producto válido base que cada test modifica.
     private Product validProduct() {

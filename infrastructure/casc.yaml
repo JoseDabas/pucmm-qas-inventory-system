@@ -27,6 +27,24 @@ credentials:
               id: "snyk-token"
               description: "Token de autenticación para Snyk"
               secret: "${SNYK_TOKEN}"
+          - string:
+              scope: GLOBAL
+              id: "digitalocean-droplet-ip"
+              description: "IP del Droplet de DigitalOcean para Producción"
+              secret: "${DIGITALOCEAN_DROPLET_IP}"
+          - string:
+              scope: GLOBAL
+              id: "digitalocean-ssh-user"
+              description: "Usuario SSH para el Droplet"
+              secret: "${DIGITALOCEAN_SSH_USER}"
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: "digitalocean-ssh-key"
+              username: "${DIGITALOCEAN_SSH_USER}"
+              description: "Llave SSH privada para desplegar en DigitalOcean"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${DIGITALOCEAN_SSH_KEY}"
 
 unclassified:
   location:

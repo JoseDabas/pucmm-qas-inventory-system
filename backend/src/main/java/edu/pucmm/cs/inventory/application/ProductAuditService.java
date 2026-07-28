@@ -4,7 +4,7 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
+
 import jakarta.persistence.PersistenceContext;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 /**
@@ -36,10 +36,7 @@ public class ProductAuditService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final ProductJpaRepository productRepository;
-
-    public ProductAuditService(ProductJpaRepository productRepository) {
-        this.productRepository = productRepository;
+    public ProductAuditService() {
     }
 
     /**
@@ -62,7 +59,7 @@ public class ProductAuditService {
 
         return revisions.stream()
                 .map(this::mapRevision)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

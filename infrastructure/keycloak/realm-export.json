@@ -3,6 +3,7 @@
   "realm": "Inventario",
   "displayName": "Sistema de Gestión de Inventarios Empresarial",
   "enabled": true,
+  "sslRequired": "none",
   "clients": [
     {
       "clientId": "inventory-client",

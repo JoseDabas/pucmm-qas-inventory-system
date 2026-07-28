@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
  */
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AdminApiContractTest {
+class AdminApiContractTest {
 
     @Container
     @ServiceConnection
@@ -30,7 +30,7 @@ public class AdminApiContractTest {
     private int port;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         RestAssured.port = port;
     }
 
@@ -40,7 +40,7 @@ public class AdminApiContractTest {
      */
     @Test
     @DisplayName("GET contrato de admin de usuarios sin token devuelve 401 Unauthorized")
-    public void testGetAdminUsersWithoutAuthorizationReturns401() {
+    void testGetAdminUsersWithoutAuthorizationReturns401() {
         RestAssured
             .given()
             .when()

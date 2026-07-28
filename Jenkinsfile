@@ -237,15 +237,62 @@ pipeline {
             environment {
                 KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
                 KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
+                PROD_IP = credentials('digitalocean-droplet-ip')
+                PROD_USER = credentials('digitalocean-ssh-user')
             }
             steps {
                 echo 'Todas las pruebas de QA (Rendimiento y E2E) han finalizado exitosamente en Staging.'
                 input message: '¿Aprobar el pase del release a Producción?', ok: 'Aprobar y Desplegar'
                 
-                echo 'Procediendo con el despliegue en el entorno de Producción...'
+                echo 'Procediendo con el despliegue en el entorno de Producción remoto...'
                 dir('infrastructure') {
-                    sh 'docker compose -f docker-compose.yml pull || true'
-                    sh 'docker compose -f docker-compose.yml up -d'
+                    sshagent(['digitalocean-ssh-key']) {
+                        sh '''
+                            # 1. Crear el directorio remoto si no existe
+                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "mkdir -p /opt/inventory-app"
+                            
+                            # 2. Generar .env.prod dinámico localmente con los secretos y variables de entorno
+                            echo "KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}" > .env.prod
+                            echo "KEYCLOAK_TEST_USER_PASSWORD=${KEYCLOAK_TEST_USER_PASSWORD}" >> .env.prod
+                            echo "PROD_IP=${PROD_IP}" >> .env.prod
+                            
+                            # 3. Empaquetar las imágenes Docker construidas
+                            echo "Empaquetando imágenes Docker para transferencia (esto puede tomar un momento)..."
+                            docker save inventory-backend:latest inventory-frontend:latest | gzip > images.tar.gz
+                            
+                            # 4. Transferir manifiestos, base de datos de Keycloak y las imágenes al servidor
+                            echo "Transfiriendo archivos e imágenes al Droplet..."
+                            scp -r -o StrictHostKeyChecking=no docker-compose.prod.yml init-keycloak-db.sql keycloak .env.prod images.tar.gz ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
+                            
+                            # 5. Configurar y levantar los servicios en el Droplet
+                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} << 'EOF'
+                                cd /opt/inventory-app
+                                mv docker-compose.prod.yml docker-compose.yml
+                                mv .env.prod .env
+                                echo 'Cargando imágenes Docker en el servidor...'
+                                docker load < images.tar.gz
+                                rm images.tar.gz
+                                docker compose up -d
+                                
+                                echo 'Esperando a que Keycloak esté disponible para configuraciones post-despliegue...'
+                                for x in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                                    if docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin >/dev/null 2>&1; then
+                                        echo 'Keycloak autenticado exitosamente.'
+                                        break
+                                    fi
+                                    echo "Esperando a Keycloak (intento $x/12)..."
+                                    sleep 5
+                                done
+                                
+                                echo 'Desactivando requerimiento de HTTPS en Keycloak (entorno QA/Dev)...'
+                                docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE || true
+                                docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/Inventario -s sslRequired=NONE || true
+EOF
+                            
+                            # 6. Limpieza local (seguridad y espacio)
+                            rm -f .env.prod images.tar.gz
+                        '''
+                    }
                 }
             }
         }

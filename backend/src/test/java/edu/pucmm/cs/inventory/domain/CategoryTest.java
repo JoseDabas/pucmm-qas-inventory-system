@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Verifica la correcta instanciación de la categoría y la validación
  * obligatoria de sus atributos para preservar la consistencia de los datos.
  */
-public class CategoryTest {
+class CategoryTest {
 
     /**
      * Comprueba la creación exitosa de una categoría cuando

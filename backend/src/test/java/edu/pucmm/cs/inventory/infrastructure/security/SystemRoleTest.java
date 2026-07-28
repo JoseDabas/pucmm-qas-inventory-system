@@ -59,8 +59,9 @@ class SystemRoleTest {
     @DisplayName("WAREHOUSE_CLERK puede gestionar stock pero no productos ni usuarios")
     void almacenistaGestionaSoloStock() {
         Set<String> permisos = SystemRole.WAREHOUSE_CLERK.getPermissions();
-        assertThat(permisos).contains(Permissions.STOCK_MANAGE);
-        assertThat(permisos).doesNotContain(Permissions.PRODUCT_MANAGE, Permissions.USER_MANAGE);
+        assertThat(permisos)
+            .contains(Permissions.STOCK_MANAGE)
+            .doesNotContain(Permissions.PRODUCT_MANAGE, Permissions.USER_MANAGE);
     }
 
     /**

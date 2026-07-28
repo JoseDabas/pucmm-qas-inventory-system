@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
  * utilizando las abstracciones de Hibernate Envers.
  */
 @ExtendWith(MockitoExtension.class)
-public class ProductAuditServiceGlobalTest {
+class ProductAuditServiceGlobalTest {
 
     @Mock
     private EntityManager entityManager;

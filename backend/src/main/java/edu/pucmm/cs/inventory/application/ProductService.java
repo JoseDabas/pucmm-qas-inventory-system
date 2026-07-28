@@ -139,14 +139,14 @@ public class ProductService {
         Map<UUID, Integer> stocks = stockMap(criticalProducts);
         return criticalProducts.stream()
                 .map(entity -> mapToResponseDTO(entity, stocks.getOrDefault(entity.getId(), 0)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
      * Ejecuta una consulta paginada de productos, opcionalmente filtrada por un
      * término de búsqueda que se compara contra el nombre o el código SKU.
      *
-     * @param search Término de búsqueda opcional (null/vacío devuelve todo).
+     * @param search Término de búsqueda opcional (null/vacío devuelve todos los registros).
      * @param pageable Configuración de paginación provista por Spring Web.
      * @return Página de resultados estructurada en DTOs.
      */
@@ -276,7 +276,7 @@ public class ProductService {
     private Map<UUID, Integer> stockMap(List<ProductEntity> products) {
         List<UUID> productIds = products.stream()
                 .map(ProductEntity::getId)
-                .collect(Collectors.toList());
+                .toList();
         if (productIds.isEmpty()) {
             return Collections.emptyMap();
         }

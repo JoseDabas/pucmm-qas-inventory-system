@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  * el historial de cambios y auditoría sobre los movimientos de inventario.
  */
 @ExtendWith(MockitoExtension.class)
-public class StockMovementAuditServiceTest {
+class StockMovementAuditServiceTest {
 
     @Mock
     private EntityManager entityManager;

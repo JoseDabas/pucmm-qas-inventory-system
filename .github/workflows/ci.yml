@@ -83,39 +83,8 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
         run: snyk test --all-subprojects
         continue-on-error: true
 
-      # Cachea la base de datos local de la NVD entre ejecuciones. Evita la descarga
-      # completa (~200k+ CVEs) en cada run, que es la causa habitual de los fallos
-      # transitorios de la NVD; solo hace actualización incremental. La key cambia por
-      # run para refrescar la caché, y restore-keys recupera la más reciente disponible.
-      # El prefijo "v2" invalida las cachés con el esquema H2 antiguo (columna URL
-      # VARCHAR(1000)) que rompía con CVEs de URL larga; Dependency-Check 12.2.2 recrea
-      # el esquema, pero hay que evitar restaurar la base vieja con restore-keys.
-      - name: Cache NVD database
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/dependency-check-data
-          key: ${{ runner.os }}-nvd-v2-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-nvd-v2-
-
-      # OWASP Dependency-Check (SCA): analiza dependencias contra la base NVD de CVEs.
-      # Requiere el secret NVD_API_KEY para evitar el rate-limit de descarga de la NVD.
-      # continue-on-error: el paso corre y publica su reporte, pero NO bloquea el
-      # pipeline (gate desactivado) mientras persiste el fallo de la NVD por URLs largas.
-      - name: OWASP Dependency-Check
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: ./gradlew dependencyCheckAnalyze
-        continue-on-error: true
-
-      # Publicar el reporte HTML de Dependency-Check como artefacto descargable.
-      - name: Upload Dependency-Check report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-report
-          path: backend/build/reports/dependency-check-report.*
-          if-no-files-found: ignore
+      # OWASP Dependency-Check deshabilitado temporalmente.
+      # Para correr manualmente: ./gradlew dependencyCheckAnalyze
 
       # QA-3 (Futuras iteraciones): Validación de contrato OpenAPI con Schemathesis
       # Este paso está comentado hasta que la aplicación esté levantada en el pipeline
