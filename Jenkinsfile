@@ -237,15 +237,39 @@ pipeline {
             environment {
                 KEYCLOAK_CLIENT_SECRET = credentials('keycloak-client-secret')
                 KEYCLOAK_TEST_USER_PASSWORD = credentials('keycloak-test-user-password')
+                PROD_IP = credentials('digitalocean-droplet-ip')
+                PROD_USER = credentials('digitalocean-ssh-user')
             }
             steps {
                 echo 'Todas las pruebas de QA (Rendimiento y E2E) han finalizado exitosamente en Staging.'
                 input message: '¿Aprobar el pase del release a Producción?', ok: 'Aprobar y Desplegar'
                 
-                echo 'Procediendo con el despliegue en el entorno de Producción...'
+                echo 'Procediendo con el despliegue en el entorno de Producción remoto...'
                 dir('infrastructure') {
-                    sh 'docker compose -f docker-compose.yml pull || true'
-                    sh 'docker compose -f docker-compose.yml up -d'
+                    sshagent(['digitalocean-ssh-key']) {
+                        sh '''
+                            # 1. Crear el directorio remoto si no existe
+                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "mkdir -p /opt/inventory-app"
+                            
+                            # 2. Generar .env.prod dinámico localmente con los secretos
+                            echo "KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}" > .env.prod
+                            echo "KEYCLOAK_TEST_USER_PASSWORD=${KEYCLOAK_TEST_USER_PASSWORD}" >> .env.prod
+                            
+                            # 3. Transferir manifiestos y variables al servidor
+                            scp -o StrictHostKeyChecking=no docker-compose.yml init-keycloak-db.sql .env.prod ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
+                            
+                            # 4. Configurar y levantar los servicios en el Droplet
+                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "
+                                cd /opt/inventory-app
+                                mv .env.prod .env
+                                docker compose pull || true
+                                docker compose up -d
+                            "
+                            
+                            # 5. Limpieza local (seguridad)
+                            rm -f .env.prod
+                        '''
+                    }
                 }
             }
         }
