@@ -265,7 +265,7 @@ pipeline {
                             scp -r -o StrictHostKeyChecking=no docker-compose.prod.yml init-keycloak-db.sql keycloak .env.prod images.tar.gz ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
                             
                             # 5. Configurar y levantar los servicios en el Droplet
-                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "
+                            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} << 'EOF'
                                 cd /opt/inventory-app
                                 mv docker-compose.prod.yml docker-compose.yml
                                 mv .env.prod .env
@@ -280,14 +280,14 @@ pipeline {
                                         echo 'Keycloak autenticado exitosamente.'
                                         break
                                     fi
-                                    echo "Esperando a Keycloak (intento \\$x/12)..."
+                                    echo "Esperando a Keycloak (intento $x/12)..."
                                     sleep 5
                                 done
                                 
                                 echo 'Desactivando requerimiento de HTTPS en Keycloak (entorno QA/Dev)...'
                                 docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE || true
                                 docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/Inventario -s sslRequired=NONE || true
-                            "
+EOF
                             
                             # 6. Limpieza local (seguridad y espacio)
                             rm -f .env.prod images.tar.gz
