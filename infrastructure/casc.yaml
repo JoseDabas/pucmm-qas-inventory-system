@@ -65,7 +65,7 @@ jobs:
                 remote {
                   url('https://github.com/Nier561/pucmm-qas-inventory-system.git')
                 }
-                branches('*/feat/digitalocean-deployment')
+                branches('*/main')
 
               }
             }
