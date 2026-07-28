@@ -87,13 +87,16 @@ jobs: # Define los trabajos que se ejecutarán en el workflow
       # completa (~200k+ CVEs) en cada run, que es la causa habitual de los fallos
       # transitorios de la NVD; solo hace actualización incremental. La key cambia por
       # run para refrescar la caché, y restore-keys recupera la más reciente disponible.
+      # El prefijo "v2" invalida las cachés con el esquema H2 antiguo (columna URL
+      # VARCHAR(1000)) que rompía con CVEs de URL larga; Dependency-Check 12.2.2 recrea
+      # el esquema, pero hay que evitar restaurar la base vieja con restore-keys.
       - name: Cache NVD database
         uses: actions/cache@v4
         with:
           path: ~/.gradle/dependency-check-data
-          key: ${{ runner.os }}-nvd-${{ github.run_id }}
+          key: ${{ runner.os }}-nvd-v2-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-nvd-
+            ${{ runner.os }}-nvd-v2-
 
       # OWASP Dependency-Check (SCA): analiza dependencias contra la base NVD de CVEs.
       # Requiere el secret NVD_API_KEY para evitar el rate-limit de descarga de la NVD.
