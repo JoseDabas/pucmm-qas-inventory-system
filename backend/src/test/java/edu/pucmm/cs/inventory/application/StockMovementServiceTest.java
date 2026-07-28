@@ -29,8 +29,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Pruebas unitarias para StockMovementService.
+ * Verifica las reglas de negocio en el registro de entradas y salidas de inventario,
+ * asegurando la integridad del stock y el manejo de condiciones límite como sobregiros.
+ */
 @ExtendWith(MockitoExtension.class)
-public class StockMovementServiceTest {
+class StockMovementServiceTest {
 
     @Mock
     private StockMovementJpaRepository stockMovementRepository;
@@ -56,6 +61,11 @@ public class StockMovementServiceTest {
         return request;
     }
 
+    /**
+     * Asegura que el servicio devuelva el historial completo ordenado 
+     * por fecha de forma descendente (del más reciente al más antiguo) 
+     * cuando no se aplican filtros de búsqueda.
+     */
     @Test
     @DisplayName("getMovements sin busqueda usa findAll con orden por fecha descendente")
     void getMovementsSinBusquedaUsaFindAllOrdenadoPorFecha() {
@@ -74,6 +84,11 @@ public class StockMovementServiceTest {
         verify(stockMovementRepository, never()).searchByProductNameOrUsername(any(), any());
     }
 
+    /**
+     * Verifica que si se envía un término de búsqueda, el servicio cambie la estrategia
+     * de consulta y utilice el filtro por nombre de producto o usuario, optimizando 
+     * la localización de movimientos específicos.
+     */
     @Test
     @DisplayName("getMovements con termino usa la busqueda por producto o usuario")
     void getMovementsConTerminoUsaBusqueda() {
@@ -88,6 +103,11 @@ public class StockMovementServiceTest {
         verify(stockMovementRepository, never()).findAll(any(Pageable.class));
     }
 
+    /**
+     * Comprueba la lógica fundamental de una entrada de mercancía (IN).
+     * El servicio debe calcular el balance anterior desde el ledger y 
+     * registrar la nueva cantidad sumando estrictamente el valor ingresado.
+     */
     @Test
     @DisplayName("registerMovement IN calcula cantidad anterior y nueva sumando al stock")
     void registerMovementInSuma() {
@@ -105,6 +125,11 @@ public class StockMovementServiceTest {
         assertEquals("Laptop", result.getProductName());
     }
 
+    /**
+     * Comprueba la lógica fundamental de una salida de mercancía (OUT).
+     * El servicio debe asegurar que se registre un decremento exacto en el stock 
+     * basado en la cantidad solicitada.
+     */
     @Test
     @DisplayName("registerMovement OUT valido resta del stock")
     void registerMovementOutResta() {
@@ -120,6 +145,11 @@ public class StockMovementServiceTest {
         assertEquals(30, result.getNewQuantity());
     }
 
+    /**
+     * Valida una regla de negocio crítica: el sistema no debe permitir que el inventario
+     * quede en negativo. Si una salida (OUT) supera el stock actual disponible, 
+     * debe lanzar IllegalArgumentException y abortar la transacción.
+     */
     @Test
     @DisplayName("registerMovement OUT que supera el stock lanza excepcion y no guarda")
     void registerMovementOutInsuficienteLanzaExcepcion() {
@@ -132,6 +162,11 @@ public class StockMovementServiceTest {
         verify(stockMovementRepository, never()).save(any());
     }
 
+    /**
+     * Protege contra anomalías o inyecciones de datos, asegurando que no se pueda 
+     * registrar un movimiento hacia un producto que no existe físicamente en 
+     * la base de datos (lanza EntityNotFoundException).
+     */
     @Test
     @DisplayName("registerMovement con producto inexistente lanza EntityNotFoundException")
     void registerMovementProductoInexistenteLanzaExcepcion() {

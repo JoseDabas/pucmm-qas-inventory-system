@@ -42,7 +42,7 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Pruebas unitarias de {@link KeycloakAdminService}. Mockean la API fluida del
+ * Pruebas unitarias de KeycloakAdminService. Mockean la API fluida del
  * cliente admin de Keycloak para verificar la creación de cuentas (incluyendo
  * los conflictos y errores), el listado, el cambio de rol y la traducción de
  * roles del sistema a permisos granulares.
@@ -107,6 +107,11 @@ class KeycloakAdminServiceTest {
         return req;
     }
 
+    /**
+     * Verifica el flujo óptimo al crear un usuario en el Identity Provider (Keycloak):
+     * Comprueba que se cree la cuenta, se configure la contraseña, y fundamentalmente, 
+     * se asigne la lista exacta de permisos granulares derivados del rol solicitado.
+     */
     @Test
     @DisplayName("createUser crea la cuenta, fija la contraseña y asigna los permisos del rol")
     void createUserAsignaPermisos() {
@@ -126,26 +131,43 @@ class KeycloakAdminServiceTest {
         verify(roleScopeResource).add(anyList()); // se añaden los permisos del rol
     }
 
+    /**
+     * Maneja el escenario de conflicto de identidad.
+     * Si Keycloak devuelve un código HTTP 409 (Conflicto), el servicio debe abstraer este error
+     * lanzando una excepción de negocio amigable: UsernameAlreadyExistsException.
+     */
     @Test
     @DisplayName("createUser lanza UsernameAlreadyExistsException cuando Keycloak responde 409")
     void createUserConflicto() {
         when(usersResource.create(any(UserRepresentation.class)))
                 .thenReturn(Response.status(Response.Status.CONFLICT).build());
 
-        assertThatThrownBy(() -> service.createUser(createRequest(SystemRole.VIEWER)))
+        var request = createRequest(SystemRole.VIEWER);
+        assertThatThrownBy(() -> service.createUser(request))
                 .isInstanceOf(UsernameAlreadyExistsException.class);
     }
 
+    /**
+     * Asegura que cualquier respuesta inesperada (ej. un 500 del servidor Keycloak)
+     * al momento de crear un usuario sea interceptada y traducida a un IllegalStateException,
+     * impidiendo silencios o corrupción en la base de usuarios.
+     */
     @Test
     @DisplayName("createUser lanza IllegalStateException ante una respuesta inesperada de Keycloak")
     void createUserErrorInesperado() {
         when(usersResource.create(any(UserRepresentation.class)))
                 .thenReturn(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
 
-        assertThatThrownBy(() -> service.createUser(createRequest(SystemRole.VIEWER)))
+        var request = createRequest(SystemRole.VIEWER);
+        assertThatThrownBy(() -> service.createUser(request))
                 .isInstanceOf(IllegalStateException.class);
     }
 
+    /**
+     * Verifica la capacidad del servicio para invertir la abstracción de seguridad:
+     * Al listar usuarios, el sistema consulta los "roles/permisos" asignados a la cuenta en Keycloak
+     * y debe deducir a qué rol genérico (ej. VIEWER) corresponden esos permisos.
+     */
     @Test
     @DisplayName("listUsers devuelve las cuentas con su rol resuelto desde los permisos")
     void listUsersResuelveRol() {
@@ -164,6 +186,12 @@ class KeycloakAdminServiceTest {
         assertThat(users.get(0).getPermissions()).containsExactlyInAnyOrderElementsOf(SystemRole.VIEWER.getPermissions());
     }
 
+    /**
+     * Comprueba la lógica diferencial en la actualización de roles:
+     * Para evitar un borrado y reconstrucción total (que podría causar downtime de permisos),
+     * el servicio debe comparar los permisos actuales vs. los esperados, 
+     * removiendo los excedentes y aplicando solo los faltantes.
+     */
     @Test
     @DisplayName("changeUserRole reemplaza los permisos: quita los sobrantes y añade los faltantes")
     void changeUserRoleReemplazaPermisos() {
@@ -183,6 +211,11 @@ class KeycloakAdminServiceTest {
         verify(roleScopeResource).add(anyList());
     }
 
+    /**
+     * Comprueba que intentar actualizar el rol de un usuario que no existe
+     * aborta el proceso prematuramente lanzando una EntityNotFoundException,
+     * protegiendo las llamadas posteriores a la API de Keycloak.
+     */
     @Test
     @DisplayName("changeUserRole lanza EntityNotFoundException si la cuenta no existe")
     void changeUserRoleNoExiste() {

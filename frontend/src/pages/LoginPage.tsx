@@ -4,17 +4,24 @@ import {User, Lock, Eye, EyeOff, AlertTriangle, Loader2 } from 'lucide-react';
 interface LoginPageProps {
   // Recibe las credenciales y resuelve la autenticación (grant password contra Keycloak).
   onLogin: (username: string, password: string) => Promise<unknown>;
+  // Error de autenticación OIDC ajeno al formulario (p. ej. fallo al validar/renovar el token o en
+  // la redirección). Se muestra sobre el formulario sin bloquear el login, para que el usuario pueda
+  // reintentar. Los errores de credenciales del propio formulario los gestiona el estado `error`.
+  externalError?: string | null;
 }
 
 // Pantalla de login (usuario no autenticado).
 // Formulario propio de usuario/contraseña que autentica directamente contra Keycloak,
 // sin redirigir a su pantalla de inicio de sesión.
-export const LoginPage = ({ onLogin }: LoginPageProps) => {
+export const LoginPage = ({ onLogin, externalError }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // El error del formulario (credenciales) tiene prioridad; si no hay, mostramos el error OIDC externo.
+  const displayError = error ?? externalError ?? null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -96,10 +103,10 @@ export const LoginPage = ({ onLogin }: LoginPageProps) => {
             </div>
           </div>
 
-          {error && (
+          {displayError && (
             <div className="flex items-start gap-2 rounded-lg p-3 text-sm text-red-600">
               <AlertTriangle size={18} className="mt-0.5 shrink-0" />
-              <span>{error}</span>
+              <span>{displayError}</span>
             </div>
           )}
 

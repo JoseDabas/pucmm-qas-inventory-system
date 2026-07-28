@@ -1,7 +1,8 @@
-package edu.pucmm.cs.inventory;
+package edu.pucmm.cs.inventory.integration;
 
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,12 +12,13 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests de integración para ProductJpaRepository.
+ * Verifican las operaciones CRUD reales contra un PostgreSQL efímero
+ * levantado por Testcontainers, incluyendo restricciones de unicidad (SKU).
+ */
 class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
 
-    // Inyectamos el repositorio JPA para interactuar con la base de datos real del
-    // contenedor.
-    // Autowired hace que Spring Boot cree una instancia real del repositorio,
-    // conectada al contenedor PostgreSQL levantado por Testcontainers.
     @Autowired
     private ProductJpaRepository productRepository;
 
@@ -32,13 +34,12 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         return p;
     }
 
-    // @Test hace que estos métodos sean ejecutados como tests de integración,
-    // verificando la interacción real con la base de datos.
-
-    // Test de integración que verifica la persistencia y recuperación de un
-    // producto.
-
+    /**
+     * Valida que la persistencia mapee correctamente la entidad 
+     * y pueda ser recuperada con los mismos datos insertados.
+     */
     @Test
+    @DisplayName("Guarda y recupera un producto correctamente en PostgreSQL real")
     void guardaYRecuperaProducto() {
         ProductEntity saved = productRepository.save(buildProduct("SKU-INT-1"));
         Optional<ProductEntity> found = productRepository.findById(saved.getId());
@@ -46,34 +47,47 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertEquals("SKU-INT-1", found.get().getSkuCode());
     }
 
-    // Verifica que el SKU es único y que intentar guardar un producto con un SKU
+    /**
+     * Comprueba que la base de datos haga cumplir la restricción UNIQUE 
+     * sobre el SKU, lanzando excepción en caso de colisión.
+     */
     @Test
+    @DisplayName("SKU duplicado lanza excepción por constraint UNIQUE")
     void skuDuplicadoLanzaError() {
         productRepository.save(buildProduct("SKU-DUP"));
         ProductEntity duplicate = buildProduct("SKU-DUP");
         assertThrows(Exception.class, () -> productRepository.saveAndFlush(duplicate));
     }
 
-    // Test que verifica la eliminación de un producto.
+    // ---- Eliminación ----
+
+    // Test que verifica la eliminación (hard delete) de un producto.
     @Test
+    @DisplayName("Elimina un producto y verifica que desaparece físicamente")
     void eliminaProducto() {
         ProductEntity saved = productRepository.save(buildProduct("SKU-DEL"));
         productRepository.deleteById(saved.getId());
         assertFalse(productRepository.findById(saved.getId()).isPresent());
     }
 
-    // Verifica que se pueden listar todos los productos y que al menos los que
-    // acabamos de guardar están presentes.
+    /**
+     * Asegura que el listado global consolide correctamente los 
+     * registros recién inyectados en la sesión.
+     */
     @Test
+    @DisplayName("Lista todos los productos incluyendo los recién guardados")
     void listaTodosLosProductos() {
         productRepository.save(buildProduct("SKU-L1"));
         productRepository.save(buildProduct("SKU-L2"));
         assertTrue(productRepository.findAll().size() >= 2);
     }
 
-    // Verifica que buscar un producto por un ID inexistente retorna un Optional
-    // vacío.
+    /**
+     * Valida la ausencia de falsos positivos cuando se solicita 
+     * un identificador inexistente.
+     */
     @Test
+    @DisplayName("Producto no existente retorna Optional vacío")
     void productoNoExistenteRetornaVacio() {
         assertFalse(productRepository.findById(UUID.randomUUID()).isPresent());
     }

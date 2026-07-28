@@ -47,7 +47,7 @@ public class CategoryService {
         Map<UUID, Integer> counts = productCountByCategory(categories);
         return categories.stream()
                 .map(category -> mapToResponseDTO(category, counts.getOrDefault(category.getId(), 0)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -86,7 +86,7 @@ public class CategoryService {
     private Map<UUID, Integer> productCountByCategory(List<Category> categories) {
         List<UUID> ids = categories.stream()
                 .map(Category::getId)
-                .collect(Collectors.toList());
+                .toList();
         if (ids.isEmpty()) {
             return Collections.emptyMap();
         }

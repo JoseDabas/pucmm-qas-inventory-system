@@ -31,9 +31,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Pruebas de API (slice @WebMvcTest) para {@link StockMovementController}.
+ * Pruebas de API (slice WebMvcTest) para StockMovementController.
  * Verifica el enrutamiento HTTP, la validación de entrada y las reglas de
- * autorización (@PreAuthorize) sin cargar el contexto completo de la aplicación.
+ * autorización (PreAuthorize) sin cargar el contexto completo de la aplicación.
  */
 @WebMvcTest(StockMovementController.class)
 @Import(SecurityConfig.class)
@@ -69,7 +69,10 @@ class StockMovementControllerApiTest {
         return jwt().authorities(new SimpleGrantedAuthority(authority));
     }
 
-    // GET sin token -> 401
+    /**
+     * Impide que usuarios anónimos consulten las bitácoras
+     * de movimientos del almacén.
+     */
     @Test
     @DisplayName("GET movimientos sin token devuelve 401")
     void getSinTokenDevuelve401() throws Exception {
@@ -77,7 +80,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // GET con stock:view -> 200
+    /**
+     * Verifica que un rol autorizado (stock:view) obtenga una respuesta
+     * paginada de todos los movimientos de mercancía (entradas y salidas).
+     */
     @Test
     @DisplayName("GET movimientos con stock:view devuelve 200")
     void getConPermisoDevuelve200() throws Exception {
@@ -86,7 +92,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isOk());
     }
 
-    // GET con permiso incorrecto -> 403
+    /**
+     * Valida que permisos cruzados o insuficientes resulten
+     * en un rechazo inmediato por parte de la configuración de seguridad.
+     */
     @Test
     @DisplayName("GET movimientos con permiso incorrecto devuelve 403")
     void getConPermisoIncorrectoDevuelve403() throws Exception {
@@ -94,7 +103,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST con stock:manage -> 201
+    /**
+     * Prueba el flujo de inserción de un movimiento físico válido (stock:manage),
+     * garantizando su correcta deserialización y delegación al servicio de aplicación.
+     */
     @Test
     @DisplayName("POST registrar movimiento con stock:manage devuelve 201")
     void postConPermisoDevuelve201() throws Exception {
@@ -106,7 +118,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isCreated());
     }
 
-    // POST con observations explícitamente null -> 400 (Nulls.FAIL respeta el contrato)
+    /**
+     * Verifica la robustez del binding en Jackson, asegurando que enviar
+     * campos obligatorios como null explícito desencadene error 400 Bad Request.
+     */
     @Test
     @DisplayName("POST movimiento con observations null explícito devuelve 400")
     void postConObservationsNullDevuelve400() throws Exception {
@@ -119,7 +134,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // POST con stock:view (sin manage) -> 403
+    /**
+     * Previene que usuarios de sólo lectura o con permisos menores intenten
+     * afectar el inventario físico mediante inyección de payloads.
+     */
     @Test
     @DisplayName("POST registrar movimiento con stock:view devuelve 403")
     void postConPermisoInsuficienteDevuelve403() throws Exception {
@@ -130,7 +148,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isForbidden());
     }
 
-    // POST sin token -> 401
+    /**
+     * Protege el endpoint de alteración de stock para que rechace
+     * solicitudes no autenticadas antes de llegar a los interceptores de validación.
+     */
     @Test
     @DisplayName("POST registrar movimiento sin token devuelve 401")
     void postSinTokenDevuelve401() throws Exception {
@@ -140,7 +161,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // POST con cantidad inválida (0) -> 400
+    /**
+     * Comprueba las aserciones de la capa de API (JSR-380): el movimiento
+     * no puede registrar cero (0) unidades operadas.
+     */
     @Test
     @DisplayName("POST con cantidad inválida devuelve 400")
     void postConCantidadInvalidaDevuelve400() throws Exception {
@@ -152,7 +176,10 @@ class StockMovementControllerApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // POST cuya salida deja stock negativo (IllegalArgumentException) -> 400
+    /**
+     * Verifica la traducción de excepciones de negocio (ej. sobregiro de inventario)
+     * a respuestas HTTP 400 mediante el GlobalExceptionHandler.
+     */
     @Test
     @DisplayName("POST que deja stock negativo devuelve 400")
     void postStockNegativoDevuelve400() throws Exception {

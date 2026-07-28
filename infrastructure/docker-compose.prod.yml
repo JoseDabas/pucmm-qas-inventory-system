@@ -1,0 +1,96 @@
+# Archivo de orquestación de Docker Compose para la infraestructura de Producción.
+# Las imágenes son cargadas desde un tarball o registro, no se construyen localmente.
+
+name: inventory-app
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: inventory_postgres
+    environment:  
+      POSTGRES_USER: inventory_user
+      POSTGRES_PASSWORD: inventory_password
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory_user -d inventory_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: inventory_keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: inventory_user
+      KC_DB_PASSWORD: inventory_password
+      KC_HOSTNAME_URL: http://${PROD_IP}:9080
+      KC_HOSTNAME_ADMIN_URL: http://${PROD_IP}:9080
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      KEYCLOAK_TEST_USER_PASSWORD: ${KEYCLOAK_TEST_USER_PASSWORD}
+    ports:
+      - "9080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import/
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    image: inventory-backend:latest
+    container_name: inventory_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/inventory_db
+      - SPRING_DATASOURCE_USERNAME=inventory_user
+      - SPRING_DATASOURCE_PASSWORD=inventory_password
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/Inventario/protocol/openid-connect/certs
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://${PROD_IP}:9080/realms/Inventario
+      - KEYCLOAK_ADMIN_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_ADMIN_REALM=Inventario
+      - KEYCLOAK_ADMIN_CLIENT_ID=inventory-client
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - APP_CORS_ALLOWED_ORIGINS=http://${PROD_IP}:5173
+      - OTEL_SERVICE_NAME=inventory-backend
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES=correlationId,user,endpoint
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    image: inventory-frontend:latest
+    container_name: inventory_frontend
+    environment:
+      - VITE_KEYCLOAK_URL=http://${PROD_IP}:9080/realms/Inventario
+      - VITE_API_BASE_URL=http://${PROD_IP}:8080
+      - VITE_KEYCLOAK_CLIENT_ID=inventory-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: infrastructure_postgres_data

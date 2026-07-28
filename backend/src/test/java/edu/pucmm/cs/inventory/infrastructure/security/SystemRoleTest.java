@@ -16,6 +16,10 @@ import org.junit.jupiter.api.Test;
  */
 class SystemRoleTest {
 
+    /**
+     * Verifica que el rol de Administrador sea omnipotente, es decir, 
+     * que cuente con todos los permisos del sistema sin excepción.
+     */
     @Test
     @DisplayName("ADMIN concentra los 7 permisos del sistema")
     void adminTieneTodosLosPermisos() {
@@ -29,6 +33,10 @@ class SystemRoleTest {
                 Permissions.AUDIT_VIEW);
     }
 
+    /**
+     * Asegura que el rol de solo lectura (Viewer) garantice visibilidad
+     * pero no permita bajo ninguna circunstancia operaciones de escritura o gestión.
+     */
     @Test
     @DisplayName("VIEWER es de solo lectura: no incluye ningún permiso de gestión")
     void viewerEsSoloLectura() {
@@ -43,14 +51,23 @@ class SystemRoleTest {
                         Permissions.USER_MANAGE);
     }
 
+    /**
+     * Valida el principio de mínimo privilegio para el Almacenista,
+     * el cual solo debe tener permisos para mover stock, pero no para crear productos o usuarios.
+     */
     @Test
     @DisplayName("WAREHOUSE_CLERK puede gestionar stock pero no productos ni usuarios")
     void almacenistaGestionaSoloStock() {
         Set<String> permisos = SystemRole.WAREHOUSE_CLERK.getPermissions();
-        assertThat(permisos).contains(Permissions.STOCK_MANAGE);
-        assertThat(permisos).doesNotContain(Permissions.PRODUCT_MANAGE, Permissions.USER_MANAGE);
+        assertThat(permisos)
+            .contains(Permissions.STOCK_MANAGE)
+            .doesNotContain(Permissions.PRODUCT_MANAGE, Permissions.USER_MANAGE);
     }
 
+    /**
+     * Garantiza que la gestión de usuarios sea exclusiva del administrador,
+     * protegiendo el sistema contra escalada de privilegios.
+     */
     @Test
     @DisplayName("Solo ADMIN concede el permiso de gestión de usuarios")
     void soloAdminGestionaUsuarios() {
@@ -62,6 +79,10 @@ class SystemRoleTest {
         }
     }
 
+    /**
+     * Verifica que todos los roles posean un nombre amigable (legible)
+     * para ser presentados en la interfaz de usuario.
+     */
     @Test
     @DisplayName("getDisplayName devuelve un nombre legible para cada rol")
     void getDisplayNameDevuelveNombreLegible() {
@@ -72,6 +93,10 @@ class SystemRoleTest {
         }
     }
 
+    /**
+     * Valida el algoritmo de resolución inversa: dado un conjunto exacto de permisos,
+     * el sistema debe ser capaz de deducir a qué rol corporativo corresponde.
+     */
     @Test
     @DisplayName("fromPermissions resuelve el rol cuando el conjunto de permisos coincide exactamente")
     void resuelveRolDesdePermisosExactos() {
@@ -79,6 +104,10 @@ class SystemRoleTest {
                 .contains(SystemRole.VIEWER);
     }
 
+    /**
+     * Comprueba que si se suministra un conjunto arbitrario o incompleto de permisos,
+     * el sistema no lo asocie a ningún rol estándar, devolviendo un Optional vacío.
+     */
     @Test
     @DisplayName("fromPermissions devuelve vacío para una combinación personalizada")
     void devuelveVacioParaCombinacionPersonalizada() {

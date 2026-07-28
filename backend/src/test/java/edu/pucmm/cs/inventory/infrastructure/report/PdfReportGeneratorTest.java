@@ -1,6 +1,7 @@
 package edu.pucmm.cs.inventory.infrastructure.report;
 
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.MovementReportView;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -9,9 +10,20 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Pruebas unitarias para el generador de reportes en PDF.
+ * Asegura la correcta renderización del documento, incluyendo metadatos, 
+ * tablas y el manejo correcto del formato binario (PDF magic numbers).
+ */
 class PdfReportGeneratorTest {
 
+    /**
+     * Verifica que si se provee un conjunto de datos válido, 
+     * el generador produzca un arreglo de bytes que corresponda verdaderamente 
+     * a un archivo PDF (comprobado a través del encabezado mágico "%PDF").
+     */
     @Test
+    @DisplayName("Genera un arreglo de bytes válido con cabecera PDF cuando existen datos")
     void testGenerateMovementReport_WithData_GeneratesPdfBytes() {
         PdfReportGenerator generator = new PdfReportGenerator();
         List<MovementReportView> data = new ArrayList<>();
@@ -67,7 +79,13 @@ class PdfReportGeneratorTest {
         assertEquals(0x46, pdfBytes[3]);
     }
 
+    /**
+     * Asegura que el reporte pueda generarse de manera exitosa incluso
+     * cuando no se provee un nombre de categoría específico para el filtro,
+     * comprobando la resistencia del layout a valores nulos.
+     */
     @Test
+    @DisplayName("Genera el reporte correctamente aunque la categoría sea nula")
     void testGenerateMovementReport_WithoutCategory_GeneratesPdfBytes() {
         PdfReportGenerator generator = new PdfReportGenerator();
         List<MovementReportView> data = new ArrayList<>();
