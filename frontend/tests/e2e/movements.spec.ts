@@ -36,6 +36,21 @@ test.describe('Movimientos - Admin', () => {
     expect(productValid).toBeFalsy();
   });
 
+  test('Admin registra un movimiento OUT y aparece en el historial', async ({ page, request }) => {
+    const product = await seedProduct(request, getAccessToken('admin'));
+    await loginAs(page, 'admin', '/historial');
+
+    await page.getByTestId('create-movement-button').click();
+    await page.getByTestId('movement-product').selectOption({ label: `${product.name} (${product.skuCode})` });
+    await page.getByTestId('movement-type').selectOption('OUT');
+    await page.getByTestId('movement-quantity').fill('5');
+    await page.getByTestId('movement-observations').fill('Movimiento OUT E2E');
+    await page.getByTestId('movement-submit').click();
+
+    await page.getByTestId('movement-search-input').fill(product.name);
+    await expect(page.getByText(product.name).first()).toBeVisible({ timeout: 10000 });
+  });
+
   test('Snapshot del historial (filas enmascaradas)', async ({ page }) => {
     await expect(page.getByTestId('movements-table')).toBeVisible();
     await expect(page.getByTestId('main-content')).toHaveScreenshot('movements.png', {

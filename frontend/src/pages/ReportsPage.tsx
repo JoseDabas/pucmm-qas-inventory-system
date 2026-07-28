@@ -90,7 +90,7 @@ export const ReportsPage: React.FC = () => {
         </h2>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-6 text-sm">
+          <div data-testid="reports-error-message" className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-6 text-sm">
             {error}
           </div>
         )}
@@ -103,6 +103,7 @@ export const ReportsPage: React.FC = () => {
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                data-testid="reports-start-date"
                 className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
               />
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -116,6 +117,7 @@ export const ReportsPage: React.FC = () => {
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                data-testid="reports-end-date"
                 className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
               />
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -127,6 +129,7 @@ export const ReportsPage: React.FC = () => {
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
+              data-testid="reports-category-select"
               className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-surface"
             >
               <option value="">Todas las categorías</option>
@@ -144,6 +147,7 @@ export const ReportsPage: React.FC = () => {
           <button
             onClick={handleDownloadReport}
             disabled={isLoading}
+            data-testid="reports-download-button"
             className="btn-primary flex items-center gap-2 px-6 py-2"
           >
             {isLoading ? (
