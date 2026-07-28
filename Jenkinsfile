@@ -255,19 +255,27 @@ pipeline {
                             echo "KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}" > .env.prod
                             echo "KEYCLOAK_TEST_USER_PASSWORD=${KEYCLOAK_TEST_USER_PASSWORD}" >> .env.prod
                             
-                            # 3. Transferir manifiestos y variables al servidor
-                            scp -o StrictHostKeyChecking=no docker-compose.yml init-keycloak-db.sql .env.prod ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
+                            # 3. Empaquetar las imágenes Docker construidas
+                            echo "Empaquetando imágenes Docker para transferencia (esto puede tomar un momento)..."
+                            docker save inventory-backend:latest inventory-frontend:latest | gzip > images.tar.gz
                             
-                            # 4. Configurar y levantar los servicios en el Droplet
+                            # 4. Transferir manifiestos, base de datos de Keycloak y las imágenes al servidor
+                            echo "Transfiriendo archivos e imágenes al Droplet..."
+                            scp -r -o StrictHostKeyChecking=no docker-compose.prod.yml init-keycloak-db.sql keycloak .env.prod images.tar.gz ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
+                            
+                            # 5. Configurar y levantar los servicios en el Droplet
                             ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "
                                 cd /opt/inventory-app
+                                mv docker-compose.prod.yml docker-compose.yml
                                 mv .env.prod .env
-                                docker compose pull || true
+                                echo 'Cargando imágenes Docker en el servidor...'
+                                docker load < images.tar.gz
+                                rm images.tar.gz
                                 docker compose up -d
                             "
                             
-                            # 5. Limpieza local (seguridad)
-                            rm -f .env.prod
+                            # 6. Limpieza local (seguridad y espacio)
+                            rm -f .env.prod images.tar.gz
                         '''
                     }
                 }
