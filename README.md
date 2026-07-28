@@ -40,8 +40,7 @@ Observabilidad:
 - **Autenticación:** OAuth2 / JWT vía Keycloak (Direct Access Grants desde el frontend; validación de firma RSA vía JWKS en el backend).
 - **Autorización:** permisos granulares (scopes) validados con `@PreAuthorize("hasAuthority('...')")`; el mapeo se hace desde `realm_access.roles` del token.
 - **Persistencia:** PostgreSQL con migraciones gestionadas por Flyway (`ddl-auto: validate`, Hibernate nunca modifica el esquema).
-- **Auditoría:** Hibernate Envers (tablas `_AUD`).
-- **Borrado lógico:** productos y categorías usan *soft delete* (`@SoftDelete`); nunca se pierde el historial.
+- **Auditoría:** Hibernate Envers (tablas `_AUD`); cada cambio, incluida la eliminación, queda registrado.
 
 ### Capas del backend
 
@@ -70,7 +69,8 @@ Paquete raíz `edu.pucmm.cs.inventory`:
 | `V6` | Añade snapshots `previous_quantity` y `new_quantity` a los movimientos. |
 | `V7` | Elimina la columna `quantity` redundante (se conservan los snapshots). |
 | `V8` | Añade `created_at` a productos y categorías (backfill desde el primer movimiento). |
-| `V9` | Añade la columna `deleted` (soft delete) a productos, categorías y `products_aud`. |
+| `V9` | Añade la columna `deleted` a productos, categorías y `products_aud`. |
+| `V10` | Elimina la columna `deleted`; la eliminación vuelve a ser física (hard delete). |
 
 ## Stack Tecnológico
 
@@ -209,7 +209,7 @@ La API expone su lógica bajo el prefijo `/api/v1`. Todos los endpoints (salvo e
 - El **stock actual se calcula al vuelo** desde el historial inmutable de movimientos (cantidad inicial + entradas − salidas), evitando condiciones de carrera.
 - Al **crear** un producto se registra automáticamente un movimiento de entrada (IN) con la cantidad inicial.
 - **Búsqueda** por nombre o SKU (`?search=`, case-insensitive), con paginación y ordenamiento.
-- **Borrado lógico** (soft delete): el producto deja de listarse pero se conserva junto con su historial.
+- **Eliminación** del producto; el historial de cambios queda en la auditoría de Envers.
 - Permisos: `product:view` (consulta), `product:manage` (escritura).
 
 ### Categorías
@@ -217,7 +217,6 @@ La API expone su lógica bajo el prefijo `/api/v1`. Todos los endpoints (salvo e
 - **Crear, listar y eliminar** categorías; cada listado incluye el **conteo de productos** asociados.
 - **Nombre único**.
 - **Bloqueo 409 Conflict** al intentar eliminar una categoría con productos asociados.
-- **Borrado lógico** (soft delete).
 - Permisos: `product:view` (consulta), `product:manage` (escritura).
 
 ### Movimientos de Stock
@@ -262,10 +261,10 @@ La API expone su lógica bajo el prefijo `/api/v1`. Todos los endpoints (salvo e
 | `GET` | `/api/v1/products/alerts/critical-stock` | `report:view` | Productos con stock ≤ mínimo. | 200 |
 | `POST` | `/api/v1/products` | `product:manage` | Crea un producto y registra el movimiento IN inicial. | 201 |
 | `PUT` | `/api/v1/products/{id}` | `product:manage` | Actualiza los metadatos de un producto. | 200 |
-| `DELETE` | `/api/v1/products/{id}` | `product:manage` | Borrado lógico (soft delete) del producto. | 204 |
+| `DELETE` | `/api/v1/products/{id}` | `product:manage` | Elimina el producto. | 204 |
 | `GET` | `/api/v1/categories` | `product:view` | Lista categorías con su conteo de productos. | 200 |
 | `POST` | `/api/v1/categories` | `product:manage` | Crea una categoría (nombre único). | 201 |
-| `DELETE` | `/api/v1/categories/{id}` | `product:manage` | Borrado lógico; 409 si tiene productos asociados. | 204 |
+| `DELETE` | `/api/v1/categories/{id}` | `product:manage` | Elimina la categoría; 409 si tiene productos asociados. | 204 |
 | `GET` | `/api/v1/stock-movements` | `stock:view` | Historial paginado; `?search=` por producto o usuario. | 200 |
 | `POST` | `/api/v1/stock-movements` | `stock:manage` | Registra un movimiento IN/OUT; rechaza stock negativo. | 201 |
 | `GET` | `/api/v1/dashboard/metrics` | *autenticado* | Métricas e indicadores agregados del inventario. | 200 |
