@@ -51,6 +51,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="w-full form-input"
+              data-testid="confirm-text-input"
               autoFocus
             />
           </div>
