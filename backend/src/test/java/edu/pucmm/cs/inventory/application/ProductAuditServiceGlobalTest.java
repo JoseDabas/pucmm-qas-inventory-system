@@ -6,7 +6,7 @@ import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import jakarta.persistence.EntityManager;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
+import edu.pucmm.cs.inventory.infrastructure.persistence.entity.UserRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,8 +79,9 @@ class ProductAuditServiceGlobalTest {
             entity.setId(UUID.randomUUID());
             entity.setName("Test Product");
 
-            DefaultRevisionEntity revisionEntity = new DefaultRevisionEntity();
+            UserRevisionEntity revisionEntity = new UserRevisionEntity();
             revisionEntity.setId(1);
+            revisionEntity.setUsername("test_user");
             revisionEntity.setTimestamp(new Date().getTime());
 
             Object[] row = {entity, revisionEntity, RevisionType.ADD};

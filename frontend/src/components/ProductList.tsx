@@ -296,9 +296,10 @@ export const ProductList: React.FC = () => {
 
       {productToDelete && (
         <ConfirmDialog
-          title="Eliminar producto"
-          message={`¿Estás seguro de eliminar "${productToDelete.name}"? Esta acción no se puede deshacer.`}
+          title="Eliminación Definitiva (Hard Delete)"
+          message={`¿Estás seguro de eliminar "${productToDelete.name}"? Esta acción no se puede deshacer y borrará permanentemente el registro.`}
           confirmLabel="Eliminar"
+          requiredInputText="confirm"
           onConfirm={confirmDelete}
           onCancel={() => setProductToDelete(null)}
         />

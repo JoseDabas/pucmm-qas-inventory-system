@@ -44,7 +44,7 @@ public class ReportController {
             @Parameter(description = "Fecha y hora de fin (ISO-8601)", example = "2023-12-31T23:59:59Z", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
             @RequestParam("endDate") String endDateStr,
             
-            @Parameter(description = "ID opcional de la categoría para filtrar")
+            @Parameter(description = "ID opcional de la categoría para filtrar", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "uuid", pattern = "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"))
             @RequestParam(value = "categoryId", required = false) UUID categoryId) {
 
         try {

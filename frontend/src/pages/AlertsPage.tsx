@@ -39,7 +39,7 @@ export const AlertsPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-6 flex items-center gap-2">
+        <div data-testid="alerts-error-message" className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-lg mb-6 flex items-center gap-2">
           <AlertTriangle size={18} />
           {error}
         </div>
@@ -48,7 +48,7 @@ export const AlertsPage: React.FC = () => {
       {loading ? (
         <p className="text-gray-400">Cargando alertas…</p>
       ) : !error && alerts.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-10 text-center">
+        <div data-testid="alerts-empty-state" className="bg-surface border border-border rounded-xl p-10 text-center">
           <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
             <CheckCircle2 className="text-green-600" size={24} />
           </div>
@@ -58,7 +58,7 @@ export const AlertsPage: React.FC = () => {
       ) : (
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table data-testid="alerts-table" className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
                   <th className="p-4 font-semibold">Producto</th>

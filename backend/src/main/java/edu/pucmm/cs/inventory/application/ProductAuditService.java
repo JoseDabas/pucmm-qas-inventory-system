@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
+import edu.pucmm.cs.inventory.infrastructure.persistence.entity.UserRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
@@ -68,7 +68,7 @@ public class ProductAuditService {
      */
     private ProductAuditResponseDTO mapRevision(Object[] row) {
         ProductEntity entity = (ProductEntity) row[0];
-        DefaultRevisionEntity revisionInfo = (DefaultRevisionEntity) row[1];
+        UserRevisionEntity revisionInfo = (UserRevisionEntity) row[1];
         RevisionType revisionType = (RevisionType) row[2];
 
         ProductAuditResponseDTO dto = new ProductAuditResponseDTO();
@@ -76,6 +76,7 @@ public class ProductAuditService {
         dto.setRevisionDate(OffsetDateTime.ofInstant(
                 revisionInfo.getRevisionDate().toInstant(), ZoneId.systemDefault()));
         dto.setRevisionType(mapRevisionType(revisionType));
+        dto.setModifiedBy(revisionInfo.getUsername());
 
         // En una baja (DEL) Envers solo rellena el id; el resto de campos quedan nulos.
         if (entity != null) {

@@ -99,6 +99,7 @@ export const AuditPage: React.FC = () => {
                   <th className="p-4 font-semibold">Acción</th>
                   <th className="p-4 font-semibold">ID Entidad</th>
                   <th className="p-4 font-semibold">Detalles (Snapshot)</th>
+                  <th className="p-4 font-semibold">Usuario (Auditoría)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -117,23 +118,29 @@ export const AuditPage: React.FC = () => {
                     <td className="p-4 whitespace-nowrap text-xs text-gray-500 font-mono">
                       {audit.entityId.substring(0, 8)}...
                     </td>
-                    <td className="p-4 text-sm text-gray-900">
-                      {audit.revisionType !== 'DELETED' ? (
-                        <div>
+                    <td className="px-6 py-4">
+                      {audit.name ? (
+                        <div className="text-sm text-gray-900">
                           <span className="font-medium">{audit.name}</span> ({audit.skuCode})
-                          <div className="text-gray-500 text-xs mt-1">
+                          <div className="text-xs text-gray-500 mt-1">
                             Precio: ${audit.price} | Stock Mínimo: {audit.minimumStock} | {audit.isActive ? 'Activo' : 'Inactivo'}
                           </div>
+                          {audit.category && (
+                            <div className="text-xs text-gray-500">
+                              Cat: {audit.category}
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-gray-400 italic">Registro eliminado</span>
+                        <span className="text-sm text-gray-400 italic">No disponible</span>
                       )}
                     </td>
+                    <td className="p-4 text-sm text-gray-900">{audit.modifiedBy || 'Sistema'}</td>
                   </tr>
                 ))}
                 {productsAudit.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-400">
+                    <td colSpan={5} className="p-8 text-center text-gray-400">
                       No hay registros de auditoría de productos.
                     </td>
                   </tr>
@@ -148,8 +155,9 @@ export const AuditPage: React.FC = () => {
                 <tr className="bg-surface-hover border-b border-border text-gray-500 text-sm uppercase tracking-wider">
                   <th className="p-4 font-semibold">Fecha / Rev #</th>
                   <th className="p-4 font-semibold">Acción</th>
-                  <th className="p-4 font-semibold">Usuario / Movimiento</th>
+                  <th className="p-4 font-semibold">Operación (Negocio)</th>
                   <th className="p-4 font-semibold">Cambio Cantidad</th>
+                  <th className="p-4 font-semibold">Usuario (Auditoría)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -183,6 +191,7 @@ export const AuditPage: React.FC = () => {
                         `${audit.previousQuantity} → ${audit.newQuantity}`
                       ) : '-'}
                     </td>
+                    <td className="p-4 text-sm text-gray-900">{audit.modifiedBy || 'Sistema'}</td>
                   </tr>
                 ))}
                 {movementsAudit.length === 0 && (

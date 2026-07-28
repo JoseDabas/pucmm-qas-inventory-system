@@ -3,6 +3,7 @@ import type { Product, ProductRequestDTO } from '../types/Product';
 import type { Category } from '../types/Category';
 import api from '../api/axios';
 import { X } from 'lucide-react';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface ProductFormProps {
   product?: Product | null;
@@ -32,6 +33,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
   // Carga las categorías disponibles para el dropdown. Si falla, no bloquea el
@@ -69,8 +71,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const processSave = async () => {
     setLoading(true);
     setError(null);
 
@@ -98,7 +99,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
       }
     } finally {
       setLoading(false);
+      setShowDeactivateConfirm(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (product && product.isActive && !formData.isActive) {
+      setShowDeactivateConfirm(true);
+      return;
+    }
+    processSave();
   };
 
   return (
@@ -270,6 +281,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSa
           </button>
         </div>
       </div>
+
+      {showDeactivateConfirm && (
+        <ConfirmDialog
+          title="Desactivar Producto"
+          message={`¿Estás seguro de desactivar "${formData.name}"? El producto ya no aparecerá en las tablas y solo el administrador de Base de Datos puede revertir este cambio.`}
+          confirmLabel="Desactivar"
+          onConfirm={processSave}
+          onCancel={() => setShowDeactivateConfirm(false)}
+        />
+      )}
     </div>
   );
 };

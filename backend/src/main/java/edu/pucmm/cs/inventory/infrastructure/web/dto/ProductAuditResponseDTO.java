@@ -11,8 +11,8 @@ import java.util.UUID;
  * Hibernate Envers. Cada instancia corresponde a un cambio (alta/modificación/baja)
  * registrado en la tabla 'products_aud', con la foto del producto en ese punto del tiempo.
  *
- * Nota: la tabla de revisiones de Envers ('revinfo') solo almacena el número de revisión
- * y su fecha; no incluye el usuario que realizó el cambio.
+ * registrada en la tabla de auditoría, con la foto del producto en ese punto del tiempo.
+ * Se incluye el usuario que realizó el cambio desde la entidad de revisión.
  */
 @Schema(description = "Revisión de auditoría (Hibernate Envers) de un producto en un punto del tiempo.")
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -54,6 +54,9 @@ public class ProductAuditResponseDTO {
     @Schema(description = "Estado activo/inactivo en esta revisión", example = "true", nullable = true)
     private Boolean isActive;
 
+    @Schema(description = "Usuario que realizó el cambio", example = "admin_user", nullable = true)
+    private String modifiedBy;
+
     // Getters
     public Integer getRevision() { return revision; }
     public UUID getEntityId() { return entityId; }
@@ -67,6 +70,7 @@ public class ProductAuditResponseDTO {
     public Integer getInitialQuantity() { return initialQuantity; }
     public Integer getMinimumStock() { return minimumStock; }
     public Boolean getIsActive() { return isActive; }
+    public String getModifiedBy() { return modifiedBy; }
 
     // Setters
     public void setRevision(Integer revision) { this.revision = revision; }
@@ -81,4 +85,5 @@ public class ProductAuditResponseDTO {
     public void setInitialQuantity(Integer initialQuantity) { this.initialQuantity = initialQuantity; }
     public void setMinimumStock(Integer minimumStock) { this.minimumStock = minimumStock; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 }

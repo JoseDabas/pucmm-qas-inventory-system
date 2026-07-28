@@ -5,7 +5,7 @@ import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementAuditResponseD
 import jakarta.persistence.EntityManager;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
+import edu.pucmm.cs.inventory.infrastructure.persistence.entity.UserRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,8 +73,9 @@ class StockMovementAuditServiceTest {
             entity.setNewQuantity(10);
             entity.setUsername("admin");
 
-            DefaultRevisionEntity revisionEntity = new DefaultRevisionEntity();
-            revisionEntity.setId(2);
+            UserRevisionEntity revisionEntity = new UserRevisionEntity();
+            revisionEntity.setId(1);
+            revisionEntity.setUsername("test_user");
             revisionEntity.setTimestamp(new Date().getTime());
 
             Object[] row = {entity, revisionEntity, RevisionType.MOD};

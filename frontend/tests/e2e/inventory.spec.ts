@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
+import { loginAs, getAccessToken, seedProduct } from './helpers/session';
 
 /**
  * Suite de Pruebas E2E: Flujo Feliz y Validaciones de Administrador.
@@ -150,6 +151,61 @@ test.describe('Flujo Feliz y Validaciones - Admin', () => {
     // Evaluamos la propiedad validity del input de precio
     const isPriceValid = await page.getByTestId('product-price').evaluate((el: HTMLInputElement) => el.checkValidity());
     expect(isPriceValid).toBeFalsy();
+  });
+});
+
+/**
+ * Suite de Pruebas E2E: Edición, Eliminación y Búsqueda - Admin.
+ *
+ * Usa el helper loginAs (patrón moderno) y seedProduct para precondicionar datos vía API.
+ */
+test.describe('Inventario Avanzado - Admin', () => {
+  test.use({ storageState: 'tests/e2e/.auth/admin.json' });
+
+  test('Admin puede editar un producto existente', async ({ page, request }) => {
+    const product = await seedProduct(request, getAccessToken('admin'));
+    await loginAs(page, 'admin', '/inventario');
+
+    await page.getByTestId('product-search-input').fill(product.skuCode);
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId('products-table').getByText(product.skuCode, { exact: true })).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId('edit-product-button').first().click();
+    const newName = `${product.name}-EDITADO`;
+    await page.getByTestId('product-name').fill(newName);
+    await page.getByTestId('product-submit').click();
+
+    await page.getByTestId('product-search-input').fill(product.skuCode);
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId('products-table').getByText(newName, { exact: true })).toBeVisible({ timeout: 10000 });
+  });
+
+  test('Admin puede eliminar un producto', async ({ page, request }) => {
+    const product = await seedProduct(request, getAccessToken('admin'));
+    await loginAs(page, 'admin', '/inventario');
+
+    await page.getByTestId('product-search-input').fill(product.skuCode);
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId('products-table').getByText(product.skuCode, { exact: true })).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId('delete-product-button').first().click();
+    await page.getByTestId('confirm-delete-button').click();
+
+    await page.getByTestId('product-search-input').fill(product.skuCode);
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId('products-table').getByText(product.skuCode, { exact: true })).not.toBeVisible({ timeout: 10000 });
+  });
+
+  test('La búsqueda filtra productos por SKU', async ({ page, request }) => {
+    const product = await seedProduct(request, getAccessToken('admin'));
+    await loginAs(page, 'admin', '/inventario');
+
+    await page.getByTestId('product-search-input').fill(product.skuCode);
+    await page.waitForTimeout(600);
+
+    const rows = page.getByTestId('product-row');
+    await expect(rows).toHaveCount(1, { timeout: 10000 });
+    await expect(rows.first()).toContainText(product.skuCode);
   });
 });
 
