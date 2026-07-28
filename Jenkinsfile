@@ -177,7 +177,10 @@ pipeline {
                     if [ ! -f infrastructure/.env ]; then
                         cp infrastructure/.env.example infrastructure/.env
                     fi
-                    export $(grep -v "^#" infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                    grep -v "^#" infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' > infrastructure/.env.safe
+                    set -a
+                    . ./infrastructure/.env.safe
+                    set +a
                     
                     export KEYCLOAK_PASSWORD="${KEYCLOAK_PASSWORD}"
                     export KEYCLOAK_CLIENT_SECRET="${KEYCLOAK_CLIENT_SECRET}"
@@ -210,7 +213,10 @@ pipeline {
                             if [ ! -f ../infrastructure/.env ]; then
                                 cp ../infrastructure/.env.example ../infrastructure/.env
                             fi
-                            export $(grep -v "^#" ../infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' | xargs)
+                            grep -v "^#" ../infrastructure/.env | grep -v -i "password\\|secret" | tr -d '\\r' > ../infrastructure/.env.safe
+                            set -a
+                            . ../infrastructure/.env.safe
+                            set +a
                             
                             export VITE_KEYCLOAK_URL=${KEYCLOAK_URL%/protocol/openid-connect/token}
                             export VITE_KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID
