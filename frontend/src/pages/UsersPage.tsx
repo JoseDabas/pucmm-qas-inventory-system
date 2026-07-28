@@ -1,62 +1,75 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Users } from 'lucide-react';
 import { adminApi } from '../api/admin';
 import type { SystemRoleOption, User } from '../types/User';
 import { UserForm } from '../components/UserForm';
 
-/**
- * Sección de administración de cuentas. Permite al administrador (permiso
- * user:manage) listar cuentas, crear nuevas y cambiar el rol de cada una. El rol
- * es solo una combinación de permisos; el backend concede los permisos
- * correspondientes en Keycloak.
- */
+const PAGE_SIZE = 10;
+
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<SystemRoleOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [usersRefreshKey, setUsersRefreshKey] = useState(0);
+  const [page, setPage] = useState(0);
 
   const readError = (err: unknown, fallback: string) =>
     (err as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.detail ||
     (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
     fallback;
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setError(null);
-      setUsers(await adminApi.getUsers());
-    } catch (err: unknown) {
-      setError(readError(err, 'Error al cargar las cuentas'));
-    }
-  }, []);
-
-  const fetchRoles = useCallback(async () => {
-    try {
-      setRoles(await adminApi.getRoles());
-    } catch (err: unknown) {
-      setError(readError(err, 'Error al cargar los roles'));
-    }
-  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setError(null);
+        const data = await adminApi.getUsers();
+        if (!cancelled) {
+          setUsers(data);
+          setPage(0);
+        }
+      } catch (err: unknown) {
+        if (!cancelled) setError(readError(err, 'Error al cargar las cuentas'));
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [usersRefreshKey]);
 
   useEffect(() => {
-    fetchRoles();
-    fetchUsers();
-  }, [fetchRoles, fetchUsers]);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const data = await adminApi.getRoles();
+        if (!cancelled) setRoles(data);
+      } catch (err: unknown) {
+        if (!cancelled) setError(readError(err, 'Error al cargar los roles'));
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const refreshUsers = () => setUsersRefreshKey((k) => k + 1);
 
   const handleFormSave = () => {
     setIsFormOpen(false);
-    fetchUsers();
+    refreshUsers();
   };
 
   const handleRoleChange = async (user: User, role: string) => {
     try {
       setError(null);
       await adminApi.changeUserRole(user.id, role);
-      fetchUsers();
+      refreshUsers();
     } catch (err: unknown) {
       setError(readError(err, 'Error al cambiar el rol'));
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const pagedUsers = users.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -99,14 +112,14 @@ export const UsersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.length === 0 ? (
+              {pagedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-gray-400">
                     No hay cuentas registradas.
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                pagedUsers.map((user) => (
                   <tr key={user.id} data-testid="user-row">
                     <td className="p-4 text-gray-900 font-medium">
                       {user.firstName || user.lastName
@@ -151,6 +164,30 @@ export const UsersPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-sm text-gray-500">
+          Página {page + 1} de {totalPages}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            data-testid="prev-page-button"
+            className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+          >
+            Anterior
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            data-testid="next-page-button"
+            className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+          >
+            Siguiente
+          </button>
         </div>
       </div>
 

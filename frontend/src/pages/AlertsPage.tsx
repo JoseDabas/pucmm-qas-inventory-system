@@ -34,7 +34,7 @@ export const AlertsPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  const totalPages = Math.ceil(allAlerts.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(allAlerts.length / PAGE_SIZE));
   const alerts = allAlerts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
@@ -121,31 +121,29 @@ export const AlertsPage: React.FC = () => {
             </div>
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">
-                Página {page + 1} de {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  data-testid="prev-page-button"
-                  className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  data-testid="next-page-button"
-                  className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
-                >
-                  Siguiente
-                </button>
-              </div>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-sm text-gray-500">
+              Página {page + 1} de {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                data-testid="prev-page-button"
+                className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                data-testid="next-page-button"
+                className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+              >
+                Siguiente
+              </button>
             </div>
-          )}
+          </div>
         </>
       )}
     </div>
