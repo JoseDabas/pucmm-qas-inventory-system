@@ -42,6 +42,9 @@ public class StockMovementAuditResponseDTO {
     @Schema(description = "Observaciones")
     private String observations;
 
+    @Schema(description = "Usuario del sistema que generó esta revisión")
+    private String modifiedBy;
+
     // Getters
     public Integer getRevision() { return revision; }
     public UUID getEntityId() { return entityId; }
@@ -54,6 +57,7 @@ public class StockMovementAuditResponseDTO {
     public OffsetDateTime getMovementDate() { return movementDate; }
     public String getUsername() { return username; }
     public String getObservations() { return observations; }
+    public String getModifiedBy() { return modifiedBy; }
 
     // Setters
     public void setRevision(Integer revision) { this.revision = revision; }
@@ -67,4 +71,5 @@ public class StockMovementAuditResponseDTO {
     public void setMovementDate(OffsetDateTime movementDate) { this.movementDate = movementDate; }
     public void setUsername(String username) { this.username = username; }
     public void setObservations(String observations) { this.observations = observations; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 }

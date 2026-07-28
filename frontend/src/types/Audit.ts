@@ -8,9 +8,10 @@ export interface ProductAuditEntry {
   description?: string;
   category?: string;
   price?: number;
-  initialQuantity?: number;
-  minimumStock?: number;
-  isActive?: boolean;
+  initialQuantity: number | null;
+  minimumStock: number | null;
+  isActive: boolean | null;
+  modifiedBy?: string;
 }
 
 export interface StockMovementAuditEntry {
@@ -22,7 +23,8 @@ export interface StockMovementAuditEntry {
   movementType?: string;
   previousQuantity?: number;
   newQuantity?: number;
-  movementDate?: string;
-  username?: string;
-  observations?: string;
+  movementDate: string;
+  username: string; // Usuario asociado al movimiento
+  observations: string;
+  modifiedBy?: string;
 }

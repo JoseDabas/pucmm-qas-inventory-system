@@ -64,6 +64,11 @@ spring:
         format_sql: true
         # Dialecto específico de PostgreSQL
         dialect: org.hibernate.dialect.PostgreSQLDialect
+      org:
+        hibernate:
+          envers:
+            # Guarda todos los datos de la entidad en lugar de solo el ID al eliminar
+            store_data_at_delete: true
 
   # -----------------------------------------------------------------
   # Configuración de Flyway (Herramienta de Migración de Base de Datos)

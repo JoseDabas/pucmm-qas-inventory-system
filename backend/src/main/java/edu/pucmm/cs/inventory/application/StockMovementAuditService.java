@@ -6,7 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
+import edu.pucmm.cs.inventory.infrastructure.persistence.entity.UserRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
@@ -50,7 +50,7 @@ public class StockMovementAuditService {
 
     private StockMovementAuditResponseDTO mapRevision(Object[] row) {
         StockMovementEntity entity = (StockMovementEntity) row[0];
-        DefaultRevisionEntity revisionInfo = (DefaultRevisionEntity) row[1];
+        UserRevisionEntity revisionInfo = (UserRevisionEntity) row[1];
         RevisionType revisionType = (RevisionType) row[2];
 
         StockMovementAuditResponseDTO dto = new StockMovementAuditResponseDTO();
@@ -58,6 +58,7 @@ public class StockMovementAuditService {
         dto.setRevisionDate(OffsetDateTime.ofInstant(
                 revisionInfo.getRevisionDate().toInstant(), ZoneId.systemDefault()));
         dto.setRevisionType(mapRevisionType(revisionType));
+        dto.setModifiedBy(revisionInfo.getUsername());
 
         if (entity != null) {
             dto.setEntityId(entity.getId());
