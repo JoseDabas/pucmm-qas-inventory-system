@@ -260,9 +260,9 @@ pipeline {
                             echo "Empaquetando imágenes Docker para transferencia (esto puede tomar un momento)..."
                             docker save inventory-backend:latest inventory-frontend:latest | gzip > images.tar.gz
                             
-                            # 4. Transferir manifiestos, base de datos de Keycloak y las imágenes al servidor
+                            # 4. Transferir manifiestos, base de datos de Keycloak, configs de observabilidad y las imágenes al servidor
                             echo "Transfiriendo archivos e imágenes al Droplet..."
-                            scp -r -o StrictHostKeyChecking=no docker-compose.prod.yml init-keycloak-db.sql keycloak .env.prod images.tar.gz ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
+                            scp -r -o StrictHostKeyChecking=no docker-compose.prod.yml docker-compose-observability.yml init-keycloak-db.sql keycloak alloy grafana prometheus tempo .env.prod images.tar.gz ${PROD_USER}@${PROD_IP}:/opt/inventory-app/
                             
                             # 5. Configurar y levantar los servicios en el Droplet
                             ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} << 'EOF'
@@ -272,7 +272,11 @@ pipeline {
                                 echo 'Cargando imágenes Docker en el servidor...'
                                 docker load < images.tar.gz
                                 rm images.tar.gz
+                                
+                                echo 'Preparando red compartida y levantando contenedores...'
+                                docker network create inventory_shared_net || true
                                 docker compose up -d
+                                docker compose -f docker-compose-observability.yml up -d
                                 
                                 echo 'Esperando a que Keycloak esté disponible para configuraciones post-despliegue...'
                                 for x in 1 2 3 4 5 6 7 8 9 10 11 12; do
