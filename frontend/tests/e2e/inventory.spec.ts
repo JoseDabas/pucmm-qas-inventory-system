@@ -189,7 +189,7 @@ test.describe('Inventario Avanzado - Admin', () => {
     await expect(page.getByTestId('products-table').getByText(product.skuCode, { exact: true })).toBeVisible({ timeout: 10000 });
 
     await page.getByTestId('delete-product-button').first().click();
-    await page.getByRole('textbox').fill('confirm');
+    await page.getByTestId('confirm-text-input').fill('confirm');
     await page.getByTestId('confirm-delete-button').click();
 
     await page.getByTestId('product-search-input').fill(product.skuCode);
