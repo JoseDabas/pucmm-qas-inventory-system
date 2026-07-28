@@ -1,6 +1,13 @@
 apiVersion: 1
 
 datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    uid: loki
+
   - name: Tempo
     type: tempo
     access: proxy
@@ -15,10 +22,3 @@ datasources:
         tags:
           - key: 'service.name'
             dir: 'app'
-
-  - name: Loki
-    type: loki
-    access: proxy
-    url: http://loki:3100
-    isDefault: false
-    uid: loki
