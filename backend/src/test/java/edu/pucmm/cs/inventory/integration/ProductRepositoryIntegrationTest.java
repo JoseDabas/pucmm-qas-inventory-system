@@ -13,7 +13,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests de integración para {@link ProductJpaRepository}.
+ * Tests de integración para ProductJpaRepository.
  * Verifican las operaciones CRUD reales contra un PostgreSQL efímero
  * levantado por Testcontainers, incluyendo restricciones de unicidad (SKU).
  */
@@ -34,8 +34,10 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         return p;
     }
 
-    // ---- Persistencia básica ----
-
+    /**
+     * Valida que la persistencia mapee correctamente la entidad 
+     * y pueda ser recuperada con los mismos datos insertados.
+     */
     @Test
     @DisplayName("Guarda y recupera un producto correctamente en PostgreSQL real")
     void guardaYRecuperaProducto() {
@@ -45,8 +47,10 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertEquals("SKU-INT-1", found.get().getSkuCode());
     }
 
-    // ---- Restricciones de unicidad ----
-
+    /**
+     * Comprueba que la base de datos haga cumplir la restricción UNIQUE 
+     * sobre el SKU, lanzando excepción en caso de colisión.
+     */
     @Test
     @DisplayName("SKU duplicado lanza excepción por constraint UNIQUE")
     void skuDuplicadoLanzaError() {
@@ -66,8 +70,10 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertFalse(productRepository.findById(saved.getId()).isPresent());
     }
 
-    // ---- Listado ----
-
+    /**
+     * Asegura que el listado global consolide correctamente los 
+     * registros recién inyectados en la sesión.
+     */
     @Test
     @DisplayName("Lista todos los productos incluyendo los recién guardados")
     void listaTodosLosProductos() {
@@ -76,6 +82,10 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertTrue(productRepository.findAll().size() >= 2);
     }
 
+    /**
+     * Valida la ausencia de falsos positivos cuando se solicita 
+     * un identificador inexistente.
+     */
     @Test
     @DisplayName("Producto no existente retorna Optional vacío")
     void productoNoExistenteRetornaVacio() {

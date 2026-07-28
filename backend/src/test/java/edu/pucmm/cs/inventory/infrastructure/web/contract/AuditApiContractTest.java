@@ -34,8 +34,10 @@ public class AuditApiContractTest {
         RestAssured.port = port;
     }
 
-    // ---- GET /audit/products ----
-
+    /**
+     * Valida que la ruta de auditoría de productos exija obligatoriamente
+     * autenticación, previniendo fuga de información confidencial.
+     */
     @Test
     @DisplayName("GET contrato de auditoría de productos sin token devuelve 401 Unauthorized")
     public void testGetAuditProductsWithoutAuthorizationReturns401() {
@@ -47,8 +49,10 @@ public class AuditApiContractTest {
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
-    // ---- GET /audit/stock-movements ----
-
+    /**
+     * Verifica que el historial de movimientos de stock esté protegido
+     * a nivel de API, retornando 401 ante accesos anónimos.
+     */
     @Test
     @DisplayName("GET contrato de auditoría de movimientos sin token devuelve 401 Unauthorized")
     public void testGetAuditStockMovementsWithoutAuthorizationReturns401() {

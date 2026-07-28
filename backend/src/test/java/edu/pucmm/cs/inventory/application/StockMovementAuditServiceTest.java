@@ -10,6 +10,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,6 +31,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+/**
+ * Pruebas unitarias para StockMovementAuditService.
+ * Verifica la correcta integración con Hibernate Envers para recuperar 
+ * el historial de cambios y auditoría sobre los movimientos de inventario.
+ */
 @ExtendWith(MockitoExtension.class)
 public class StockMovementAuditServiceTest {
 
@@ -48,7 +54,13 @@ public class StockMovementAuditServiceTest {
         auditQuery = mock(AuditQuery.class);
     }
 
+    /**
+     * Valida que el servicio consulte las tablas de auditoría de Envers de manera correcta,
+     * obteniendo todas las revisiones asociadas a movimientos de stock y
+     * transformando los datos crudos en DTOs listos para la API.
+     */
     @Test
+    @DisplayName("getAllStockMovementAuditHistory devuelve la lista de revisiones mapeadas a DTO")
     void getAllStockMovementAuditHistory_ReturnsRevisions() {
         try (MockedStatic<AuditReaderFactory> mockedFactory = mockStatic(AuditReaderFactory.class)) {
             mockedFactory.when(() -> AuditReaderFactory.get(entityManager)).thenReturn(auditReader);

@@ -34,6 +34,10 @@ public class StockMovementApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Comprueba que los registros físicos de entradas y salidas del almacén
+     * no puedan consultarse sin inyectar un Bearer Token en las cabeceras.
+     */
     @Test
     @DisplayName("GET contrato de movimientos de stock sin token devuelve 401 Unauthorized")
     public void testGetStockMovementsWithoutAuthorizationReturns401() {

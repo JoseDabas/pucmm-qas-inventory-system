@@ -29,13 +29,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Validación de JWT (Security Testing).
- * <p>
- * A diferencia de {@code ProductControllerApiTest}, que usa el post-processor
- * {@code jwt()} y omite la decodificación real, aquí se sustituye el
- * {@link JwtDecoder} con un mock para ejercitar el flujo completo del OAuth2
- * Resource Server: token ausente/malformado devuelve 401, y un token válido
- * es decodificado y sus roles de {@code realm_access.roles} se mapean a
- * autoridades vía {@code KeycloakRealmRoleConverter} en {@link SecurityConfig}.
+ * 
+ * A diferencia de los tests de controladores convencionales, aquí se sustituye el
+ * JwtDecoder con un mock para ejercitar el flujo completo del OAuth2 Resource Server: 
+ * comprueba que un token ausente o malformado devuelve 401, y que un token válido
+ * se decodifica y sus roles se mapean correctamente a permisos de sistema.
  */
 @WebMvcTest(ProductController.class)
 @Import(SecurityConfig.class)
@@ -68,7 +66,10 @@ class JwtValidationApiTest {
                 .build();
     }
 
-    // Sin encabezado Authorization -> 401 (autenticación requerida).
+    /**
+     * Asegura que cualquier petición a un recurso protegido que omita
+     * la cabecera Authorization sea rechazada con estado HTTP 401.
+     */
     @Test
     @DisplayName("Petición sin token JWT devuelve 401")
     void sinTokenDevuelve401() throws Exception {
@@ -76,7 +77,11 @@ class JwtValidationApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // Token malformado/inválido: el decoder lanza excepción -> 401.
+    /**
+     * Verifica que si el cliente provee un JWT firmado con una clave incorrecta,
+     * expirado o con estructura inválida, el filtro de seguridad lo intercepte
+     * devolviendo estado HTTP 401.
+     */
     @Test
     @DisplayName("Token JWT malformado devuelve 401")
     void tokenMalformadoDevuelve401() throws Exception {
@@ -87,7 +92,11 @@ class JwtValidationApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // Token válido con el rol requerido -> 200 (mapeo de realm_access.roles a authority).
+    /**
+     * Prueba el flujo de éxito: si el JWT es matemáticamente válido y contiene
+     * el rol (claim) necesario para ejecutar la acción, la solicitud
+     * debe procesarse exitosamente (HTTP 200).
+     */
     @Test
     @DisplayName("Token JWT válido con rol product:view devuelve 200")
     void tokenValidoConRolDevuelve200() throws Exception {
@@ -99,7 +108,11 @@ class JwtValidationApiTest {
                 .andExpect(status().isOk());
     }
 
-    // Token válido pero sin el rol requerido -> 403 (autenticado pero no autorizado).
+    /**
+     * Comprueba la autorización (Authorization vs Authentication):
+     * Un usuario puede tener una identidad válida en el sistema (token válido),
+     * pero si no posee el rol granular requerido, debe recibir un estado HTTP 403.
+     */
     @Test
     @DisplayName("Token JWT válido sin el rol requerido devuelve 403")
     void tokenValidoSinRolDevuelve403() throws Exception {

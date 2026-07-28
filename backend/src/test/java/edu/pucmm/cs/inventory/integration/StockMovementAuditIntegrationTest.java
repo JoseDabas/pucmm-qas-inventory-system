@@ -33,10 +33,14 @@ class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private StockMovementAuditService stockMovementAuditService;
 
+    /**
+     * Valida de principio a fin el flujo de auditoría de inventarios físicos.
+     * Crea un movimiento inicial, lo modifica y afirma que Envers rastrea ambos
+     * estados retornando el historial más reciente primero.
+     */
     @Test
     @DisplayName("Envers registra revisiones ADD y MOD al crear y modificar un movimiento de stock")
     void auditHistoryRegistraAltaYModificacion() {
-        // 1. Crear producto base
         ProductEntity p = new ProductEntity();
         p.setId(UUID.randomUUID());
         p.setName("Producto Base");
@@ -47,7 +51,6 @@ class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
         p.setIsActive(true);
         ProductEntity product = productRepository.save(p);
 
-        // 2. Crear movimiento de stock (ADD)
         StockMovementEntity movement = new StockMovementEntity();
         movement.setId(UUID.randomUUID());
         movement.setProductId(product.getId());
@@ -58,11 +61,9 @@ class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
         movement.setUsername("user1");
         StockMovementEntity created = stockMovementRepository.save(movement);
 
-        // 3. Modificar el movimiento (MOD)
         created.setObservations("Corregido por error de tipeo");
         stockMovementRepository.save(created);
 
-        // 4. Obtener historial global y filtrar
         List<StockMovementAuditResponseDTO> history = stockMovementAuditService.getAllStockMovementAuditHistory();
 
         List<StockMovementAuditResponseDTO> movementHistory = history.stream()
@@ -71,7 +72,6 @@ class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(2, movementHistory.size());
         
-        // Orden descendente: la revisión más reciente (modificación) primero.
         assertEquals("UPDATED", movementHistory.get(0).getRevisionType());
         assertEquals("Corregido por error de tipeo", movementHistory.get(0).getObservations());
         assertEquals(15, movementHistory.get(0).getNewQuantity());

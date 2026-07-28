@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Pruebas de API (slice @WebMvcTest) para {@link DashboardController}.
+ * Pruebas de API (slice WebMvcTest) para DashboardController.
  * Verifican que las métricas exigen autenticación pero NO un permiso concreto,
  * de modo que cualquier rol autenticado pueda verlas.
  */
@@ -55,6 +55,10 @@ class DashboardControllerApiTest {
         return jwt().authorities(new SimpleGrantedAuthority(authority));
     }
 
+    /**
+     * Garantiza que el widget de métricas del dashboard no sea de acceso público,
+     * requiriendo siempre una sesión iniciada (HTTP 401).
+     */
     @Test
     @DisplayName("GET métricas sin token devuelve 401")
     void getMetricasSinTokenDevuelve401() throws Exception {
@@ -62,12 +66,16 @@ class DashboardControllerApiTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Comprueba que la arquitectura permita a cualquier usuario validado 
+     * ver el resumen del estado general de la empresa, sin importar la granularidad 
+     * de sus permisos (se usa audit:view como caso atípico para confirmarlo).
+     */
     @Test
     @DisplayName("GET métricas con cualquier rol autenticado devuelve 200 con los valores")
     void getMetricasConCualquierRolDevuelve200() throws Exception {
         when(dashboardService.getMetrics()).thenReturn(sampleMetrics);
-        // 'audit:view' es un permiso que NO da acceso a productos/stock; aun así el
-        // dashboard debe responder, demostrando que no exige un permiso concreto.
+
         mockMvc.perform(get("/api/v1/dashboard/metrics").with(jwtWith("audit:view")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalProducts").value(10))

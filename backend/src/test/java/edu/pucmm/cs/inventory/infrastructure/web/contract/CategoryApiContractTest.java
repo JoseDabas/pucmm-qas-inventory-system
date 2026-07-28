@@ -34,6 +34,10 @@ public class CategoryApiContractTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Asegura que el catálogo de categorías rechace peticiones 
+     * no firmadas devolviendo el estado HTTP 401.
+     */
     @Test
     @DisplayName("GET contrato de categorías sin token devuelve 401 Unauthorized")
     public void testGetCategoriesWithoutAuthorizationReturns401() {
