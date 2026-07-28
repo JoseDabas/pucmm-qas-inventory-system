@@ -3,11 +3,14 @@ import { ShieldCheck, Package, ArrowRightLeft, Clock } from 'lucide-react';
 import { getProductAuditHistory, getStockMovementAuditHistory } from '../api/audit';
 import type { ProductAuditEntry, StockMovementAuditEntry } from '../types/Audit';
 
+const PAGE_SIZE = 10;
+
 export const AuditPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'products' | 'movements'>('products');
   const [productsAudit, setProductsAudit] = useState<ProductAuditEntry[]>([]);
   const [movementsAudit, setMovementsAudit] = useState<StockMovementAuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const fetchAudit = async () => {
@@ -28,6 +31,15 @@ export const AuditPage: React.FC = () => {
     };
     fetchAudit();
   }, [activeTab]);
+
+  const handleTabChange = (tab: 'products' | 'movements') => {
+    setActiveTab(tab);
+    setPage(0);
+  };
+
+  const currentData = activeTab === 'products' ? productsAudit : movementsAudit;
+  const totalPages = Math.max(1, Math.ceil(currentData.length / PAGE_SIZE));
+  const pagedData = currentData.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const renderRevisionBadge = (type: string) => {
     switch (type) {
@@ -61,7 +73,7 @@ export const AuditPage: React.FC = () => {
       <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
-            onClick={() => setActiveTab('products')}
+            onClick={() => handleTabChange('products')}
             data-testid="audit-products-tab"
             className={`${
               activeTab === 'products'
@@ -73,7 +85,7 @@ export const AuditPage: React.FC = () => {
             Productos
           </button>
           <button
-            onClick={() => setActiveTab('movements')}
+            onClick={() => handleTabChange('movements')}
             data-testid="audit-movements-tab"
             className={`${
               activeTab === 'movements'
@@ -103,7 +115,7 @@ export const AuditPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {productsAudit.map((audit) => (
+                {(pagedData as ProductAuditEntry[]).map((audit) => (
                   <tr key={`${audit.entityId}-${audit.revision}`}>
                     <td className="p-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-1 text-gray-500 mb-1">
@@ -161,7 +173,7 @@ export const AuditPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {movementsAudit.map((audit) => (
+                {(pagedData as StockMovementAuditEntry[]).map((audit) => (
                   <tr key={`${audit.entityId}-${audit.revision}`}>
                     <td className="p-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-1 text-gray-500 mb-1">
@@ -206,7 +218,30 @@ export const AuditPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-sm text-gray-500">
+          Página {page + 1} de {totalPages}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            data-testid="prev-page-button"
+            className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+          >
+            Anterior
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            data-testid="next-page-button"
+            className="px-3 py-1.5 border border-border rounded-lg disabled:opacity-50 hover:bg-surface-hover"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
-
