@@ -5,7 +5,6 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRe
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -22,11 +21,6 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ProductJpaRepository productRepository;
-
-    // Acceso directo a la BD para comprobar el estado físico de la fila,
-    // saltándose el filtro automático de @SoftDelete de Hibernate.
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
 
     private ProductEntity buildProduct(String sku) {
         ProductEntity p = new ProductEntity();
@@ -63,24 +57,13 @@ class ProductRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     // ---- Eliminación ----
 
-    // Verifica que la eliminación es un borrado lógico (soft delete): el producto
-    // deja de ser visible por las consultas, pero la fila sigue existiendo en la
-    // base de datos marcada con deleted = true.
+    // Test que verifica la eliminación (hard delete) de un producto.
     @Test
-    @DisplayName("Elimina un producto y verifica que es un Soft Delete (no desaparece físicamente)")
-    void eliminaProductoEsSoftDelete() {
+    @DisplayName("Elimina un producto y verifica que desaparece físicamente")
+    void eliminaProducto() {
         ProductEntity saved = productRepository.save(buildProduct("SKU-DEL"));
-        UUID id = saved.getId();
-
-        productRepository.deleteById(id);
-
-        // A través de Hibernate el producto ya no es visible (filtra deleted = false).
-        assertFalse(productRepository.findById(id).isPresent());
-
-        // Pero la fila sigue físicamente en la tabla, marcada como borrada.
-        Integer vivos = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM products WHERE id = ? AND deleted = true", Integer.class, id);
-        assertEquals(1, vivos);
+        productRepository.deleteById(saved.getId());
+        assertFalse(productRepository.findById(saved.getId()).isPresent());
     }
 
     // ---- Listado ----

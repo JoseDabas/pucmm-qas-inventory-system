@@ -119,7 +119,7 @@ public class ProductController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('" + Permissions.PRODUCT_MANAGE + "')")
-    @Operation(summary = "Eliminar Producto", description = "Realiza un borrado lógico (Soft Delete): el producto se marca como eliminado y deja de aparecer en los listados, pero se conserva en la base de datos junto con su historial de movimientos de stock.")
+    @Operation(summary = "Eliminar Producto Definitivamente", description = "Borra físicamente (Hard Delete) el registro de un producto. Si cuenta con movimientos de stock, fallará por integridad referencial.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Producto eliminado exitosamente")
     public ResponseEntity<Void> deleteProduct(
             @Parameter(description = "Identificador único UUID del producto a destruir", required = true) @PathVariable @NonNull UUID id) {

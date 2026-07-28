@@ -177,12 +177,7 @@ public class ProductService {
     }
 
     /**
-     * Marca un producto como eliminado (borrado lógico / soft delete).
-     *
-     * La fila no se borra físicamente: gracias a la anotación @SoftDelete de la
-     * entidad, Hibernate reescribe este borrado como UPDATE deleted = true, y el
-     * producto deja de aparecer en todas las consultas. Su historial de
-     * movimientos de stock se conserva intacto.
+     * Elimina permanentemente un producto de la base de datos.
      *
      * @param id Identificador único del producto.
      */
@@ -191,8 +186,9 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw new jakarta.persistence.EntityNotFoundException("Operación denegada. El producto especificado no existe.");
         }
-        // Soft delete: Hibernate ejecuta UPDATE products SET deleted = true. No se
-        // borran los movimientos de stock; se conservan como historial.
+        // Eliminar primero los movimientos de stock para evitar violaciones de clave foránea
+        stockMovementRepository.deleteByProductId(id);
+
         productRepository.deleteById(id);
     }
 
