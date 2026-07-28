@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: (window as any)._env_?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
 });
 
 // Interceptor para inyectar el token JWT de Keycloak en las cabeceras de cada petición
 api.interceptors.request.use((config) => {
-  const authority = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:9080/realms/Inventario';
-  const clientId = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'inventory-client';
+  const authority = (window as any)._env_?.VITE_KEYCLOAK_URL || import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:9080/realms/Inventario';
+  const clientId = (window as any)._env_?.VITE_KEYCLOAK_CLIENT_ID || import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'inventory-client';
   const oidcStorageKey = `oidc.user:${authority}:${clientId}`;
   
   const oidcStorage = sessionStorage.getItem(oidcStorageKey);

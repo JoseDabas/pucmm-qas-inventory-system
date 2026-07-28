@@ -251,9 +251,10 @@ pipeline {
                             # 1. Crear el directorio remoto si no existe
                             ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_IP} "mkdir -p /opt/inventory-app"
                             
-                            # 2. Generar .env.prod dinámico localmente con los secretos
+                            # 2. Generar .env.prod dinámico localmente con los secretos y variables de entorno
                             echo "KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}" > .env.prod
                             echo "KEYCLOAK_TEST_USER_PASSWORD=${KEYCLOAK_TEST_USER_PASSWORD}" >> .env.prod
+                            echo "PROD_IP=${PROD_IP}" >> .env.prod
                             
                             # 3. Empaquetar las imágenes Docker construidas
                             echo "Empaquetando imágenes Docker para transferencia (esto puede tomar un momento)..."

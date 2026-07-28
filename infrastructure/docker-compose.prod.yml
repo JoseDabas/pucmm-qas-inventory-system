@@ -78,6 +78,10 @@ services:
   frontend:
     image: inventory-frontend:latest
     container_name: inventory_frontend
+    environment:
+      - VITE_KEYCLOAK_URL=http://${PROD_IP}:9080/realms/Inventario
+      - VITE_API_BASE_URL=http://${PROD_IP}:8080
+      - VITE_KEYCLOAK_CLIENT_ID=inventory-client
     ports:
       - "5173:80"
     depends_on:
