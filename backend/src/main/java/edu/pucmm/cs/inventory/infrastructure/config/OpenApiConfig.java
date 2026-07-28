@@ -56,29 +56,58 @@ public class OpenApiConfig {
     @Bean
     public org.springdoc.core.customizers.OpenApiCustomizer globalOpenApiCustomizer() {
         return openApi -> {
-            // 1. Agregar 'additionalProperties: false' a todos los esquemas (objetos)
+            // 1. Modificar esquemas para restringir generación de datos por Schemathesis
             if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
                 openApi.getComponents().getSchemas().values().forEach(schema -> {
                     // Si el esquema es un objeto (o tipo por defecto), prohibir campos extras
                     if (schema.getType() == null || "object".equals(schema.getType())) {
                         schema.setAdditionalProperties(Boolean.FALSE);
                     }
+                    
+                    // Restringir UUIDs para que Schemathesis no genere strings vacíos o caracteres inválidos
+                    if ("string".equals(schema.getType()) && "uuid".equals(schema.getFormat())) {
+                        schema.setPattern("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+                    }
+                    
+                    // Iterar sobre las propiedades para encontrar UUIDs anidados (ej. en DTOs)
+                    if (schema.getProperties() != null) {
+                        schema.getProperties().values().forEach(prop -> {
+                            if (prop instanceof io.swagger.v3.oas.models.media.Schema) {
+                                io.swagger.v3.oas.models.media.Schema propSchema = (io.swagger.v3.oas.models.media.Schema) prop;
+                                if ("string".equals(propSchema.getType()) && "uuid".equals(propSchema.getFormat())) {
+                                    propSchema.setPattern("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+                                }
+                            }
+                        });
+                    }
                 });
             }
 
-            // 2. Agregar códigos de error estándar a todas las operaciones para satisfacer los stateful tests de Schemathesis
+            // 2. Agregar códigos de error estándar a todas las operaciones y restringir parámetros UUID
             if (openApi.getPaths() != null) {
-                openApi.getPaths().values().forEach(pathItem -> 
-                    pathItem.readOperations().forEach(operation -> 
+                openApi.getPaths().values().forEach(pathItem -> {
+                    pathItem.readOperations().forEach(operation -> {
+                        // Restringir parámetros UUID para Schemathesis
+                        if (operation.getParameters() != null) {
+                            operation.getParameters().forEach(parameter -> {
+                                if (parameter.getSchema() != null 
+                                    && "string".equals(parameter.getSchema().getType()) 
+                                    && "uuid".equals(parameter.getSchema().getFormat())) {
+                                    parameter.getSchema().setPattern("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+                                }
+                            });
+                        }
+                        
+                        // Agregar códigos de error estándar
                         operation.getResponses()
                             .addApiResponse("400", new io.swagger.v3.oas.models.responses.ApiResponse().description("Bad Request: Petición inválida"))
                             .addApiResponse("401", new io.swagger.v3.oas.models.responses.ApiResponse().description("Unauthorized: Token JWT no proporcionado o inválido"))
                             .addApiResponse("403", new io.swagger.v3.oas.models.responses.ApiResponse().description("Forbidden: Permisos insuficientes"))
                             .addApiResponse("404", new io.swagger.v3.oas.models.responses.ApiResponse().description("Not Found: Recurso no encontrado"))
                             .addApiResponse("409", new io.swagger.v3.oas.models.responses.ApiResponse().description("Conflict: Violación de integridad de datos"))
-                            .addApiResponse("500", new io.swagger.v3.oas.models.responses.ApiResponse().description("Internal Server Error"))
-                    )
-                );
+                            .addApiResponse("500", new io.swagger.v3.oas.models.responses.ApiResponse().description("Internal Server Error"));
+                    });
+                });
             }
         };
     }
