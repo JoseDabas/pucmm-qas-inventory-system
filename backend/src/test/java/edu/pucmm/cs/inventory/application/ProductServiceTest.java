@@ -183,6 +183,7 @@ public class ProductServiceTest {
 
         productService.deleteProduct(id);
 
+        verify(stockMovementRepository, times(1)).deleteByProductId(id);
         verify(productRepository, times(1)).deleteById(id);
     }
 

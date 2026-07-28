@@ -1,9 +1,9 @@
 package edu.pucmm.cs.inventory.application;
 
-import edu.pucmm.cs.inventory.domain.MovementType;
-import edu.pucmm.cs.inventory.infrastructure.persistence.entity.StockMovementEntity;
+import edu.pucmm.cs.inventory.domain.Category;
+import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.UserRevisionEntity;
-import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementAuditResponseDTO;
+import edu.pucmm.cs.inventory.infrastructure.web.dto.ProductAuditResponseDTO;
 import jakarta.persistence.EntityManager;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
@@ -21,18 +21,19 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StockMovementAuditServiceTest {
+class ProductAuditServiceTest {
 
     @Mock
     private EntityManager entityManager;
@@ -47,7 +48,7 @@ class StockMovementAuditServiceTest {
     private AuditQuery auditQuery;
 
     @InjectMocks
-    private StockMovementAuditService stockMovementAuditService;
+    private ProductAuditService productAuditService;
 
     private MockedStatic<AuditReaderFactory> mockedAuditReaderFactory;
 
@@ -59,51 +60,51 @@ class StockMovementAuditServiceTest {
 
     @AfterEach
     void tearDown() {
-        if (mockedAuditReaderFactory != null) {
-            mockedAuditReaderFactory.close();
-        }
+        mockedAuditReaderFactory.close();
     }
 
     @Test
-    void getAllStockMovementAuditHistory_ShouldReturnMappedHistory() {
+    void getAllProductAuditHistory_ShouldReturnMappedHistory() {
         // Arrange
         when(auditReader.createQuery()).thenReturn(auditQueryCreator);
-        when(auditQueryCreator.forRevisionsOfEntity(eq(StockMovementEntity.class), eq(false), eq(true))).thenReturn(auditQuery);
+        when(auditQueryCreator.forRevisionsOfEntity(eq(ProductEntity.class), eq(false), eq(true))).thenReturn(auditQuery);
         when(auditQuery.addOrder(any())).thenReturn(auditQuery);
 
-        StockMovementEntity movementEntity = new StockMovementEntity();
-        movementEntity.setId(UUID.randomUUID());
-        movementEntity.setProductId(UUID.randomUUID());
-        movementEntity.setMovementType(MovementType.IN.name());
-        movementEntity.setNewQuantity(50);
-        movementEntity.setDate(LocalDateTime.now());
+        ProductEntity productEntity = new ProductEntity();
+        productEntity.setId(UUID.randomUUID());
+        productEntity.setName("Test Product");
+        productEntity.setPrice(BigDecimal.TEN);
+        
+        Category category = new Category(UUID.randomUUID(), "Category1", null);
+        productEntity.setCategory(category);
 
         UserRevisionEntity revisionEntity = new UserRevisionEntity();
         revisionEntity.setId(1);
         revisionEntity.setTimestamp(System.currentTimeMillis());
         revisionEntity.setUsername("testuser");
 
-        Object[] revisionRow1 = new Object[]{movementEntity, revisionEntity, RevisionType.ADD};
-        Object[] revisionRow2 = new Object[]{null, revisionEntity, RevisionType.DEL};
+        Object[] revisionRow1 = new Object[]{productEntity, revisionEntity, RevisionType.ADD};
+        Object[] revisionRow2 = new Object[]{null, revisionEntity, RevisionType.DEL}; // Simulate DEL where entity is null or partially filled
 
         when(auditQuery.getResultList()).thenReturn(List.of(revisionRow1, revisionRow2));
 
         // Act
-        List<StockMovementAuditResponseDTO> result = stockMovementAuditService.getAllStockMovementAuditHistory();
+        List<ProductAuditResponseDTO> result = productAuditService.getAllProductAuditHistory();
 
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
 
         // Check ADD
-        StockMovementAuditResponseDTO dto1 = result.get(0);
+        ProductAuditResponseDTO dto1 = result.get(0);
         assertEquals("CREATED", dto1.getRevisionType());
         assertEquals("testuser", dto1.getModifiedBy());
-        assertEquals(50, dto1.getNewQuantity());
+        assertEquals("Test Product", dto1.getName());
+        assertEquals("Category1", dto1.getCategory());
 
         // Check DEL
-        StockMovementAuditResponseDTO dto2 = result.get(1);
+        ProductAuditResponseDTO dto2 = result.get(1);
         assertEquals("DELETED", dto2.getRevisionType());
-        assertNull(dto2.getMovementType()); // Because entity is null
+        assertNull(dto2.getName()); // Because entity is null
     }
 }
