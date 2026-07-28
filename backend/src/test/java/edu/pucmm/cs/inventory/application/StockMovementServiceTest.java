@@ -100,7 +100,7 @@ class StockMovementServiceTest {
 
         assertEquals(1, result.getTotalElements());
         verify(stockMovementRepository).searchByProductNameOrUsername(eq("lap"), any(Pageable.class));
-        verify(stockMovementRepository, never()).findAll(any(Pageable.class));
+        verify(stockMovementRepository, never()).findByProductIsActiveTrue(any(Pageable.class));
     }
 
     /**
