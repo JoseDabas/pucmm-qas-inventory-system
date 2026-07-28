@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface ConfirmDialogProps {
@@ -5,6 +6,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  requiredInputText?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -18,9 +20,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
+  requiredInputText,
   onConfirm,
   onCancel,
 }) => {
+  const [inputValue, setInputValue] = useState('');
+  
+  const isConfirmDisabled = requiredInputText ? inputValue !== requiredInputText : false;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-xl p-6">
@@ -34,6 +41,21 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
         </div>
 
+        {requiredInputText && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Escribe "{requiredInputText}" para confirmar:
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full form-input"
+              autoFocus
+            />
+          </div>
+        )}
+
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onCancel} className="btn-secondary">
             {cancelLabel}
@@ -41,8 +63,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <button
             type="button"
             onClick={onConfirm}
+            disabled={isConfirmDisabled}
             data-testid="confirm-delete-button"
-            className="btn-danger"
+            className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {confirmLabel}
           </button>

@@ -63,7 +63,7 @@ public class StockMovementService {
 
         Page<StockMovementEntity> movements;
         if (search == null || search.isBlank()) {
-            movements = stockMovementRepository.findAll(effective);
+            movements = stockMovementRepository.findByProductIsActiveTrue(effective);
         } else {
             movements = stockMovementRepository.searchByProductNameOrUsername(search.trim(), effective);
         }

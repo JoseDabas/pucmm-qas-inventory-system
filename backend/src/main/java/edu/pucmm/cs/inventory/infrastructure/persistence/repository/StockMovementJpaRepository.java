@@ -48,11 +48,17 @@ public interface StockMovementJpaRepository extends JpaRepository<StockMovementE
      * de movimiento no mantiene una relación @ManyToOne hacia el producto.
      */
     @Query(value = "SELECT m FROM StockMovementEntity m, ProductEntity p " +
-                   "WHERE m.productId = p.id AND (" +
+                   "WHERE m.productId = p.id AND p.isActive = true",
+           countQuery = "SELECT COUNT(m) FROM StockMovementEntity m, ProductEntity p " +
+                        "WHERE m.productId = p.id AND p.isActive = true")
+    Page<StockMovementEntity> findByProductIsActiveTrue(Pageable pageable);
+
+    @Query(value = "SELECT m FROM StockMovementEntity m, ProductEntity p " +
+                   "WHERE m.productId = p.id AND p.isActive = true AND (" +
                    "LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
                    "LOWER(m.username) LIKE LOWER(CONCAT('%', :term, '%')))",
            countQuery = "SELECT COUNT(m) FROM StockMovementEntity m, ProductEntity p " +
-                        "WHERE m.productId = p.id AND (" +
+                        "WHERE m.productId = p.id AND p.isActive = true AND (" +
                         "LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
                         "LOWER(m.username) LIKE LOWER(CONCAT('%', :term, '%')))")
     Page<StockMovementEntity> searchByProductNameOrUsername(@Param("term") String term, Pageable pageable);

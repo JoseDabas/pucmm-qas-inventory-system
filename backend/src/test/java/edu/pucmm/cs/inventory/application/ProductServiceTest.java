@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  * excepciones como EntityNotFoundException.
  */
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+public class ProductServiceTest {
 
     @Mock
     private ProductJpaRepository productRepository;
@@ -208,18 +208,18 @@ class ProductServiceTest {
      * aplicando un orden descendente por fecha de creación por defecto.
      */
     @Test
-    @DisplayName("getProducts sin busqueda consulta findAll paginado")
+    @DisplayName("getProducts sin busqueda consulta findByIsActiveTrue paginado")
     void getProductsSinBusquedaUsaFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
         // Sin orden explícito, el servicio ordena por createdAt DESC (más reciente primero).
         Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        when(productRepository.findAll(expected)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
+        when(productRepository.findByIsActiveTrue(expected)).thenReturn(new PageImpl<>(List.of(new ProductEntity())));
         when(stockMovementRepository.sumSignedQuantitiesByProductIds(any())).thenReturn(List.of());
 
         Page<ProductResponseDTO> result = productService.getProducts(null, pageable);
 
         assertEquals(1, result.getTotalElements());
-        verify(productRepository, times(1)).findAll(expected);
+        verify(productRepository, times(1)).findByIsActiveTrue(expected);
         verify(productRepository, never())
                 .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(any(), any(), any());
     }
@@ -244,7 +244,7 @@ class ProductServiceTest {
         assertEquals(1, result.getTotalElements());
         verify(productRepository, times(1))
                 .findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase("lap", "lap", expected);
-        verify(productRepository, never()).findAll(any(Pageable.class));
+        verify(productRepository, never()).findByIsActiveTrue(any(Pageable.class));
     }
 
     /**
@@ -262,7 +262,7 @@ class ProductServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         // Sin orden explícito, el servicio ordena por createdAt DESC (más reciente primero).
         Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        when(productRepository.findAll(expected)).thenReturn(new PageImpl<>(List.of(product)));
+        when(productRepository.findByIsActiveTrue(expected)).thenReturn(new PageImpl<>(List.of(product)));
 
         ProductStockView view = mock(ProductStockView.class);
         when(view.getProductId()).thenReturn(productId);

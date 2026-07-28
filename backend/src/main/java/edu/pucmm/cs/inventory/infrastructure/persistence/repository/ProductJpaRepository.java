@@ -32,12 +32,21 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
     List<ProductEntity> findProductsWithCriticalStock();
 
     /**
-     * Busca de forma paginada los productos cuyo nombre o código SKU contengan el
-     * término indicado, ignorando mayúsculas/minúsculas. Spring Data genera la
-     * implementación automáticamente a partir del nombre del método.
+     * Busca de forma paginada los productos activos.
      */
+    Page<ProductEntity> findByIsActiveTrue(Pageable pageable);
+
+    /**
+     * Busca de forma paginada los productos cuyo nombre o código SKU contengan el
+     * término indicado, ignorando mayúsculas/minúsculas, asegurando que estén activos.
+     */
+    @Query("SELECT p FROM ProductEntity p WHERE p.isActive = true AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
+           "LOWER(p.skuCode) LIKE LOWER(CONCAT('%', :skuCode, '%')))")
     Page<ProductEntity> findByNameContainingIgnoreCaseOrSkuCodeContainingIgnoreCase(
-            String name, String skuCode, Pageable pageable);
+            @org.springframework.data.repository.query.Param("name") String name, 
+            @org.springframework.data.repository.query.Param("skuCode") String skuCode, 
+            Pageable pageable);
 
     /**
      * Cuenta cuántos productos referencian una categoría específica. Se usa para

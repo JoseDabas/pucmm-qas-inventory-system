@@ -67,9 +67,9 @@ class StockMovementServiceTest {
      * cuando no se aplican filtros de búsqueda.
      */
     @Test
-    @DisplayName("getMovements sin busqueda usa findAll con orden por fecha descendente")
+    @DisplayName("getMovements sin busqueda usa findByProductIsActiveTrue con orden por fecha descendente")
     void getMovementsSinBusquedaUsaFindAllOrdenadoPorFecha() {
-        when(stockMovementRepository.findAll(any(Pageable.class)))
+        when(stockMovementRepository.findByProductIsActiveTrue(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(new StockMovementEntity())));
         when(productRepository.findAllById(any())).thenReturn(List.of());
 
@@ -77,7 +77,7 @@ class StockMovementServiceTest {
 
         assertEquals(1, result.getTotalElements());
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
-        verify(stockMovementRepository).findAll(captor.capture());
+        verify(stockMovementRepository).findByProductIsActiveTrue(captor.capture());
         Sort.Order order = captor.getValue().getSort().getOrderFor("date");
         assertNotNull(order);
         assertTrue(order.isDescending());
