@@ -76,3 +76,8 @@ services:
 volumes:
   grafana_data:
     name: infrastructure_grafana_data # Nombre fijo: conserva los datos existentes tras renombrar el proyecto
+
+networks:
+  default:
+    name: inventory_shared_net
+    external: true
