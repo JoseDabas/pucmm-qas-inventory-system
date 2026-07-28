@@ -273,6 +273,20 @@ pipeline {
                                 docker load < images.tar.gz
                                 rm images.tar.gz
                                 docker compose up -d
+                                
+                                echo 'Esperando a que Keycloak esté disponible para configuraciones post-despliegue...'
+                                for x in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                                    if docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin >/dev/null 2>&1; then
+                                        echo 'Keycloak autenticado exitosamente.'
+                                        break
+                                    fi
+                                    echo "Esperando a Keycloak (intento \\$x/12)..."
+                                    sleep 5
+                                done
+                                
+                                echo 'Desactivando requerimiento de HTTPS en Keycloak (entorno QA/Dev)...'
+                                docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE || true
+                                docker exec inventory_keycloak /opt/keycloak/bin/kcadm.sh update realms/Inventario -s sslRequired=NONE || true
                             "
                             
                             # 6. Limpieza local (seguridad y espacio)
