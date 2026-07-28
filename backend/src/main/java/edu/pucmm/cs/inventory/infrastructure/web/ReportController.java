@@ -44,22 +44,12 @@ public class ReportController {
             @Parameter(description = "Fecha y hora de fin (ISO-8601)", example = "2023-12-31T23:59:59Z", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
             @RequestParam("endDate") String endDateStr,
             
-            @Parameter(description = "ID opcional de la categoría para filtrar", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "uuid", pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))
-            @RequestParam(value = "categoryId", required = false) String categoryIdStr) {
+            @Parameter(description = "ID opcional de la categoría para filtrar", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "uuid", pattern = "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"))
+            @RequestParam(value = "categoryId", required = false) UUID categoryId) {
 
         try {
             LocalDateTime startDate = parseDate(startDateStr);
             LocalDateTime endDate = parseDate(endDateStr);
-            
-            UUID categoryId = null;
-            if (categoryIdStr != null) {
-                if (categoryIdStr.isBlank()) {
-                    // Schemathesis manda ?categoryId= (vacio) que rompe el regex estricto de UUID.
-                    // Rechazar explícitamente con 400.
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-                }
-                categoryId = UUID.fromString(categoryIdStr);
-            }
             
             byte[] pdfBytes = reportService.generateMovementReportPdf(startDate, endDate, categoryId);
 
