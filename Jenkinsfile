@@ -279,7 +279,8 @@ pipeline {
                                 docker load < images.tar.gz
                                 rm images.tar.gz
                                 
-                                echo 'Preparando red compartida y levantando contenedores...'
+                                echo 'Preparando red compartida, permisos y levantando contenedores...'
+                                chmod -R 755 /opt/inventory-app
                                 docker network create inventory_shared_net || true
                                 docker compose up -d
                                 docker compose -f docker-compose-observability.yml up -d
