@@ -1,4 +1,4 @@
-package edu.pucmm.cs.inventory;
+package edu.pucmm.cs.inventory.integration;
 
 import edu.pucmm.cs.inventory.application.StockMovementAuditService;
 import edu.pucmm.cs.inventory.infrastructure.persistence.entity.ProductEntity;
@@ -6,6 +6,7 @@ import edu.pucmm.cs.inventory.infrastructure.persistence.entity.StockMovementEnt
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.ProductJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.persistence.repository.StockMovementJpaRepository;
 import edu.pucmm.cs.inventory.infrastructure.web.dto.StockMovementAuditResponseDTO;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Verifica de punta a punta (Postgres real vía Testcontainers) que Hibernate Envers
- * registra las revisiones de un movimiento de stock y que el servicio de auditoría las expone
- * correctamente.
+ * registra las revisiones de un movimiento de stock y que el servicio de auditoría
+ * las expone correctamente.
  */
 class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
 
@@ -33,6 +34,7 @@ class StockMovementAuditIntegrationTest extends AbstractIntegrationTest {
     private StockMovementAuditService stockMovementAuditService;
 
     @Test
+    @DisplayName("Envers registra revisiones ADD y MOD al crear y modificar un movimiento de stock")
     void auditHistoryRegistraAltaYModificacion() {
         // 1. Crear producto base
         ProductEntity p = new ProductEntity();
