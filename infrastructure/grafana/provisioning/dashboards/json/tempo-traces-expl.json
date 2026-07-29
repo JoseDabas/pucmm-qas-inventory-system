@@ -10,7 +10,7 @@
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
           "queryType": "traceql",
-          "query": "{}",
+          "query": "{ .service.name = \"inventory-backend\" }",
           "refId": "A"
         }
       ],
