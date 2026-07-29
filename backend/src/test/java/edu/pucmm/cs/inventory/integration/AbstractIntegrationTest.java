@@ -9,7 +9,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * Clase base para tests de integración con Testcontainers.
  * Levanta un PostgreSQL real efímero y aplica las migraciones Flyway sobre él.
  * 
- * Configura el contenedor como singleton estático para acelerar las ejecuciones 
+ * Configura el contenedor como singleton estático para acelerar las ejecuciones
  * evitando reiniciar la base de datos entre diferentes clases de prueba.
  */
 @SpringBootTest
@@ -24,6 +24,8 @@ public abstract class AbstractIntegrationTest {
         postgres.start();
     }
 
+    // Configuración dinámica de propiedades de Spring Boot para apuntar al
+    // contenedor PostgreSQL efímero.
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);

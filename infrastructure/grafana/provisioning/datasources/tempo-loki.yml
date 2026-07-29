@@ -17,8 +17,20 @@ datasources:
     jsonData:
       nodeGraph:
         enabled: true
+      serviceMap:
+        datasourceUid: prometheus
       tracesToLogsV2:
         datasourceUid: loki
         tags:
           - key: 'service.name'
             dir: 'app'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags:
+          - key: 'service.name'
+            value: 'service'
+        queries:
+          - name: Request rate
+            query: 'sum(rate(traces_spanmetrics_calls_total{service="$__tags"}[5m]))'
+          - name: Error rate
+            query: 'sum(rate(traces_spanmetrics_calls_total{service="$__tags",status_code="STATUS_CODE_ERROR"}[5m]))'
