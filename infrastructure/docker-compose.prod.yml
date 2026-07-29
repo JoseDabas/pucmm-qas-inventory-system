@@ -65,7 +65,7 @@ services:
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
       - APP_CORS_ALLOWED_ORIGINS=http://${PROD_IP}:5173
       - OTEL_SERVICE_NAME=inventory-backend
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://inventory_alloy:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_TRACES_EXPORTER=otlp
@@ -94,3 +94,8 @@ services:
 volumes:
   postgres_data:
     name: infrastructure_postgres_data
+
+networks:
+  default:
+    name: inventory_shared_net
+    external: true

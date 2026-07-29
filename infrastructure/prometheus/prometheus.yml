@@ -1,6 +1,14 @@
 global: # Configuración global de Prometheus
   scrape_interval: 15s
 
+rule_files:
+  - "/etc/prometheus/alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs: # Configuración de los trabajos de scraping para recolectar métricas
   - job_name: "inventory-backend"
     metrics_path: "/actuator/prometheus"

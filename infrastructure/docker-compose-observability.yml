@@ -6,10 +6,17 @@ services:
     container_name: inventory_prometheus
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-remote-write-receiver
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
     restart: unless-stopped
 
   grafana: # Servicio de Grafana para visualización de métricas
@@ -75,6 +82,20 @@ services:
       - tempo
     restart: unless-stopped
 
+  alertmanager: # Gestor centralizado de alertas (requisito)
+    image: prom/alertmanager:latest
+    container_name: inventory_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    restart: unless-stopped
+
 volumes:
   grafana_data:
     name: infrastructure_grafana_data # Nombre fijo: conserva los datos existentes tras renombrar el proyecto
+
+networks:
+  default:
+    name: inventory_shared_net
+    external: true
