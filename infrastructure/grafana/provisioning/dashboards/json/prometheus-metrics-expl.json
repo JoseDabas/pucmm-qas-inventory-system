@@ -1,0 +1,50 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "content": "# Métricas de Prometheus\nEste dashboard muestra las métricas clave de rendimiento.",
+        "mode": "markdown"
+      },
+      "title": "Explicación",
+      "type": "text"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 5 },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(http_server_requests_seconds_count[5m])",
+          "refId": "A",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "title": "Tasa de Peticiones HTTP",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 5 },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (instance) (rate(process_cpu_usage[5m]))",
+          "refId": "A",
+          "legendFormat": "CPU Usage"
+        }
+      ],
+      "title": "Uso de CPU",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["explicativo", "prometheus", "metrics"],
+  "title": "Métricas Explicativas (Prometheus)",
+  "uid": "prometheus-metrics-expl"
+}
