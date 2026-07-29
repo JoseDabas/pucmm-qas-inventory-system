@@ -1,0 +1,25 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {},
+      "targets": [
+        {
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "queryType": "traceql",
+          "query": "{ .service.name = \"inventory-backend\" }",
+          "refId": "A"
+        }
+      ],
+      "title": "Últimas Trazas (Tempo)",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["explicativo", "tempo", "traces"],
+  "title": "Traces Explicativos (Tempo)",
+  "uid": "tempo-traces-expl"
+}
