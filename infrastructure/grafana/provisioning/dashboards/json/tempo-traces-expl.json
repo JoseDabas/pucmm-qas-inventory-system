@@ -14,8 +14,8 @@
           "refId": "A"
         }
       ],
-      "title": "Explorador de Traces (Tempo)",
-      "type": "traces"
+      "title": "Últimas Trazas (Tempo)",
+      "type": "table"
     }
   ],
   "schemaVersion": 39,
