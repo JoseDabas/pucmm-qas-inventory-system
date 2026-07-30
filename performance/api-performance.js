@@ -1,5 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import { textSummary } from "https://jslib.k6.io/k6-summary/0.1.0/index.js";
 
 /**
  * Script de Pruebas de Rendimiento y Carga (k6) para la API REST del Sistema de Inventario.
@@ -147,5 +149,28 @@ export default function (data) {
 
     // Pausa breve para simular tiempo de reflexión/interacción del usuario (Think Time)
     sleep(1);
+}
+
+// ==========================================
+// CICLO DE VIDA: GENERACIÓN DE REPORTES (Dashboard)
+// ==========================================
+
+/**
+ * Hook handleSummary: Se ejecuta una única vez al finalizar la prueba (incluso si fallan los
+ * thresholds/SLAs). Genera un dashboard HTML auto-contenido con los resultados de la corrida,
+ * un volcado JSON con las métricas crudas, y mantiene el resumen textual en la consola.
+ *
+ * Las rutas son relativas al directorio de trabajo desde donde se invoca 'k6 run' (la raíz del
+ * workspace en el pipeline de Jenkins), por lo que los archivos quedan bajo 'performance/'.
+ *
+ * @param {Object} data Objeto con todas las métricas agregadas de la ejecución de k6.
+ * @returns {Object} Mapa de destino -> contenido (archivos a escribir y salida estándar).
+ */
+export function handleSummary(data) {
+    return {
+        "performance/k6-report.html": htmlReport(data),
+        "performance/summary.json": JSON.stringify(data, null, 2),
+        stdout: textSummary(data, { indent: " ", enableColors: true }),
+    };
 }
 
