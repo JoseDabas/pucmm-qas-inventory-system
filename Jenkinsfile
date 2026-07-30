@@ -319,10 +319,17 @@ EOF
             sh 'docker image prune -f || true'
             sh 'docker builder prune -f || true'
             
-            echo 'Archivando reportes de Playwright y capturas de prueba...' 
+            echo 'Archivando reportes de Playwright y capturas de prueba...'
             dir('frontend') {
                 archiveArtifacts artifacts: 'playwright-report/**, test-results/**', allowEmptyArchive: true
             }
+
+            echo 'Archivando reporte de rendimiento k6 (dashboard HTML)...'
+            archiveArtifacts artifacts: 'performance/k6-report.html, performance/summary.json', allowEmptyArchive: true
+            echo '========================================================'
+            echo 'Dashboard de resultados k6 (HTML):'
+            echo "${env.BUILD_URL}artifact/performance/k6-report.html"
+            echo '========================================================'
         }
         success {
             echo 'Pipeline de CI/CD ejecutado exitosamente.'
